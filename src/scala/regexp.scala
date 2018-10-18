@@ -1,6 +1,6 @@
-package com.haoran
+package scala
 
-object demo01 {
+object regexp {
     def main(args: Array[String]) {
         implicit def int2Boolen(a: Int):Boolean = if(a == 0) false else true
         //正则表达式
