@@ -1,11 +1,10 @@
 package sparkdemo.sparkRDD
 
 import utils.BaseUtil.int2boolen
-import org.apache.spark.{SparkConf, SparkContext}
 
-object Opporation extends App {
+object Operation extends App {
 
-    val sc = utils.ConnectUtil.getSparkLocal
+    val sc = utils.ConnectUtil.getLocalSC
 
     // 参考：http://homepage.cs.latrobe.edu.au/zhe/ZhenHeSparkRDDAPIExamples.html
     val 创建RDD的两种方式 = 0
@@ -81,10 +80,10 @@ object Opporation extends App {
         // 第一个参数是分区的索引，第二个参数是该分区中所有项的迭代器。
         // 输出是一个迭代器，它包含应用函数编码的任何转换后的项列表。
         val rdd6 = sc.parallelize(List(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 3)
-        def myfunc(index: Int, iter: Iterator[Int]): Iterator[String] = {
+        def myfunc3(index: Int, iter: Iterator[Int]): Iterator[String] = {
             iter.map(x => "（分区" + index + "：" + x + ")")
         }
-        rdd6.mapPartitionsWithIndex(myfunc).collect()
+        rdd6.mapPartitionsWithIndex(myfunc3).collect()
         //res57: Array[String] = Array(（分区0：1), （分区0：2), （分区0：3),
         // （分区1：4), （分区1：5), （分区1：6),
         // （分区2：7), （分区2：8), （分区2：9), （分区2：10))

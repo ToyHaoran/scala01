@@ -9,10 +9,12 @@ package utils
   */
 object BaseUtil {
     /**
-      * 用来快捷控制代码的开关，将0，1转化为false和true
+      * 用来快捷控制代码的开关，将0，1隐式转换为false和true
       * @param a
       * @return
       */
     implicit def int2boolen(a: Int): Boolean = if (a == 0) false else true
+
+
 
 }
