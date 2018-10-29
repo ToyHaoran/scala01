@@ -1,7 +1,7 @@
-package scala
+package scalademo
 
-object regexp {
-    def main(args: Array[String]) {
+object Regexp extends App{
+
         implicit def int2Boolen(a: Int):Boolean = if(a == 0) false else true
         //正则表达式
         if(0){
@@ -32,6 +32,4 @@ object regexp {
             }
         }
 
-
-    }
 }
