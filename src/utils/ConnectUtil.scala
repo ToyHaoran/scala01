@@ -25,4 +25,15 @@ object ConnectUtil {
             .getOrCreate()
         spark
     }
+
+    /**
+      * 得到集群的SparkSession
+      * @return
+      */
+    def getClusterSpark: SparkSession = {
+        val spark = SparkSession.builder().appName("SparkSessionDemo")
+            .config("spark.some.config.option", "some-value")
+            .getOrCreate()
+        spark
+    }
 }
