@@ -6,8 +6,12 @@
 
 [2,12 控制结构和函数](ControlAndFunction.scala)
 
+
 再深化一下
+
 [13 集合](CollectionDemo.scala)
+![](img/集合.png)
+
 
 [14 模式匹配](MatchDemo.scala)
 
