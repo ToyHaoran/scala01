@@ -75,6 +75,7 @@ object HDFSRead {
                     for(i <- 1 to partititonNum){
                         gddwbmlist.+:(subgddwbm + "_" + i)
                     }
+                    println(gddwbmlist.length)
                     val ran = scala.util.Random.nextInt(partititonNum)
                     res = gddwbmlist(ran)
                 }else{
