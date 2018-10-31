@@ -253,3 +253,127 @@ object ListDemo extends App{
         (4 +: buf).toList
     }
 }
+
+object QueueDemo extends App {
+    println("先进后出的序列========")
+    val 不可变序列 = 0
+    if (1) {
+        import scala.collection.immutable.Queue
+        val que = Queue[Int]() //不能加new，不知道为什么
+        val que2 = Queue(1, 4, 5, 2, 3, 4, 6)
+
+        println("添加元素=======")
+        que.enqueue(1).enqueue(List(2, 3, 4))
+        //scala.collection.immutable.Queue[Int] = Queue(1, 2, 3, 4)
+
+
+        println("从头部移除元素========")
+        val (elemaen, que3) = que2.dequeue //返回对偶Tuple2
+        //elemaen: Int = 1
+        //que3: scala.collection.immutable.Queue[Int] = Queue(4, 5, 2, 3, 4, 6)
+
+    }
+
+    val 可变序列 = 0
+    if (1) {
+        import scala.collection.mutable.Queue
+        val que4 = new scala.collection.mutable.Queue[String]()
+        que4 += "a"
+        que4 ++= List("b", "c", "d") //que4.type = Queue(a, b, c, d)
+        que4.dequeue() // String = a
+    }
+}
+
+object StackDemo extends App{
+    println("先进先出的序列===========")
+    val 栈 = 0
+    if(1){
+        import scala.collection.mutable.Stack
+        val stack = new Stack[Int]
+        stack.push(1).push(2,3,4)//元素的推入    stack.type = Stack(4, 3, 2, 1)
+        stack.pop//元素的弹出    Int = 4
+        stack.top//只获取，不移除
+    }
+}
+
+object SetDemo extends App{
+    println("集没有重复值=========")
+
+    val 不可变集 = 0
+    if(1){
+        val set = Set(1,1,2,3,4,5,5)//scala.collection.immutable.Set[Int] = Set(5, 1, 2, 3, 4)
+        val set2 = Set("aaa","aaa","dfg","abc")// scala.collection.immutable.Set[String] = Set(aaa, dfg, abc)
+        set + 5//添加元素
+        set - 3//删除元素
+        set ++ List(5,7,8)//scala.collection.immutable.Set[Int] = Set(5, 1, 2, 7, 3, 8, 4)
+        set -- List(1,2,3)
+        set -- List(1,2,9)//scala.collection.immutable.Set[Int] = Set(5, 3, 4)
+        set.size
+        set.contains(5)
+
+        set.head
+        set.tail
+        set.isEmpty
+        set.++(set2)
+        set ++ set2
+
+        set.min
+        set.max
+        set.&(Set(3,4,7,8))  //取交集 3，4
+        set.intersect(Set(3,4,7,8))
+        //以上方法都是traversableonce的方法，集合通用的
+
+        //有序的集,具体的顺序取决于Order特质
+        import scala.collection.immutable.TreeSet
+        val ts = TreeSet(34,5,5,6,3,3,5,6,4,3,3,6,7,8,1)// scala.collection.immutable.TreeSet[Int] = TreeSet(1, 3, 4, 5, 6, 7, 8, 34)
+        val cs = TreeSet('f','u','n')//scala.collection.immutable.TreeSet[Char] = TreeSet(f, n, u)
+    }
+
+    val 可变集 = 0
+    if(1){
+        val words = scala.collection.mutable.Set.empty[String]
+        words += "the"
+        words -= "the"
+        words ++= List("do","re","mi")
+        words --= List("do","re")
+        words.clear()//删除所有元素
+    }
+}
+
+
+object MapDemo extends App{
+    //键值对
+    val 不可变映射 = 0
+    if(1){
+        val map = Map("i"->1,"j"->2)
+        val map2 = Map(("i",1),("j",2))
+        map + ("k"->3)
+        map - "j"
+        //合并集合
+        map ++ List("m"->2,"l"->7)//scala.collection.immutable.Map[String,Int] = Map(i -> 1, j -> 2, m -> 2, l -> 7)
+        map -- List("m","l")
+        map.size
+        map.contains("i")
+        map.keys// Iterable[String] = Set(i, j)
+        map.values//Iterable[Int] = MapLike(1, 2)
+        map.keySet//scala.collection.immutable.Set[String] = Set(i, j)
+        map.isEmpty
+
+        //有序的映射
+        import scala.collection.immutable.TreeMap
+        val tm = TreeMap(3->"x",4->"y",5->"z")
+        tm + (4->"g")// scala.collection.immutable.TreeMap[Int,String] = Map(3 -> x, 4 -> g, 5 -> z)
+    }
+
+
+    val 可变映射 = 0
+    if(1){
+        val words = collection.mutable.Map.empty[String,Int]
+        words += ("one"->1)
+        words -= "one"
+        words ++= List("one"->1,"two"->2)
+        words --= List("one","two")
+    }
+}
+
+
