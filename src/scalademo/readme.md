@@ -7,7 +7,7 @@
 
 [隐式转换](ImplicitDemo.scala)
 
-[控制结构](ControlDemo.scala)
+[第2章 控制结构和函数](ControlAndFunction.scala)
 
 [第13章 集合](CollectionDemo.scala)
 
