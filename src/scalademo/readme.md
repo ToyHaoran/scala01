@@ -1,5 +1,12 @@
 
+
+# 在IDEA中打开Scala Console
+Tools -> Run Scala Console （必须选中某个scala文件，否则没有这个选项）
+注意：这种模式相当于:paste模式，你必须用Ctrl+Enter才能执行代码。
+
+
 # 基础知识
+
 
 [正则表达式](Regexp.scala)
 

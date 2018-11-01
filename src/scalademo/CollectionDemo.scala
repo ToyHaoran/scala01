@@ -118,8 +118,9 @@ object ArrayDemo extends App {
 object ListDemo extends App{
     //列表支持在头部快速添加和删除，但是不能提供对任意索引值的快速引用，因为这种实现需要线性枚举整个列表
     val 不可变列表 = 0
-    if(1){
-        // 创建列表(注意列表是不可变的，只能用::来添加元素)
+    if(0){
+        println("创建列表===========")
+        // (注意列表是不可变的，只能用::来添加元素)
         val site: List[String] = List("Runoob", "Google", "Baidu")
         val site1 = "Runoob" :: ("Google" :: ("Baidu" :: Nil)) //构造列表，底层代码，::右结合
         val nums: List[Int] = List(1, 2, 3, 4)
