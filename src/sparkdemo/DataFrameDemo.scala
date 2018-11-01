@@ -12,11 +12,11 @@ object DataFrameDemo {
 
     val sc = ConnectUtil.getLocalSC
     val spark = ConnectUtil.getLocalSpark
-    val df = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
-
     import spark.implicits._
+
+    val df = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
     case class Person(name: String, age: Int)
-    val people = sc.textFile("F:\\桌面\\API\\Scala\\SparkDemo1\\src\\source\\person.txt")
+    val people = sc.textFile("F:/桌面/API/Scala/SparkDemo1/src/source/person.txt")
         .map(_.split(",")).map(p => Person(p(0), p(1).trim.toInt)).toDF()//转化为df后，统统为Row类型
 
 
@@ -340,10 +340,10 @@ object DataFrameDemo {
         //————————————————————————————保存DF的方式——————————————————————————————————
         //  保存操作可以选择使用SaveMode，它指定如何处理现有数据（如果存在）。
         // 重要的是要意识到这些保存模式不使用任何锁定并且不是原子的。此外，执行覆盖时，将在写出新数据之前删除数据。
-        SaveMode.ErrorIfExists//如果数据已存在，则会引发异常。
-        SaveMode.Append  //附加到现有数据。
-        SaveMode.Overwrite //覆盖数据
-        SaveMode.Ignore//如果数据已存在，则预期保存操作不会保存DataFrame的内容并且不会更改现有数据。
+        // SaveMode.ErrorIfExists//如果数据已存在，则会引发异常。
+        // SaveMode.Append  //附加到现有数据。
+        // SaveMode.Overwrite //覆盖数据
+        // SaveMode.Ignore//如果数据已存在，则预期保存操作不会保存DataFrame的内容并且不会更改现有数据。
 
 
         df.write.format("parquet").mode(SaveMode.Overwrite).save()
@@ -359,7 +359,7 @@ object DataFrameDemo {
         val df11 = spark.read.parquet("hdfs://localhost:9000/user/wcinput/df")
     }
 
-    val UDF和UDAF = 0
+    /*val UDF和UDAF = 0
     if(0){
         //—————————————————————————UDF操作———————————————————————————————
         df.createOrReplaceTempView("testUDF")
@@ -455,6 +455,7 @@ object DataFrameDemo {
             // 为最终输出值类型指定编码器
             def outputEncoder: Encoder[Double] = Encoders.scalaDouble
         }
-    }
+    }*/
+
 
 }

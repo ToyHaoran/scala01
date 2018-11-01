@@ -8,7 +8,7 @@ object ArrayDemo extends App {
     // 数组能够让你保留一组元素序列并可以用基于0的索引高效访问（无论是获取还是添加）处于任意位置的元素。
     val 不可变数组 = 0
     if (1){
-        println("不可变数组===========")
+        println("不可变（定长）数组===========")
         println("初始化数组=======")
         val nums = new Array[Int](10) //初始化为0
         val nums1 = new Array[String](10) //初始化为null

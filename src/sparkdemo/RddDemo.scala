@@ -3,21 +3,34 @@ package sparkdemo
 import utils.BaseUtil.int2boolen
 import utils.ConnectUtil
 
-object Operation extends App {
+// RDD就是分布式的元素集合（弹性分布式数据集）
+// 在spark中，对数据的所有操作不外乎创建
 
-    val sc = utils.ConnectUtil.getLocalSC
+object RddDemo extends App {
+
+    val sc = ConnectUtil.getLocalSC
+    val spark = ConnectUtil.getLocalSpark
 
     // 参考：http://homepage.cs.latrobe.edu.au/zhe/ZhenHeSparkRDDAPIExamples.html
     val 创建RDD的两种方式 = 0
-    if (0) {
-        //Scala中的parallelize() 方法
+    if (1) {
+        println("Scala中的parallelize()方法============")
         val lines = sc.parallelize(List("hello  scala", "hello java", "hello scala"))
             .flatMap(_.split("\\s+")).map((_, 1)).reduceByKey(_ + _).sortBy(_._2).collect
 
-        val lines2 = sc.textFile("/path/to/README.md")
+        println("从文件中读取======")
+        val lines2 = sc.textFile("src/sparkdemo/readme.md")
+        //val lines2 = sc.textFile("H:\\code\\idea\\scala01\\src\\sparkdemo\\readme.md")
+        lines2.foreach(println(_))
     }
 
     val 转化操作 = 0
+    // 需要collect才能出结果的，
+    // 一般是这种格式：res54: org.apache.spark.rdd.RDD[String] = MapPartitionsRDD[63] at mapPartitionsWithIndex at <console>:29
+
+    val 行动操作 = 0
+    // 可以直接出结果的，比如collect，reduce
+
     val map_mapValues_mapPartitions_mapPartitionsWithIndex = 0
     if (0) {
         println("map：对RDD的每个元素进行处理，并将结果作为新RDD返回=========")
@@ -227,9 +240,9 @@ object Operation extends App {
         //res102: Array[Int] = Array(7, 5, 3, 2, 1, 1)
 
         val rdd13 = sc.parallelize(Array(("H", 10), ("A", 26), ("Z", 1), ("L", 5)))
-        rdd13.sortBy(c => c._1, true).collect
+        rdd13.sortBy(c => c._1, ascending = true).collect
         //res109: Array[(String, Int)] = Array((A,26), (H,10), (L,5), (Z,1))
-        rdd13.sortBy(c => c._2, true).collect
+        rdd13.sortBy(c => c._2, ascending = true).collect
         //res108: Array[(String, Int)] = Array((Z,1), (L,5), (H,10), (A,26))
         rdd13.sortBy(c => (c._2 + 13) / 2 * 3 % 3) //可以传一个函数
 
@@ -355,8 +368,9 @@ object Operation extends App {
 
         println("sample===========")
         //  sample(withRe placement, fraction, [seed])
-        //  对RDD采样，以及是否替换
-        rdd.sample(false, 0.5) //非确定的
+        //  对RDD采样，以及是否放回（一般是不放回）
+        rdd.sample(false, 0.5).collect() //非确定的，并不一定是两个数据，也有可能是0-4个数据
+        rdd.sample(true, 0.5).collect() //放回去，有可能会获得两个1
 
         println("repartition=========")
         //  repartition(numPartitions: Int)(implicit ord: Ordering[T] = null): RDD[T]
@@ -367,18 +381,17 @@ object Operation extends App {
         rdd.repartition(5).partitions.length //5
 
         println("coalesce============")
-        //  coalesce ( numPartitions : Int , shuffle : Boolean = false ): RDD [T]
-        //  将关联数据合并到给定数量的分区中。 repartition(numPartitions)只是coalesce的缩写(numPartitions，shuffle = true)。
+        // coalesce ( numPartitions : Int , shuffle : Boolean = false ): RDD [T]
+        // 将关联数据合并到给定数量的分区中。
+        // repartition(numPartitions)只是coalesce的缩写(numPartitions，shuffle = true)。
         sc.parallelize(1 to 10, 10).coalesce(2, false).getNumPartitions //2
     }
-}
 
 
-object Action extends App{
-    val sc = ConnectUtil.getLocalSC
-    val spark = ConnectUtil.getLocalSpark
 
-    val 行动操作 = 0
+
+
+
     val collect_collectAsMap = 0
     if(0){
         val a = sc.parallelize(List((1, 2), (3, 4), (3, 6)))
@@ -440,7 +453,8 @@ object Action extends App{
 
     val reduce_fold_foldByKey = 0
     if(0){
-        //————————————————————————reduce(f: (T, T) => T): T
+        println("reduce=========")
+        // reduce(f: (T, T) => T): T
         //  并行整合 RDD 中所有数据，注意：你提供的任何功能都应该是可交换的，以便生成可重现的结果
         //案例：
         val a = sc.parallelize(1 to 100, 3)
@@ -472,15 +486,16 @@ object Action extends App{
 
     val aggregate_aggregateByKey = 0
     if(0){
-        //——————————————————————————aggregate
+        println("aggregate==========")
         //  aggregate[U: ClassTag](zeroValue: U)(seqOp: (U, T) => U, combOp: (U, U) => U): U
         //  在每个分区中应用第一个reduce函数，以将每个分区中的数据减少为单个结果。
         //  第二个reduce函数用于将所有分区的不同减少的结果组合在一起以得到一个最终结果。
         //  用户还指定初始值，应用于两个reduce。  两个reduce函数必须是可交换的和关联的。
 
         //案例0：（看不懂是不是？，先跳过，接着往下看。。）
-        //  aggregate() 来计算 RDD 的平均值，来代替 map() 后面接 fold() 的方式？？？？
-        //  rdd.aggregate((0, 0)) ((x, y) =>  (x._1 + y, x._2 + 1), (x, y) =>  (x._1 + y._1, x._2 + y._2))                (9,4)
+        //  aggregate() 来计算 RDD 的平均值，来代替 map() 后面接 fold() 的方式
+        //  rdd.aggregate((0, 0)) ((x, y) =>  (x._1 + y, x._2 + 1), (x, y) =>  (x._1 + y._1, x._2 + y._2))
+        // (9,4)
 
         //案例1：
         val z = sc.parallelize(List(1,2,3,4,5,6), 2)
@@ -494,7 +509,7 @@ object Action extends App{
 
         //初始值是5，分区0的reduce是max(5,1,2,3)=5，分区1的reduce是max(5,4,5,6)=6，最终跨分区的reduce是5+5+6=16
         z.aggregate(5)(math.max(_, _), _ + _)//16
-        z.aggregate(0)(math.max(_, _), _ + _)//9
+        z.aggregate(0)(math.max _, _ + _)//9
 
         //案例2：
         val z2 = sc.parallelize(List("a","b","c","d","e","f"),2)
@@ -521,8 +536,8 @@ object Action extends App{
         //res144: String = 11        //同上
 
 
-
-        //——————————————————————————aggregateByKey [Pair]
+        println("aggregateByKey=================")
+        // aggregateByKey [Pair]
         //  像聚合函数一样工作，除了聚合应用于具有相同键的值。与聚合函数不同，初始值不应用于第二个reduce。
         val pairRDD = sc.parallelize(List( ("cat",2), ("cat", 5), ("mouse", 4),("cat", 12), ("dog", 12), ("mouse", 2)), 2)
         //让我们来看看分区中的内容
@@ -568,8 +583,7 @@ object Action extends App{
     }
 
     val 持久化 = 0
-
-
+    //见笔记spark调优-01代码调优
 
 
 }
