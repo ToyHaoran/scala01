@@ -27,9 +27,7 @@ object WordCount extends App{
         .flatMap(line => line.split("\\s+"))
         .map(x=>(x,1))
         .reduceByKey(_+_)
-    words1.cache()
-
-    words1.sortBy(_._2,false)
+        .sortBy(_._2,false)
         .map(x =>(UUID.randomUUID().toString,x._1.toString,x._2.toLong))
         .toDF("PKID","WORD","FREQ")
         .show(false)

@@ -27,7 +27,7 @@ object DataCreateUtil{
             "山竹", "蟠桃", "贡梨", "鸭梨", "菠萝", "柚子", "樱桃", "椰子", "无花果", "山野葡萄", "桑葚", "人参果", "柿子", "杏子")
 
         val len = fruitArray.length
-
+        //TODO 拆分方法
         if (totalTimes < 1000) {
             //用来随机换行的变量
             var ranCreateFlag = true
@@ -50,7 +50,7 @@ object DataCreateUtil{
                             fruitArray(ran)
                         }
                     case 2 =>
-                        // TODO 怎么随机换行
+                        // TODO 将换行符放在前面，然后mkString("")
                         /*思路：
                         随机5-10个就换行
                         弄个flag，运行一次弄个随机数，然后后面的几次就不产生随机数了
