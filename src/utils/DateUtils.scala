@@ -4,21 +4,80 @@ import java.text.{ParseException, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
 /**
-  * 操作日期工具类 [慢慢添加]
+  * 操作日期工具类
   *
   */
 object DateUtils {
+    /**
+      * 得到代码块的运行时间
+      *
+      * @param block 需要测试的代码块
+      * @tparam R
+      * @return (代码块返回值，毫秒值)
+      */
+    def getMethodRunTime[R](block: => R): (R, Double) = {
+        val start = System.nanoTime() //系统纳米时间
+        val result = block
+        val end = System.nanoTime()
+        val delta = end - start
+        (result, delta / 1000000d)
+    }
 
     /**
-      * 日期转换为字符串
+      * 日期str转换为毫秒值str
       */
-    def dateFormatParse(srcTime: String, pattern: String): String = {
+    def dateStrToMillStr(srcTime: String, pattern: String): String = {
+        String.valueOf(dateStrToMill(srcTime, pattern))
+    }
+
+    /**
+      * 日期str转化为毫秒值Long
+      *
+      * @param srcTime
+      * @param pattern
+      * @return
+      */
+    def dateStrToMill(srcTime: String, pattern: String): Long = {
+        val date = dateStrToDate(srcTime, pattern)
+        val ts = date.getTime()
+        ts
+    }
+
+    /**
+      * 日期str转化为date类型
+      */
+    def dateStrToDate(srcTime: String, pattern: String): Date = {
         val dateFormat: SimpleDateFormat = new SimpleDateFormat(pattern)
         val date = dateFormat.parse(srcTime)
-        val ts = date.getTime()
-
-        String.valueOf(ts)
+        date
     }
+
+    /**
+      * 日期date转化为日期str
+      */
+    def dateToStr(srcDate: Date, pattern: String): String = {
+        val dateFormat: SimpleDateFormat = new SimpleDateFormat(pattern)
+        val dateStr = dateFormat.format(srcDate)
+        dateStr
+    }
+
+
+    /**
+      * 日期字符串转化为另一种格式的字符串
+      *
+      * @param src
+      * @param srcPattern
+      * @param desPattern
+      * @return
+      */
+    def dateStrToOtherStr(src: String, srcPattern: String, desPattern: String): String = {
+        val date = dateStrToDate(src, srcPattern)
+        val res = dateToStr(date, desPattern)
+        res
+    }
+
+
+
 
 
     /**
@@ -321,5 +380,6 @@ object DateUtils {
                 throw new Exception("pattern error :" + pattern, ex)
         }
     }
+
 
 }

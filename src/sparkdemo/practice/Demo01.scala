@@ -22,15 +22,18 @@ object Demo01 extends App{
     val spark = ConnectUtil.getLocalSpark
     import spark.implicits._
 
-    //val words1 = sc.textFile("src/sparkdemo/testfile/hello.txt")
-    val words1 = sc.textFile("file:/usr/local/jar/lihaoran/hello.txt")
-        .flatMap(line => line.split("\\s+"))
-        .map(x=>(x,1))
-        .reduceByKey(_+_)
-        .sortBy(_._2,false)
-        .map(x =>(UUID.randomUUID().toString,x._1.toString,x._2.toLong))
-        .toDF("PKID","WORD","FREQ")
-        .show(false)
+    if(0){
+        //方法1:推荐
+        //val words1 = sc.textFile("src/sparkdemo/testfile/hello.txt")
+        val words1 = sc.textFile("file:/usr/local/jar/lihaoran/hello.txt")
+            .flatMap(line => line.split("\\s+"))
+            .map(x=>(x,1))
+            .reduceByKey(_+_)
+            .sortBy(_._2,false)
+            .map(x =>(UUID.randomUUID().toString,x._1.toString,x._2.toLong))
+            .toDF("PKID","WORD","FREQ")
+            .show(false)
+    }
 
     if(0){
         //方法2 费劲
