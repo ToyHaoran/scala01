@@ -13,7 +13,7 @@ object DateUtils {
       *
       * @param block 需要测试的代码块
       * @tparam R
-      * @return (代码块返回值，毫秒值)
+      * @return Turple(代码块返回值，代码运行时间：毫秒值)
       */
     def getMethodRunTime[R](block: => R): (R, Double) = {
         val start = System.nanoTime() //系统纳米时间
@@ -24,9 +24,22 @@ object DateUtils {
     }
 
     /**
+      * 日期date转化为日期str
+      */
+    def dateToStr(srcDate: Date, pattern: String = "yyyy-MM-dd HH:mm:ss"): String = {
+        if(srcDate == null){
+            null
+        }else{
+            val dateFormat: SimpleDateFormat = new SimpleDateFormat(pattern)
+            val dateStr = dateFormat.format(srcDate)
+            dateStr
+        }
+    }
+
+    /**
       * 日期str转换为毫秒值str
       */
-    def dateStrToMillStr(srcTime: String, pattern: String): String = {
+    def dateStrToMillStr(srcTime: String, pattern: String = "yyyy-MM-dd HH:mm:ss"): String = {
         String.valueOf(dateStrToMill(srcTime, pattern))
     }
 
@@ -37,7 +50,7 @@ object DateUtils {
       * @param pattern
       * @return
       */
-    def dateStrToMill(srcTime: String, pattern: String): Long = {
+    def dateStrToMill(srcTime: String, pattern: String = "yyyy-MM-dd HH:mm:ss"): Long = {
         val date = dateStrToDate(srcTime, pattern)
         val ts = date.getTime()
         ts
@@ -46,20 +59,12 @@ object DateUtils {
     /**
       * 日期str转化为date类型
       */
-    def dateStrToDate(srcTime: String, pattern: String): Date = {
+    def dateStrToDate(srcTime: String, pattern: String = "yyyy-MM-dd HH:mm:ss"): Date = {
         val dateFormat: SimpleDateFormat = new SimpleDateFormat(pattern)
         val date = dateFormat.parse(srcTime)
         date
     }
 
-    /**
-      * 日期date转化为日期str
-      */
-    def dateToStr(srcDate: Date, pattern: String): String = {
-        val dateFormat: SimpleDateFormat = new SimpleDateFormat(pattern)
-        val dateStr = dateFormat.format(srcDate)
-        dateStr
-    }
 
 
     /**
@@ -76,15 +81,31 @@ object DateUtils {
         res
     }
 
-
-
-
-
     /**
       * 获取当前年份
       */
     def getCurrentYear(): Int = {
-        return Calendar.getInstance().get(Calendar.YEAR)
+        Calendar.getInstance().get(Calendar.YEAR)
+    }
+
+    /**
+      * 计算相隔的天数
+      *
+      */
+    // TODO 四舍五入的问题。。
+    def getIntervalDays(startday: Calendar, endday: Calendar): Long = {
+        var star = startday
+        var end = endday
+        //确保star在end之前
+        if (star.after(end)) {
+            val cal = star
+            star = end
+            end = cal
+        }
+        val d1 = star.getTimeInMillis
+        val d2 = end.getTimeInMillis
+        val minus = (d2 - d1) / 1000 / 60 / 60 / 24
+        minus
     }
 
 
@@ -325,61 +346,5 @@ object DateUtils {
         cal.add(Calendar.DATE, -1)
         cal.getTime
     }
-
-    /**
-      * 使用默认表达式格式化日期  [yyyy-MM-dd HH:mm:ss.SSS]
-      */
-    def formatDate(srcTime: Long): String = {
-        formatDate(new Date(srcTime), "yyyy-MM-dd HH:mm:ss.SSS");
-    }
-
-    /**
-      * 使用默认表达式格式化日期  [yyyy-MM-dd HH:mm:ss.SSS]
-      */
-    /*  def formatDate(srcTime: Date): String = {
-        formatDate(srcTime, "yyyy-MM-dd HH:mm:ss.SSS");
-      }*/
-
-    /**
-      * 使用指定表达式格式化日期
-      */
-    /*  def formatDate(srcTime: Long, pattern: String): String = {
-        formatDate(new Date(srcTime), pattern);
-      }*/
-
-    /**
-      * 使用指定表达式格式化日期
-      */
-    def formatDate(srcTime: Date, pattern: String): String = {
-        if (srcTime == null) {
-            null
-        } else {
-            val sdf = new SimpleDateFormat(pattern);
-            sdf.format(srcTime);
-        }
-    }
-
-    /**
-      * 按默认格式，解析字符串  [yyyy-MM-dd HH:mm:ss.SSS]
-      * 字符串必须满足此表达式
-      */
-    def parseDate(srcTime: String): Date = {
-        parseDate(srcTime, "yyyy-MM-dd HH:mm:ss.SSS")
-    }
-
-    /**
-      * 使用指定表达式，解析字符串
-      * 字符串格式必须满足表达式
-      */
-    def parseDate(srcTime: String, pattern: String): Date = {
-        try {
-            val sdf = new SimpleDateFormat(pattern);
-            sdf.parse(srcTime);
-        } catch {
-            case ex: ParseException =>
-                throw new Exception("pattern error :" + pattern, ex)
-        }
-    }
-
 
 }
