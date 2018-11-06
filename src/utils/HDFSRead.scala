@@ -12,7 +12,7 @@ import scala.util.Random
   * User: lihaoran 
   * Date: 2018/10/29
   * Time: 9:15 
-  * Description:
+  * Description: 读取HDFS文件并且将大表重分区。
   */
 object HDFSRead {
     def main(args: Array[String]) {
@@ -23,7 +23,7 @@ object HDFSRead {
         //写活方法失败(spark, hdfsRoot, files)
 
         files.par.foreach(path =>{
-            //这里为什么会读取不到类型？
+            //这里必须确定一下类型
             val strPath:String = path
             if (strPath != "/YXFK/compute/HS_DJWDMX" && strPath != "/YXFK/compute/open"){
                 strPath match {
@@ -31,19 +31,10 @@ object HDFSRead {
                         //读取/YXFK/compute/KH_JLD表并且重新分区
                         val df = spark.read.parquet(hdfsRoot + path)
                         val df2 = df.withColumn("PARTITION", getJldPartition(col("GDDWBM")))
-                        //这种模式是先根据col将相同列的不同分区的数据拉取到一个分区
-                        //df2.repartition(30, col("PARTITION")).write.mode(SaveMode.Overwrite).parquet(hdfsRoot + "/temp_data/temp_lihaoran/")
-                        //
-                        //df2.repartition(col("PARTITION")).write.mode(SaveMode.Overwrite).parquet(hdfsRoot + "/temp_data/temp_lihaoran/")
-
                         //这种模式是按照列名分区，但是每个列文件中有不少分区，是因为没有将不同分区的数据拉去到同一分区。
                         //df2.write.partitionBy("PARTITION").mode(SaveMode.Overwrite).parquet(hdfsRoot + "/temp_data/temp_lihaoran/")
                         df2.repartition(29, col("PARTITION")).write.partitionBy("PARTITION").mode(SaveMode.Overwrite)
                             .parquet(hdfsRoot + "/temp_data/temp_lihaoran/KH_JLD")
-
-                    // 查看保存的信息
-                    /*val df3 = spark.read.parquet(hdfsRoot + "/temp_data/temp_lihaoran/KH_JLD")
-                    df3.show*/
 
                     case "/YXFK/compute/LC_HBXXJL" =>
                         val df = spark.read.parquet(hdfsRoot + path)
@@ -76,15 +67,10 @@ object HDFSRead {
                             .parquet(hdfsRoot + "/temp_data/temp_lihaoran/KH_YDKH")
                     case _ =>
                         println(path + "：暂时不复制")
-                        /*val df = spark.read.parquet(hdfsRoot + path)
-                        df.write.mode(SaveMode.Overwrite).parquet(hdfsRoot + "/temp_data/temp_lihaoran/" + path.substring(14))*/
                 }
             }
         })
     }
-
-
-
 
     def getYdkhPartititon:UserDefinedFunction = {
         udf { (gddwbm: String) => {
@@ -567,7 +553,6 @@ object HDFSRead {
                         }*/
 
                         // 供电单位编码(前五位)
-
                         val rdd2 = df.select("GDDWBM")
                             .withColumn("SUBGDDWBM", getSubgddwbm(col("GDDWBM")))
                             .drop("GDDWBM")
@@ -612,6 +597,7 @@ object HDFSRead {
             }
         }
     }
+
     def 写活方法失败(spark: SparkSession, hdfsRoot: String, files: Array[String]): Unit = {
             /*
                 如何将上面那种方式写活？

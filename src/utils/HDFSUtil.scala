@@ -9,13 +9,6 @@ import org.apache.log4j.Logger
 
 import scala.collection.mutable.ArrayBuffer
 
-/**
-  * Created with IntelliJ IDEA.
-  * User: liubodong
-  * Date: 2018/8/31
-  * Time: 14:17 
-  * Description:
-  */
 class HDFSUtil(hdfsBsePath: String) {
 
     System.setProperty("HADOOP_USER_NAME", "hdfs")

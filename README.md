@@ -10,7 +10,8 @@
 -
 
 注意：
-- 有个测试文件大小为6M，下载可能缓慢
+- 有个测试文件大小为12M，下载可能缓慢
 - [src/log4j](src/log4j.properties)
-  这个文件是用来控制Console打印信息的，去掉INFO信息(第19行将INFO改为了WARN)
+  这个文件是用来控制Console打印信息的，去掉INFO信息(第19行将INFO改为了WARN)，
+  后来又改回来了。
 -

@@ -5,31 +5,39 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.{SparkConf, SparkContext}
-import utils.BaseUtil.int2boolen
+
+import utils.BaseUtil._
 import utils.ConnectUtil
 
-object DataFrameDemo {
+object DataFrameDemo extends App{
 
     val sc = ConnectUtil.getLocalSC  //基本上后来不用sc了，用spark.sparkContext代替
-
     val spark = ConnectUtil.getLocalSpark
-
     import spark.implicits._
 
     val df = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
-
     case class Person(name: String, age: Int)
-
     //val people = sc.textFile("src/sparkdemo/testfile/person.txt")
     val people = sc.textFile("file:/usr/local/jar/lihaoran/person.txt")
         .map(_.split(",")).map(p => Person(p(0), p(1).trim.toInt)).toDF() //转化为df后，统统为Row类型
 
-    val DF打印对齐 = 0
+    val DF打印操作 = 0
     if (0) {
         df.show(30) //最多打印30行
         df.show(30, truncate = 20) // 每个元素最大20个字符，其他折叠
         df.show(30, truncate = false) // 每个元素不折叠
         //注意shell中极有可能head对不齐，但是在Spark web UI中可以对齐
+
+        //注意打印信息的时候,如果是并行计算，show会占用一点时间，导致print同时打印，然后show也打印在了一起。
+        //这种情况下，推荐println("")放在后面，或者类似DateUtils.getMethodRunTime那样打印
+        (0 to 2).par.foreach{
+            case 0 =>
+                println("df1========")
+                df.show()
+            case 1 =>
+                println("df2========")
+                df.show()
+        }
     }
 
     val 创建DF的方式 = 0
@@ -57,19 +65,21 @@ object DataFrameDemo {
 
         //方法三，通过文件直接创建DataFrame(推荐)
         val df4 = spark.read.parquet("hdfs:/path/to/file") //使用parquet文件创建
-        val df4_1 = spark.read.parquet("E:/hivedata1/xxxx") //使用parquet文件创建
+        val df4_1 = spark.read.parquet("E:/hivedata1/xxxx")
         val df5 = spark.read.json("examples/src/main/resources/people.json") //使用json文件创建
-        val df6 = spark.read.format("csv") //使用csv文件,spark2.0+之后的版本可用
+        val df6 = spark.read.format("csv") //使用csv文件,spark2.0+之后,通用加载json, parquet, jdbc, orc, libsvm, csv, text
                 .option("sep", ",")
                 .option("inferSchema", "true")
                 .option("header", "true")
                 .load("file:/usr/local/jar/lihaoran/测试.csv").show()
         //.load("sparkdemo/testfile/测试.csv")
+
         //直接在文件上运行SQL
         val df7 = spark.sql("SELECT * FROM parquet.'examples/src/main/resources/users.parquet'")
 
         //从Hive中读取
         //Use SparkSession.builder.enableHiveSupport instead
+        //详细参考文档：http://spark.apachecn.org/docs/cn/2.2.0/sql-programming-guide.html
         import org.apache.spark.sql.hive.HiveContext
         val hiveCtx = new HiveContext(sc)
         val rows = hiveCtx.sql("SELECT key, value FROM mytable")
@@ -84,7 +94,7 @@ object DataFrameDemo {
         dataBaseProps.setProperty("password", password)
         dataBaseProps.setProperty("fetchsize", "1000") //批量读
         dataBaseProps.setProperty("batchsize", "5000") //批量写
-        val b_jcy_voltrank = spark.read.jdbc(url, "(select * from lc_cbxx where rownum<=1000)", dataBaseProps) //write是一样的格式
+        val res = spark.read.jdbc(url, "(select * from lc_cbxx where rownum<=1000)", dataBaseProps) //write是一样的格式
     }
 
     val RDD_DF_DS的相互转化 = 0
@@ -284,7 +294,7 @@ object DataFrameDemo {
     val 对聚合操作后的Value进行操作 = 0
     if (0) {
         //—————————————高级分组聚合———————————————————————————————
-        //具体案例见例题4
+        //具体案例见sparkdemo.practice.Demo05
         df.groupByKey(row => row.getAs[String]("key1")).mapGroups((key1, group) => {
             var res = ""
             val key = key1
@@ -324,6 +334,7 @@ object DataFrameDemo {
         //修改行操作
         df.distinct()
         df.dropDuplicates() //删除重复行，distinct的别名
+
         //删除某一列具有重复的元素所在的行
         df.dropDuplicates("key1") //常用
     }
@@ -336,13 +347,20 @@ object DataFrameDemo {
         val df2 = spark.createDataset(Seq(("aaa", 2, 2), ("bbb", 3, 5), ("ddd", 3, 5), ("bbb", 4, 6), ("eee", 1, 2), ("aaa", 1, 5), ("fff", 5, 6))).toDF("key1", "key2", "key4")
 
         //内连接,左右必须同时满足的才可以显示
-        df1.join(df2, "key1") //如下所示
-        df1.join(df2, df1("key1") === df2("key1")) //多了一列key1
+        df1.join(df2, "key1").show() //推荐
+        df1.join(df2, df1("key1") === df2("key1")).show() //多了一列key1,还要drop(df2.col("key1"))
         //等值连接（两个公共字段key1，key2）
-        df1.join(df2, Seq("key1", "key2"))
+        df1.join(df2, Seq("key1", "key2")).show()
 
-        //  还是内连接，这次用joinWith。和join的区别是连接后的新Dataset的schema会不一样
+        //还是内连接，这次用joinWith。和join的区别是连接后的新Dataset的schema会不一样
         df1.joinWith(df2, df1("key1") === df2("key1"))
+        /*
+        +---------+---------+
+        |       _1|       _2|
+        +---------+---------+
+        |[aaa,1,2]|[aaa,1,5]|
+        |[aaa,1,2]|[aaa,2,2]|
+         */
 
         //左连接(左外连接),只显示左边的，右边的填充null
         df1.join(df2, df1("key1") === df2("key1"), "left").show()
@@ -369,42 +387,71 @@ object DataFrameDemo {
         // SaveMode.Overwrite //覆盖数据
         // SaveMode.Ignore//如果数据已存在，则预期保存操作不会保存DataFrame的内容并且不会更改现有数据。
 
-
+        //通用的保存模式：format保持文件的类型，mode保存模式，
         df.write.format("parquet").mode(SaveMode.Overwrite).save()
-        df.write.mode(SaveMode.Overwrite).save("F:\\桌面\\API\\Scala\\SparkDemo1\\src\\source\\hello.txt")
+        df.write.mode(SaveMode.Overwrite).save("F:/桌面/API/Scala/SparkDemo1/src/source/hello.txt")
 
-
+        //保存到持久表
         df.write.saveAsTable("df")
-        df.write.json("F:\\桌面\\API\\Scala\\SparkDemo1\\src\\source\\test.json")
-        df.write.parquet("F:\\桌面\\API\\Scala\\SparkDemo1\\src\\source\\parquet")
-        //保存到HDFS
+
+        df.write.json("F:/桌面/API/Scala/SparkDemo1/src/source/test.json")
+        df.write.parquet("src/sparkdemo/testfile/xxx")
         df.write.parquet("hdfs://localhost:9000/user/wcinput/df")
-        //从HDFS读取文件
-        val df11 = spark.read.parquet("hdfs://localhost:9000/user/wcinput/df")
+
+        //分区，分桶以及排序
+        //partitionBy 创建一个 directory structure （目录结构）
+        df.write.partitionBy("key1").bucketBy(42, "name").saveAsTable("people_partitioned_bucketed")
+        df.write.bucketBy(42, "name").sortBy("age").saveAsTable("people_bucketed")
     }
 
-    /*val UDF和UDAF = 0
+    val Schema合并 = 0
+    //没什么卵用
     if(0){
-        //—————————————————————————UDF操作———————————————————————————————
+        val squaresDF = spark.sparkContext.makeRDD(1 to 5).map(i => (i, i * i)).toDF("value", "square")
+        squaresDF.write.parquet("data/test_table/key=1")
+
+        val cubesDF = spark.sparkContext.makeRDD(6 to 10).map(i => (i, i * i * i)).toDF("value", "cube")
+        cubesDF.write.parquet("data/test_table/key=2")
+
+        val mergedDF = spark.read.option("mergeSchema", "true").parquet("data/test_table")
+        mergedDF.printSchema()
+    }
+
+    val UDF = 0
+    if(0){
+        //使用方式1：不推荐(没有代码检查，容易出错)
         df.createOrReplaceTempView("testUDF")
         //UDF用户定义的函数，针对单行输入，返回一个输出
-        spark.udf.register("product",(x:Integer,y:Integer)=>(x*y,11))
+        spark.udf.register("product", (x: Integer, y: Integer) => (x * y, 11))
         //直接在SQL语句中使用UDF，就像使用SQL自动的内部函数一样
         spark.sql("select key1,product(key2,key3) as prodect from testUDF").show
 
-        //推荐UDF使用方式，如果udf和col是红色的，说明没有这个函数，其实需要导包
+        //方式2：推荐，如果udf和col是红色的，说明没有这个函数，其实需要导包
         import org.apache.spark.sql.functions._
-        val udf1 = udf((input:String)=>input.length)
-        df.withColumn("key4",udf1($"key1"))
+        val udf1 = udf((input: String) =>
+            input.length
+        )
+        def getUdf: UserDefinedFunction = {
+            udf((input: String) =>
+                input.length
+            )
+        }
+        df.withColumn("key4", udf1($"key1"))
+        df.withColumn("key4", getUdf($"key1"))
+    }
 
-
-
-        //UDAF用户定义的聚合函数,在下面。针对多行输入，返回一个输出。
-        //具体案例见培训例题4,推荐使用DF中的groupByKey，以及mapGroups函数
-        //如果是object，可以直接写spark.udf.register("wordCount", MyAverage)
+    val UDAF = 0
+    //UDAF用户定义的聚合函数。针对多行输入，返回一个输出。
+    //用不大到,还特别复杂。推荐使用DF中的groupByKey，以及mapGroups函数
+    //虽然UDAF可以用Java或者Scala实现，但是建议您使用Java，因为Scala的数据类型有时会造成不必要的性能损失。
+    //参考：https://help.aliyun.com/document_detail/69553.html
+    //具体案例见sparkdemo.practice.Demo05
+    if(0){
+        /*//如果是object，可以直接写spark.udf.register("wordCount", MyAverage)
         spark.udf.register("myAvg", new MyAverage)
         spark.sql("select key1, myAvg(key2) as avg from testUDF group by key1").show()
 
+        import org.apache.spark.sql.functions._
         //类型安全的用户自定义函数。
         val ds = df.as[KeyDemo]
         val average_key2 =(new MyAverage2).toColumn.name("average_key2")
@@ -478,8 +525,35 @@ object DataFrameDemo {
             def bufferEncoder: Encoder[Average] = Encoders.product
             // 为最终输出值类型指定编码器
             def outputEncoder: Encoder[Double] = Encoders.scalaDouble
-        }
-    }*/
+        }*/
+    }
+
+    val repartition的三个重载函数的区别 = 0
+    //参考：http://www.cnblogs.com/lillcol/p/9885080.html
+    // 涉及到关联操作的时候，对数据进行重新分区操作可以提高程序运行效率
+    // 内部是通过shuffle进行操作的。
+    // 很多时候效率的提升远远高于重新分区的消耗，所以进行重新分区还是很有价值的
+    if(0){
+        //有明确的分区
+        df.repartition(10)
+
+        //它由保留现有分区数量的给定分区表达式划分。得到的DataFrame是哈希分区的。
+        // 这与SQL (Hive QL)中的“distribution BY”操作相同
+        //根据 key1 字段进行分区，分区数量由 spark.sql.shuffle.partition 决定 //默认200个
+        df.repartition(col("key1"))
+
+        // 由给定的分区表达式划分为 'numpartition' 。得到的DataFrame是哈希分区的。
+        // 这与SQL (Hive QL)中的“distribution BY”操作相同。
+        // 根据 key1 字段进行分区，将获得10个分区的DataFrame，此方法有时候在join的时候可以极大的提高效率，但是得注意出现数据倾斜的问题
+        df.repartition(10, col("key1"))
+
+        //减少分区数量，避免shuffle
+        df.coalesce(3)  //当df有10个分区减少到3个分区时，不会触发shuffle
+        df.coalesce(100) //触发shuffle 返回一个100分区的DataFrame，等价于repartition(100)
+
+
+    }
+    df.getKeyNums($"key1")
 
 
 }

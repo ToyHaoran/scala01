@@ -359,7 +359,7 @@ object RddDemo extends App {
         // Array((2,(ArrayBuffer(b),ArrayBuffer(c))), (3,(ArrayBuffer(b),ArrayBuffer(c))), (1,(ArrayBuffer(b, b),ArrayBuffer(c, c))) )
     }
 
-    val distinct_sample_repartition_coalesce = 0
+    val distinct_sample = 0
     if (0) {
         val rdd = sc.parallelize(Seq(1, 2, 3, 3))
         println("distinct===================")
@@ -371,7 +371,12 @@ object RddDemo extends App {
         //  对RDD采样，以及是否放回（一般是不放回）
         rdd.sample(false, 0.5).collect() //非确定的，并不一定是两个数据，也有可能是0-4个数据
         rdd.sample(true, 0.5).collect() //放回去，有可能会获得两个1
+    }
 
+    val repartition_coalesce = 0
+    if(0){
+        val rdd = sc.parallelize(Seq(1, 2, 3, 3))
+        //参考： https://www.cnblogs.com/lillcol/p/9889162.html
         println("repartition=========")
         //  repartition(numPartitions: Int)(implicit ord: Ordering[T] = null): RDD[T]
         //  此函数将分区数更改为numPartitions参数指定的数
@@ -386,10 +391,6 @@ object RddDemo extends App {
         // repartition(numPartitions)只是coalesce的缩写(numPartitions，shuffle = true)。
         sc.parallelize(1 to 10, 10).coalesce(2, false).getNumPartitions //2
     }
-
-
-
-
 
 
     val collect_collectAsMap = 0

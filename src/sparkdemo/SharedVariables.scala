@@ -80,7 +80,8 @@ object SharedVariables extends App{
 
             //isZero: 当累加器中为空时结束程序，res表示空值，对应不同的累加器，比如0，Nil，""
             override def isZero: Boolean = {
-                res == ""
+                //res == ""
+                res.isEmpty
             }
 
             //merge: 合并数据

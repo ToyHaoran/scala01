@@ -1,5 +1,10 @@
 package utils
 
+import org.apache.spark.sql._
+
+//导入对应的规则类，以免出现警告
+import scala.language.implicitConversions
+
 /**
   * Created with IntelliJ IDEA.
   * User: lihaoran 
@@ -14,6 +19,27 @@ object BaseUtil {
       * @return
       */
     implicit def int2boolen(a: Int): Boolean = if (a == 0) false else true
+
+    /**
+      * DF的装饰类
+      * @param dataFrame
+      */
+    class RichDataFrame(dataFrame: DataFrame){
+        def getKeyNums(column: Column): Unit ={
+            val map = dataFrame.select(column).rdd.countByValue()
+            println(s"一共${map.size}个key====================")
+            for ((key, num) <- map) {
+                println(key + "共有" + num + "条记录")
+            }
+        }
+    }
+
+    /**
+      * 扩展df的方法，隐式转换
+      * @param src
+      * @return
+      */
+    implicit def df2RichDF(src:DataFrame):RichDataFrame = new RichDataFrame(src)
 
 
 
