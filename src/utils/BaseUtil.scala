@@ -25,12 +25,21 @@ object BaseUtil {
       * @param dataFrame
       */
     class RichDataFrame(dataFrame: DataFrame){
+
+        /**
+          * 用来统计相同key的记录数，常用于调整数据倾斜
+          * @param column
+          */
         def getKeyNums(column: Column): Unit ={
             val map = dataFrame.select(column).rdd.countByValue()
             println(s"一共${map.size}个key====================")
             for ((key, num) <- map) {
                 println(key + "共有" + num + "条记录")
             }
+        }
+
+        def getKeyNums(column: String): Unit ={
+            getKeyNums(dataFrame.col(column))
         }
     }
 

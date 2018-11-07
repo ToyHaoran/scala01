@@ -553,7 +553,13 @@ object DataFrameDemo extends App{
 
 
     }
-    df.getKeyNums($"key1")
+
+    val df装饰类 = 0
+    //参考 utils.BaseUtil
+    if(0){
+        //获取key的数目，常用于调整数据倾斜
+        df.getKeyNums($"key1")
+    }
 
 
 }

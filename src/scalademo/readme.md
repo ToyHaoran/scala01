@@ -7,6 +7,10 @@ Tools -> Run Scala Console （必须选中某个scala文件，否则没有这个
 
 # 基础知识
 
+[DataDemo.scala](DataDemo.scala)
+
+[DateDemo.scala](DateDemo.scala)
+
 
 [正则表达式](Regexp.scala)
 
