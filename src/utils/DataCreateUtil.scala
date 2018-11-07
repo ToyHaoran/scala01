@@ -27,36 +27,33 @@ object DataCreateUtil{
       * @param lineSplit 是否换行，默认不换行
       * @param perNum 如果固定换行，每行的单词数，默认10
       */
-    def textCreate(totalTimes:Int, sep: String = ",", lineSplit:Boolean = false, perNum:Int = 10): String = {
+    def textCreate(totalTimes: Int, sep: String = ",", lineSplit: Boolean = false, perNum: Int = 10): String = {
         //用来造的基础数据，比如说水果，基本单词
         val baseDataArray = getBaseData("水果")
 
         val len = baseDataArray.length
-        //99万数据大约是1.7到2.2秒
-        if (totalTimes < 1000000) {
-            //用来保存数据的列表
-            var lst = List[String]()
-            for (i <- 1 to totalTimes) {
-                // 基于索引的快速访问需要使用数组
-                val ran = scala.util.Random.nextInt(len)
-                val str = if(!lineSplit){
-                    //不换行
+        // 99万数据大约是1.7到2.2秒
+        // "并不需要并行计算，99万也可以在几秒内运行完"
+        //用来保存数据的列表
+        var lst = List[String]()
+        for (i <- 1 to totalTimes) {
+            // 基于索引的快速访问需要使用数组
+            val ran = scala.util.Random.nextInt(len)
+            val str = if (!lineSplit) {
+                //不换行
+                sep + baseDataArray(ran)
+            } else {
+                //固定次数换行，也可以用随机换行的方法
+                if (i % perNum == 0) {
+                    "\n" + baseDataArray(ran)
+                } else {
                     sep + baseDataArray(ran)
-                }else{
-                    //固定次数换行，也可以用随机换行的方法
-                    if (i % perNum == 0) {
-                        "\n" + baseDataArray(ran)
-                    } else {
-                        sep + baseDataArray(ran)
-                    }
                 }
-                // 快速添加使用列表，注意是往头部添加的。
-                lst = str :: lst
             }
-            lst.mkString("")
-        }else{
-            "并不需要并行计算，99万也可以在几秒内运行完"
+            // 快速添加使用列表，注意是往头部添加的。
+            lst = str :: lst
         }
+        lst.mkString("")
     }
 
     /**
@@ -68,47 +65,43 @@ object DataCreateUtil{
       * @param end 随机换行最大值
       * @return
       */
-    def text1Create(totalTimes:Int, sep: String = ",", star:Int = 10, end:Int = 20): String = {
+    def text1Create(totalTimes: Int, sep: String = ",", star: Int = 10, end: Int = 20): String = {
         //用来造的基础数据，比如说水果，基本单词
         val baseDataArray = getBaseData("水果")
         val len = baseDataArray.length
-        if (totalTimes < 1000000) {
-            //用来随机换行的变量
-            var ranCreateFlag = true
-            var ranCreated = 0
-            val range = end - star + 1
-            //用来保存数据的列表
-            var lst = List[String]()
-            for (i <- 1 to totalTimes) {
-                // 基于索引的快速访问需要使用数组
-                val ran = scala.util.Random.nextInt(len)
-                val str ={
-                    /*思路：
-                        随机5-10个就换行
-                        弄个flag，运行一次弄个随机数，然后后面的几次就不产生随机数了
-                        等到运行完指定的次数，然后再产生一个随机数
-                         */
-                    if(ranCreateFlag){
-                        //为什么第一行是4个(SB,打印的第一行是最后一行)
-                        ranCreated = scala.util.Random.nextInt(range) + star
-                        ranCreateFlag = false
-                    }
-                    if (ranCreated != 0){
-                        ranCreated -= 1
-                        sep + baseDataArray(ran)
-                    }else {
-                        //需要换行
-                        ranCreateFlag = true
-                        "\n"
-                    }
+        //用来随机换行的变量
+        var ranCreateFlag = true
+        var ranCreated = 0
+        val range = end - star + 1
+        //用来保存数据的列表
+        var lst = List[String]()
+        for (i <- 1 to totalTimes) {
+            // 基于索引的快速访问需要使用数组
+            val ran = scala.util.Random.nextInt(len)
+            val str = {
+                /*思路：
+                    随机5-10个就换行
+                    弄个flag，运行一次弄个随机数，然后后面的几次就不产生随机数了
+                    等到运行完指定的次数，然后再产生一个随机数
+                     */
+                if (ranCreateFlag) {
+                    //为什么第一行是4个(SB,打印的第一行是最后一行)
+                    ranCreated = scala.util.Random.nextInt(range) + star
+                    ranCreateFlag = false
                 }
-                // 快速添加使用列表，注意是往头部添加的。
-                lst = str :: lst
+                if (ranCreated != 0) {
+                    ranCreated -= 1
+                    sep + baseDataArray(ran)
+                } else {
+                    //需要换行
+                    ranCreateFlag = true
+                    "\n"
+                }
             }
-            lst.mkString("")
-        }else{
-            "并行计算"
+            // 快速添加使用列表，注意是往头部添加的。
+            lst = str :: lst
         }
+        lst.mkString("")
     }
 
     /**
@@ -117,7 +110,7 @@ object DataCreateUtil{
       * @param name 基础数据名
       * @return
       */
-    def getBaseData(name:String): Array[String] ={
+    def getBaseData(name: String): Array[String] = {
         val arr = name match {
             case "水果" =>
                 Array("苹果", "梨", "橘子", "芭蕉", "草莓", "龙眼", "香蕉", "榴莲", "荔枝", "橙子", "橘子", "甘蔗",

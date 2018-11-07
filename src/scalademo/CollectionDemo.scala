@@ -1,5 +1,7 @@
 package scalademo
 
+import java.util.function.BiFunction
+
 import utils.BaseUtil.int2boolen
 
 // 序列是继承自特质Seq的类，可以处理一组线性分布的数据。元素是有序的。
@@ -375,6 +377,102 @@ object MapDemo extends App{
         words ++= List("one"->1,"two"->2)
         words --= List("one","two")
     }
+}
+
+object ConcurrentHashMapDemo extends App{
+    /*
+    参考：https://blog.csdn.net/u013036068/article/details/52859451
+    https://blog.csdn.net/dachengxi/article/details/52103431
+
+    相信每个JAVA程序员都了解HashMap，最大的问题是线程不安全，
+    因为方法中不涉及到同步，也正因为如此，HashMap的效率非常高，在不涉及线程安全的程序中广泛被应用。
+    然而当涉及到多线程作业时，就会出现一些问题。为了解决这些问题JAVA提供了Hashtable，这是一种整体加锁的数据结构，然而效率不敢恭维。
+    这时候就有了ConcurrentHashMap。
+
+    一个例子说明三者关系：
+    前提：某个卫生间共有16个隔间。
+    HashMap：每个隔间都没锁门，有人想上厕所，管理员指给他一个隔间，里面没人的话正常用，里面有人的话把这个人赶出来然后用。
+    优点，每个人进来不耽误都能用；缺点，每一个上厕所的人都有被中途赶出来的危险。
+
+    Hashtable：在卫生间外面安装一个大门，有人想上厕所，问管理员要一个钥匙进门，把门反锁用，用完后出来，把钥匙交换给管理员。
+    在这个人上厕所期间，其他所有人都必须在外面排号。
+    优点，每个人都能安心上完厕所；缺点，卫生间外面可能已经出了人命。 =_=
+
+    ConcurrentHashMap：在卫生间每个隔间安装门锁，有人想上厕所，管理员指给他一个隔间，进来后这个隔间如果没人在用则直接用，
+    如果有人正在用，则排号。在这期间其他人会按规则分到不同的隔间，重复上述行为。
+    优点：每个人都能安心上厕所，外面排队的也被均匀分摊。缺点：。。。
+
+    ConcurrentHashMap实现的原理
+    https://blog.csdn.net/a940659387/article/details/50857952
+     */
+
+    val 测试案例 = 0
+    if(0){
+        val conMap = new java.util.concurrent.ConcurrentHashMap[String, String]()
+        val conMap2 = new java.util.concurrent.ConcurrentHashMap[String, String]()
+
+        //隐式转换，按条件用不同的方式处理value
+        import scala.language.implicitConversions
+        implicit def func2java(func: (String, String) => String): BiFunction[String, String, String] = new BiFunction[String, String, String] {
+            override def apply(key: String, value: String) = {
+                func(key, value)
+            }
+        }
+        import utils.DataCreateUtil._
+        import utils.DateUtils._
+        //990万数据
+        val data = textCreate(9900000," ").split("\\s+").filter(!_.trim.isEmpty)
+
+        //并行测试
+        var (res, time) = getMethodRunTime(data.par.foreach(name => {
+            // 存在key就累加计数,不存在就设置value为1
+            conMap.compute(name, (key: String, value: String) => if (value == null) "1" else (value.toInt + 1).toString)
+        }))
+
+        //没有并行
+        var (res2, time2) = getMethodRunTime(data.foreach(name => {
+            conMap2.compute(name, (key: String, value: String) => if (value == null) "1" else (value.toInt + 1).toString)
+        }))
+
+        println("并行时间：" + time)  // 并行时间：6644.579184 （推测可能是没有在真实环境中运行的原因，电脑CPU就一个。。）
+        println("不并行时间：" + time2) // 不并行时间：2327.626717
+
+        //需要将java的集合类转化为scala的集合类
+        import scala.collection.JavaConversions._
+        for ((key, value) <- conMap.toMap) {
+            println(key + " " + value)
+        }
+    }
+}
+
+object OptionDemo extends App{
+    /*
+    参考：http://www.runoob.com/scala/scala-options.html
+    Scala Option(选项)类型用来表示一个值是可选的（有值或无值)。
+    Option[T] 是一个类型为 T 的可选值的容器：
+    如果值存在， Option[T] 就是一个 Some[T] ，
+    如果不存在， Option[T] 就是对象 None 。
+     */
+    if(0){
+        val myMap: Map[String, String] = Map("key1" -> "value")
+        /*
+        Scala 使用 Option[String] 来告诉你：「我会想办法回传一个 String，但也可能没有 String 给你」。
+        Option 有两个子类别，一个是 Some，一个是 None，
+        当他回传 Some 的时候，代表这个函式成功地给了你一个 String，而你可以透过 get() 这个函式拿到那个 String，
+        如果他返回的是 None，则代表没有字符串可以给你。
+         */
+        val value1: Option[String] = myMap.get("key1")
+        val value2: Option[String] = myMap.get("key2")
+        val value3: String = myMap.getOrElse("key2","没东西给你")
+
+        println(value1) // Some("value")
+        println(value1.get)
+        println(value2) // None
+        println(value2.isEmpty)
+        println(value2.getOrElse("没钱"))
+        println(value3) // 没东西给你
+    }
+
 }
 
 
