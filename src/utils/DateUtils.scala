@@ -13,7 +13,7 @@ object DateUtils {
       *
       * @param block 需要测试的代码块
       * @tparam R
-      * @return Turple(代码块返回值，代码运行时间：毫秒值)
+      * @return Turple(代码块返回值 | 代码运行时间 毫秒值)
       */
     def getMethodRunTime[R](block: => R): (R, Double) = {
         val start = System.nanoTime() //系统纳米时间
