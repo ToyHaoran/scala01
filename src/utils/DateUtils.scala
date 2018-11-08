@@ -15,12 +15,12 @@ object DateUtils {
       * @tparam R
       * @return Turple(代码块返回值 | 代码运行时间 毫秒值)
       */
-    def getMethodRunTime[R](block: => R): (R, Double) = {
+    def getMethodRunTime[R](block: => R): (R, String) = {
         val start = System.nanoTime() //系统纳米时间
         val result = block
         val end = System.nanoTime()
         val delta = end - start
-        (result, delta / 1000000d)
+        (result, (delta / 1000000d).toString + "ms")
     }
 
     /**

@@ -18,6 +18,10 @@ object DataCreateUtil{
 
     }
 
+    def textCreate4Fruit(totalTimes: Int, sep: String = ","): String ={
+        //"苹果", "梨", "橘子", "芭蕉"
+        textCreate(totalTimes, sep, kind = "四种水果")
+    }
 
     /**
       * 不分行、以及固定长度换行
@@ -27,9 +31,9 @@ object DataCreateUtil{
       * @param lineSplit 是否换行，默认不换行
       * @param perNum 如果固定换行，每行的单词数，默认10
       */
-    def textCreate(totalTimes: Int, sep: String = ",", lineSplit: Boolean = false, perNum: Int = 10): String = {
+    def textCreate(totalTimes: Int, sep: String = ",", lineSplit: Boolean = false, perNum: Int = 10, kind: String = "水果"): String = {
         //用来造的基础数据，比如说水果，基本单词
-        val baseDataArray = getBaseData("水果")
+        val baseDataArray = getBaseData(kind)
 
         val len = baseDataArray.length
         // 99万数据大约是1.7到2.2秒
@@ -117,6 +121,8 @@ object DataCreateUtil{
                     "枇杷", "葡萄", "芒果", "李子", "桃子", "提子", "哈密瓜", "香瓜", "木瓜", "火龙果", "猕猴桃", "雪梨",
                     "西瓜", "石榴", "香梨", "山竹", "蟠桃", "贡梨", "鸭梨", "菠萝", "柚子", "樱桃", "椰子", "无花果",
                     "山野葡萄", "桑葚", "人参果", "柿子", "杏子")
+            case "四种水果" =>
+                Array("苹果", "梨", "橘子", "芭蕉")
         }
         arr
     }

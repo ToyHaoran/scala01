@@ -27,7 +27,7 @@ object ImplicitDemo extends App {
         implicit def dog2RichDog(from: Dog) = new RichDog(from)
 
         //测试
-        val dog = (new Dog()) //dog: Dog = Dog@120d6cbf
+        val dog = new Dog() //dog: Dog = Dog@120d6cbf
         dog.getClass //res14: Class[_ <: Dog] = class Dog
         dog.park //wangwangwang
         dog.park2 //miomiomio

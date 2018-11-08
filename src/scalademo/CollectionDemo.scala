@@ -9,7 +9,7 @@ object ArrayDemo extends App {
 
     // 数组能够让你保留一组元素序列并可以用基于0的索引高效访问（无论是获取还是添加）处于任意位置的元素。
     val 不可变数组 = 0
-    if (1){
+    if (1) {
         println("不可变（定长）数组===========")
         println("初始化数组=======")
         val nums = new Array[Int](10) //初始化为0
@@ -48,7 +48,7 @@ object ArrayDemo extends App {
         nums3.update(1, "every one")
 
         println("数组长度=====")
-        nums.length//数组长度
+        nums.length //数组长度
 
         println("复制数组=====")
         nums.clone() //克隆数组
@@ -88,7 +88,7 @@ object ArrayDemo extends App {
     }
 
     val 可变数组 = 0
-    if(1){
+    if (1) {
         //———————————————————————可变数组：数组缓冲—————————————————————————————————
         println("创建数组缓冲，增删改查操作=========")
         import scala.collection.mutable.ArrayBuffer
@@ -106,21 +106,21 @@ object ArrayDemo extends App {
         b(1)
         b(2) = 3
 
-        b.toArray.toBuffer//相互转化
+        b.toArray.toBuffer //相互转化
 
         println("常用算法,重点=======")
         b.sum
-        b.count(a=>a+3==7)
+        b.count(a => a + 3 == 7)
         b.reverse
         b.sorted
         b.foreach(println(_))
     }
 }
 
-object ListDemo extends App{
+object ListDemo extends App {
     //列表支持在头部快速添加和删除，但是不能提供对任意索引值的快速引用，因为这种实现需要线性枚举整个列表
     val 不可变列表 = 0
-    if(0){
+    if (0) {
         println("创建列表===========")
         // (注意列表是不可变的，只能用::来添加元素)
         val site: List[String] = List("Runoob", "Google", "Baidu")
@@ -245,14 +245,12 @@ object ListDemo extends App{
     }
 
 
-
-
     val 可变列表_列表缓存 = 0
-    if(1){
+    if (1) {
         import scala.collection.mutable.ListBuffer
         val buf = new ListBuffer[Int]
         buf += 1
-        buf += (2,3)//buf.type = ListBuffer(1, 2, 3)
+        buf +=(2, 3) //buf.type = ListBuffer(1, 2, 3)
         (4 +: buf).toList
     }
 }
@@ -287,30 +285,30 @@ object QueueDemo extends App {
     }
 }
 
-object StackDemo extends App{
+object StackDemo extends App {
     println("先进先出的序列===========")
     val 栈 = 0
-    if(1){
+    if (1) {
         import scala.collection.mutable.Stack
         val stack = new Stack[Int]
-        stack.push(1).push(2,3,4)//元素的推入    stack.type = Stack(4, 3, 2, 1)
-        stack.pop//元素的弹出    Int = 4
-        stack.top//只获取，不移除
+        stack.push(1).push(2, 3, 4) //元素的推入    stack.type = Stack(4, 3, 2, 1)
+        stack.pop //元素的弹出    Int = 4
+        stack.top //只获取，不移除
     }
 }
 
-object SetDemo extends App{
+object SetDemo extends App {
     println("集没有重复值=========")
 
     val 不可变集 = 0
-    if(1){
-        val set = Set(1,1,2,3,4,5,5)//scala.collection.immutable.Set[Int] = Set(5, 1, 2, 3, 4)
-        val set2 = Set("aaa","aaa","dfg","abc")// scala.collection.immutable.Set[String] = Set(aaa, dfg, abc)
-        set + 5//添加元素
-        set - 3//删除元素
-        set ++ List(5,7,8)//scala.collection.immutable.Set[Int] = Set(5, 1, 2, 7, 3, 8, 4)
-        set -- List(1,2,3)
-        set -- List(1,2,9)//scala.collection.immutable.Set[Int] = Set(5, 3, 4)
+    if (1) {
+        val set = Set(1, 1, 2, 3, 4, 5, 5) //scala.collection.immutable.Set[Int] = Set(5, 1, 2, 3, 4)
+        val set2 = Set("aaa", "aaa", "dfg", "abc") // scala.collection.immutable.Set[String] = Set(aaa, dfg, abc)
+        set + 5 //添加元素
+        set - 3 //删除元素
+        set ++ List(5, 7, 8) //scala.collection.immutable.Set[Int] = Set(5, 1, 2, 7, 3, 8, 4)
+        set -- List(1, 2, 3)
+        set -- List(1, 2, 9) //scala.collection.immutable.Set[Int] = Set(5, 3, 4)
         set.size
         set.contains(5)
 
@@ -322,64 +320,64 @@ object SetDemo extends App{
 
         set.min
         set.max
-        set.&(Set(3,4,7,8))  //取交集 3，4
-        set.intersect(Set(3,4,7,8))
+        set.&(Set(3, 4, 7, 8)) //取交集 3，4
+        set.intersect(Set(3, 4, 7, 8))
         //以上方法都是traversableonce的方法，集合通用的
 
         //有序的集,具体的顺序取决于Order特质
         import scala.collection.immutable.TreeSet
-        val ts = TreeSet(34,5,5,6,3,3,5,6,4,3,3,6,7,8,1)// scala.collection.immutable.TreeSet[Int] = TreeSet(1, 3, 4, 5, 6, 7, 8, 34)
-        val cs = TreeSet('f','u','n')//scala.collection.immutable.TreeSet[Char] = TreeSet(f, n, u)
+        val ts = TreeSet(34, 5, 5, 6, 3, 3, 5, 6, 4, 3, 3, 6, 7, 8, 1) // scala.collection.immutable.TreeSet[Int] = TreeSet(1, 3, 4, 5, 6, 7, 8, 34)
+        val cs = TreeSet('f', 'u', 'n') //scala.collection.immutable.TreeSet[Char] = TreeSet(f, n, u)
     }
 
     val 可变集 = 0
-    if(1){
+    if (1) {
         val words = scala.collection.mutable.Set.empty[String]
         words += "the"
         words -= "the"
-        words ++= List("do","re","mi")
-        words --= List("do","re")
-        words.clear()//删除所有元素
+        words ++= List("do", "re", "mi")
+        words --= List("do", "re")
+        words.clear() //删除所有元素
     }
 }
 
 
-object MapDemo extends App{
+object MapDemo extends App {
     //键值对
     val 不可变映射 = 0
-    if(1){
-        val map = Map("i"->1,"j"->2)
-        val map2 = Map(("i",1),("j",2))
-        map + ("k"->3)
+    if (1) {
+        val map = Map("i" -> 1, "j" -> 2)
+        val map2 = Map(("i", 1), ("j", 2))
+        map + ("k" -> 3)
         map - "j"
         //合并集合
-        map ++ List("m"->2,"l"->7)//scala.collection.immutable.Map[String,Int] = Map(i -> 1, j -> 2, m -> 2, l -> 7)
-        map -- List("m","l")
+        map ++ List("m" -> 2, "l" -> 7) //scala.collection.immutable.Map[String,Int] = Map(i -> 1, j -> 2, m -> 2, l -> 7)
+        map -- List("m", "l")
         map.size
         map.contains("i")
-        map.keys// Iterable[String] = Set(i, j)
-        map.values//Iterable[Int] = MapLike(1, 2)
-        map.keySet//scala.collection.immutable.Set[String] = Set(i, j)
+        map.keys // Iterable[String] = Set(i, j)
+        map.values //Iterable[Int] = MapLike(1, 2)
+        map.keySet //scala.collection.immutable.Set[String] = Set(i, j)
         map.isEmpty
 
         //有序的映射
         import scala.collection.immutable.TreeMap
-        val tm = TreeMap(3->"x",4->"y",5->"z")
-        tm + (4->"g")// scala.collection.immutable.TreeMap[Int,String] = Map(3 -> x, 4 -> g, 5 -> z)
+        val tm = TreeMap(3 -> "x", 4 -> "y", 5 -> "z")
+        tm + (4 -> "g") // scala.collection.immutable.TreeMap[Int,String] = Map(3 -> x, 4 -> g, 5 -> z)
     }
 
 
     val 可变映射 = 0
-    if(1){
-        val words = collection.mutable.Map.empty[String,Int]
-        words += ("one"->1)
+    if (1) {
+        val words = collection.mutable.Map.empty[String, Int]
+        words += ("one" -> 1)
         words -= "one"
-        words ++= List("one"->1,"two"->2)
-        words --= List("one","two")
+        words ++= List("one" -> 1, "two" -> 2)
+        words --= List("one", "two")
     }
 }
 
-object ConcurrentHashMapDemo extends App{
+object ConcurrentHashMapDemo extends App {
     /*
     参考：https://blog.csdn.net/u013036068/article/details/52859451
     https://blog.csdn.net/dachengxi/article/details/52103431
@@ -407,7 +405,7 @@ object ConcurrentHashMapDemo extends App{
      */
 
     val 测试案例 = 0
-    if(0){
+    if (1) {
         val conMap = new java.util.concurrent.ConcurrentHashMap[String, String]()
         val conMap2 = new java.util.concurrent.ConcurrentHashMap[String, String]()
 
@@ -421,20 +419,25 @@ object ConcurrentHashMapDemo extends App{
         import utils.DataCreateUtil._
         import utils.DateUtils._
         //990万数据
-        val data = textCreate(9900000," ").split("\\s+").filter(!_.trim.isEmpty)
+        val data = textCreate(9900000, " ").split("\\s+").filter(!_.trim.isEmpty)
 
-        //并行测试
-        var (res, time) = getMethodRunTime(data.par.foreach(name => {
-            // 存在key就累加计数,不存在就设置value为1
-            conMap.compute(name, (key: String, value: String) => if (value == null) "1" else (value.toInt + 1).toString)
-        }))
+        // 并行测试：常用于读取或者写入HDFS文件的时候。
+        // 对同一个数据进行处理,在本机并不会加快(反而会变慢)，但是在集群上明显快上好几倍。可能与电脑CPU核数有关。
+        var (res, time) = getMethodRunTime(data.par.foreach {
+            /*case (name, age) =>
+                println("将每个元素进行解析")*/
+            case name =>
+                // 存在key就累加计数,不存在就设置value为1
+                conMap.compute(name, (key: String, value: String) => if (value == null) "1" else (value.toInt + 1).toString)
+        })
 
         //没有并行
         var (res2, time2) = getMethodRunTime(data.foreach(name => {
             conMap2.compute(name, (key: String, value: String) => if (value == null) "1" else (value.toInt + 1).toString)
         }))
 
-        println("并行时间：" + time)  // 并行时间：6644.579184 （推测可能是没有在真实环境中运行的原因，电脑CPU就一个。。）
+
+        println("并行时间：" + time) // 并行时间：6644.579184  估计是cup核数的问题
         println("不并行时间：" + time2) // 不并行时间：2327.626717
 
         //需要将java的集合类转化为scala的集合类
@@ -442,10 +445,35 @@ object ConcurrentHashMapDemo extends App{
         for ((key, value) <- conMap.toMap) {
             println(key + " " + value)
         }
+
+        /* 费控代码测试，com/dingxin/entrance/Dlrk.scala:206
+        带有par的运行时间========555.031426
+        不带par的运行时间========2497.330679
+        val (res33, time33) = DateUtils.getMethodRunTime(temp123.par.foreach {
+          case (yg, jldxxKey, res1, res2, res3) =>
+            if (yg == 1){ //有功
+             // 表示如果key为null，value值设置为xxx,否则设置为yyy，用到了上面的隐式转换
+              ygpowerMap.compute(jldxxKey, (key: String, value: String) => if (value == null) res1 + res2 else value + "," + res2)
+              ygcjpowerMap.compute(jldxxKey, (key: String, value: String) => if (value == null) res3 else value + "," + res3)
+            } else {
+              wgpowerMap.compute(jldxxKey, (key: String, value: String) => if (value == null) res1 + res2 else value + "," + res2)
+            }
+        })
+
+        val (res44, time44) = DateUtils.getMethodRunTime(temp123.foreach(name => {
+          val (yg, jldxxKey, res1, res2, res3) = name  //解析
+          if (yg == 1){ //有功
+            ygpowerMap33.compute(jldxxKey, (key: String, value: String) => if (value == null) res1 + res2 else value + "," + res2)
+            ygcjpowerMap33.compute(jldxxKey, (key: String, value: String) => if (value == null) res3 else value + "," + res3)
+          } else {
+            wgpowerMap33.compute(jldxxKey, (key: String, value: String) => if (value == null) res1 + res2 else value + "," + res2)
+          }
+        }))
+         */
     }
 }
 
-object OptionDemo extends App{
+object OptionDemo extends App {
     /*
     参考：http://www.runoob.com/scala/scala-options.html
     Scala Option(选项)类型用来表示一个值是可选的（有值或无值)。
@@ -453,7 +481,7 @@ object OptionDemo extends App{
     如果值存在， Option[T] 就是一个 Some[T] ，
     如果不存在， Option[T] 就是对象 None 。
      */
-    if(0){
+    if (0) {
         val myMap: Map[String, String] = Map("key1" -> "value")
         /*
         Scala 使用 Option[String] 来告诉你：「我会想办法回传一个 String，但也可能没有 String 给你」。
@@ -463,7 +491,7 @@ object OptionDemo extends App{
          */
         val value1: Option[String] = myMap.get("key1")
         val value2: Option[String] = myMap.get("key2")
-        val value3: String = myMap.getOrElse("key2","没东西给你")
+        val value3: String = myMap.getOrElse("key2", "没东西给你")
 
         println(value1) // Some("value")
         println(value1.get)
