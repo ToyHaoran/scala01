@@ -30,7 +30,7 @@ object DataFrameDemo extends App{
 
         //注意打印信息的时候,如果是并行计算，show会占用一点时间，导致print同时打印，然后show也打印在了一起。
         //这种情况下，推荐println("")放在后面，或者类似DateUtils.getMethodRunTime那样打印
-        (0 to 2).par.foreach{
+        (0 to 1).par.foreach{
             case 0 =>
                 println("df1========")
                 df.show()
@@ -38,6 +38,8 @@ object DataFrameDemo extends App{
                 println("df2========")
                 df.show()
         }
+        println("正在睡眠，抓紧看UI界面")
+        Thread.sleep(10 * 60 * 1000) //挂住10分钟
     }
 
     val 创建DF的方式 = 0
@@ -558,7 +560,7 @@ object DataFrameDemo extends App{
     //参考 utils.BaseUtil
     if(0){
         //获取key的数目，常用于调整数据倾斜
-        df.getKeyNums($"key1")
+        df.getKeyNums("key1")
     }
 
 

@@ -29,7 +29,7 @@ Tools -> Run Scala Console （必须选中某个scala文件，否则没有这个
 [21 隐式转换](ImplicitDemo.scala)
 
 # 其他
-[常用设计模式](DesignPatterns.scala)
+[常用设计模式](designpattern)
 
 [在线反编译网址](http://www.javadecompilers.com/)
 

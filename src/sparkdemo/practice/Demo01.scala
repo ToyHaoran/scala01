@@ -4,7 +4,7 @@ import java.util.UUID
 
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.Row
-import utils.ConnectUtil
+import utils.{ConnectUtil, DataCreateUtil}
 import utils.BaseUtil.int2boolen
 
 /**
@@ -25,14 +25,18 @@ object Demo01 extends App{
     if(0){
         //方法1:推荐
         //val words1 = sc.textFile("src/sparkdemo/testfile/hello.txt")
-        val words1 = sc.textFile("file:/usr/local/jar/lihaoran/hello.txt")
+        //val words1 = sc.textFile("file:/usr/local/jar/lihaoran/hello.txt")
+        val words1 = sc.parallelize(Seq(DataCreateUtil.textCreate(400000," ")))
             .flatMap(line => line.split("\\s+"))
             .map(x=>(x,1))
             .reduceByKey(_+_)
             .sortBy(_._2,false)
             .map(x =>(UUID.randomUUID().toString,x._1.toString,x._2.toLong))
             .toDF("PKID","WORD","FREQ")
-            .show(false)
+            .show()
+
+        println("正在睡眠，抓紧看UI界面")
+        Thread.sleep(10 * 60 * 1000) //挂住10分钟
     }
 
     if(0){

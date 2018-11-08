@@ -12,4 +12,7 @@ testfile文件夹是用来存放**测试文件**的, 注意在编译的时候Exc
 
 
 # 其他
+运行期间查看spark UI 可以在代码的后面加
+Thread.sleep(10 * 60 * 1000) // 挂住 10 分钟
+
 关掉json检查：Setting--Editor--inspections--Json
