@@ -228,8 +228,9 @@ object DataFrameDemo extends App{
         // 如果没有给出列，则此函数计算所有数字或字符串列的统计信息。
         // 如果要以编程方式计算摘要统计信息，请使用`agg`函数。
         df.describe("key1", "key2")
-        df.summary().show()
-        df.summary("mean")
+        //2.2版本没有
+        //df.summary().show()
+        //df.summary("mean")
 
         //以数组形式返回所有列名
         df.columns //res83: Array[String] = Array(key1, key2, key3)
@@ -339,6 +340,10 @@ object DataFrameDemo extends App{
 
         //删除某一列具有重复的元素所在的行
         df.dropDuplicates("key1") //常用
+
+        df.rdd.zipWithUniqueId()
+        //Array[(org.apache.spark.sql.Row, Long)] = Array(([aaa,1,2],0), ([bbb,3,4],1), ([ccc,3,5],2), ([bbb,4,6],3))
+
     }
 
     val 多表操作 = 0
@@ -433,6 +438,7 @@ object DataFrameDemo extends App{
         val udf1 = udf((input: String) =>
             input.length
         )
+        //特别推荐，因为可以将方法抽出来。
         def getUdf: UserDefinedFunction = {
             udf((input: String) =>
                 input.length

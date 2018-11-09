@@ -371,6 +371,7 @@ object MapDemo extends App {
     if (1) {
         val words = collection.mutable.Map.empty[String, Int]
         words += ("one" -> 1)
+        words.put("one", 10) //会覆盖前面的
         words -= "one"
         words ++= List("one" -> 1, "two" -> 2)
         words --= List("one", "two")

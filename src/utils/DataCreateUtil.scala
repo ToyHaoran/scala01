@@ -18,7 +18,7 @@ object DataCreateUtil{
 
     }
 
-    def textCreate4Fruit(totalTimes: Int, sep: String = ","): String ={
+    def textCreate4Fruit(totalTimes: Int = 10000, sep: String = ","): String ={
         //"苹果", "梨", "橘子", "芭蕉"
         textCreate(totalTimes, sep, kind = "四种水果")
     }

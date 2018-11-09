@@ -50,6 +50,14 @@ object BaseUtil {
       */
     implicit def df2RichDF(src:DataFrame):RichDataFrame = new RichDataFrame(src)
 
+    /**
+      * 打印map信息
+      * @param map
+      */
+    def printMap(map: String): Unit ={
+        // TODO 打印map信息
+    }
+
 
 
 }

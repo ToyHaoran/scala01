@@ -39,7 +39,7 @@ object DateUtils {
     /**
       * 日期str转换为毫秒值str
       */
-    def dateStrToMillStr(srcTime: String, pattern: String = "yyyy-MM-dd HH:mm:ss"): String = {
+    def dateStrToMillStr(srcTime: String, pattern: String): String = {
         String.valueOf(dateStrToMill(srcTime, pattern))
     }
 
@@ -50,7 +50,7 @@ object DateUtils {
       * @param pattern
       * @return
       */
-    def dateStrToMill(srcTime: String, pattern: String = "yyyy-MM-dd HH:mm:ss"): Long = {
+    def dateStrToMill(srcTime: String, pattern: String): Long = {
         val date = dateStrToDate(srcTime, pattern)
         val ts = date.getTime()
         ts
@@ -59,7 +59,7 @@ object DateUtils {
     /**
       * 日期str转化为date类型
       */
-    def dateStrToDate(srcTime: String, pattern: String = "yyyy-MM-dd HH:mm:ss"): Date = {
+    def dateStrToDate(srcTime: String, pattern: String): Date = {
         val dateFormat: SimpleDateFormat = new SimpleDateFormat(pattern)
         val date = dateFormat.parse(srcTime)
         date
