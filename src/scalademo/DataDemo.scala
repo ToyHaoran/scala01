@@ -4,6 +4,30 @@ import utils.BaseUtil.int2boolen
 
 object DataDemo extends App {
 
+    val 基类及泛型 = 0
+    if(1){
+        //Any是所有其他类的超类
+        val temp1:Any = "123"
+        val temp2:Any = List(1,2,3,4)
+        //AnyRef类是Scala里所有引用类(reference class)的基类
+        val temp3:AnyRef = List(1,2,3,4)
+
+        //泛型
+        def getxxx(a:Any): Unit ={
+            println(a.toString)
+        }
+        getxxx(temp1)
+        getxxx("444")
+
+        def printMap(map: Map[_ <: Any, _ <: Any]): Unit = {
+            for ((key, value) <- map){
+                println(key.toString + " : " + value.toString)
+            }
+            println("===================")
+        }
+
+    }
+
     val 常见数据类型 = 0
     /*
     数据类型	        描述
@@ -23,7 +47,7 @@ object DataDemo extends App {
     AnyRef	        AnyRef类是Scala里所有引用类(reference class)的基类
     上表中列出的数据类型都是对象，也就是说scala没有java中的原生类型。在scala是可以对数字等基础类型调用方法的
      */
-    if (1) {
+    if (0) {
         val long01 = 35L
         val float01 = 3.1415f
         val char01 = 'a'

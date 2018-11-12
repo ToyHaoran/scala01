@@ -30,14 +30,14 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/../../jars/spark-2.1.0-bin-hadoop2.7/jars" />
+          <root url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="file://$MODULE_DIR$/../../jars/spark-2.1.0-bin-hadoop2.7/jars" />
+          <root url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" />
         </SOURCES>
-        <jarDirectory url="file://$MODULE_DIR$/../../jars/spark-2.1.0-bin-hadoop2.7/jars" recursive="false" />
-        <jarDirectory url="file://$MODULE_DIR$/../../jars/spark-2.1.0-bin-hadoop2.7/jars" recursive="false" type="SOURCES" />
+        <jarDirectory url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
   </component>
