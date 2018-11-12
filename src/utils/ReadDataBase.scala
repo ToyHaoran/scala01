@@ -56,7 +56,7 @@ object ReadDataBase {
     /**
       * 得到Mysql的URl
       */
-    def getMysqlUrl(host:String,dbName:String, port:String = "3306"): String ={
+    def getMysqlUrl(host: String, dbName: String, port: String = "3306"): String = {
         s"jdbc:mysql://$host:$port/$dbName"
     }
 }
