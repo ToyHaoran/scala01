@@ -21,24 +21,23 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" />
+          <root url="jar://$MODULE_DIR$/../../jars/jars-jdbc/mysql-connector-java-5.1.7-bin.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES>
-          <root url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" />
-          <root url="jar://$USER_HOME$/.ideaLibSources/spark-sql_2.11-2.3.1-sources.jar!/" />
-        </SOURCES>
-        <jarDirectory url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" recursive="false" />
-        <jarDirectory url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" recursive="false" type="SOURCES" />
+        <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../jars/jars-jdbc/mysql-connector-java-5.1.7-bin.jar!/" />
+          <root url="file://$MODULE_DIR$/../../jars/spark-2.1.0-bin-hadoop2.7/jars" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../../jars/spark-2.1.0-bin-hadoop2.7/jars" />
+        </SOURCES>
+        <jarDirectory url="file://$MODULE_DIR$/../../jars/spark-2.1.0-bin-hadoop2.7/jars" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/../../jars/spark-2.1.0-bin-hadoop2.7/jars" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
   </component>
