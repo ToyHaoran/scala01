@@ -1,10 +1,12 @@
 package utils
 
+import java.util.Random
+
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
-
 import UdfUtil._
 import org.apache.spark.sql.functions._
+
 
 /**
   * Created with IntelliJ IDEA.
@@ -13,7 +15,7 @@ import org.apache.spark.sql.functions._
   * Time: 14:27 
   * Description:
   */
-object ReadDataBase {
+object ReadDBWithSpark {
     def main(args: Array[String]) {
         readMysql()
         //readOracle()
@@ -43,6 +45,7 @@ object ReadDataBase {
         temp.printSchema()
 
         val temp2 = temp.withColumn("Grade",nulltozero(col("Grade")))
+            .withColumn("PKID", getUUID())
         temp2.show()
         temp2.printSchema()
 
@@ -52,6 +55,53 @@ object ReadDataBase {
         val temp02 = spark.read.parquet("src/sparkdemo/testfile/temp")
         temp02.show()
         temp02.printSchema()*/
+
+        (0 to 10).par.foreach{
+            case 0 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+            case 1 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+            case 2 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+            case 3 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+            case 4 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+            case 5 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+            case 6 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+            case 7 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+            case 8 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+            case 9 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+            case 10 =>
+                for (i <- 1 to 100000000) {
+                    if (654789 == new Random().nextInt()) println("exception")
+                }
+        }
 
     }
 

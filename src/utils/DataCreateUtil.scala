@@ -18,10 +18,6 @@ object DataCreateUtil{
 
     }
 
-    def textCreate4Fruit(totalTimes: Int = 10000, sep: String = ","): String ={
-        //"苹果", "梨", "橘子", "芭蕉"
-        textCreate(totalTimes, sep, kind = "四种水果")
-    }
 
     /**
       * 不分行、以及固定长度换行
@@ -60,6 +56,11 @@ object DataCreateUtil{
         lst.mkString("")
     }
 
+    def textCreate4Fruit(totalTimes: Int = 10000, sep: String = ","): String ={
+        //"苹果", "梨", "橘子", "芭蕉"
+        textCreate(totalTimes, sep, kind = "四种水果")
+    }
+
     /**
       * 随机换行
       *
@@ -69,7 +70,7 @@ object DataCreateUtil{
       * @param end 随机换行最大值
       * @return
       */
-    def text1Create(totalTimes: Int, sep: String = ",", star: Int = 10, end: Int = 20): String = {
+    def textCreateRandomLine(totalTimes: Int, sep: String = ",", star: Int = 10, end: Int = 20): String = {
         //用来造的基础数据，比如说水果，基本单词
         val baseDataArray = getBaseData("水果")
         val len = baseDataArray.length

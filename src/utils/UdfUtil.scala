@@ -15,26 +15,25 @@ object UdfUtil {
 
     /**
       * 将数值列中的空值转化为0
+      * <p>
+      * 例如：withColumn("Grade",nulltozero(col("Grade")))
       * @return
       */
     def nulltozero: UserDefinedFunction = udf((input: String) =>
         //input.isEmpty是判断长度的
-        if(null == input || "" == input.trim()){
-            0.toDouble
-        }else{
+        if (null == input || input.trim().length == 0 || input.toLowerCase == "null") {
+            0.0
+        } else {
             input.toDouble
         }
     )
 
     /**
       * 拼接UUID
+      * <p>
+      * 例如：withColumn("PKID", getUUID())
       */
-    def appendUUID:UserDefinedFunction = udf { () =>
+    def getUUID:UserDefinedFunction = udf { () =>
         UUID.randomUUID().toString.replaceAll("-", "").toUpperCase()
     }
-
-
-
-
-
 }

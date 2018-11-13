@@ -1,6 +1,6 @@
 package scalademo
 
-import utils.BaseUtil.int2boolen
+import utils.BaseUtil._
 
 object DataDemo extends App {
 
@@ -59,49 +59,70 @@ object DataDemo extends App {
 
 
     val BigDecimalDemo = 0
-    /*
-    输入数字	UP远离0	 DOWN靠近0	CEILING向上	FLOOR向下	HALF_UP远离0的舍入	HALF_DOWN靠近0的舍入	HALF_EVEN向相邻的偶数舍入	UNNECESSARY
-    5.5	     6	        5	        6	        5	        6	                5	                    6	                异常
-    2.5	     3	        2	        3	        2	        3	                2	                    2	                异常
-    1.6	     2	        1	        2	        1	        2	                2	                    2	                异常
-    1.1	     2	        1	        2	        1	        1	                1	                    1	                异常
-    1.0	     1	        1	        1	        1	        1	                1	                    1	                1
-    -1.0	-1	        -1	        -1	        -1	        -1	                -1	                    -1	                -1
-    -1.1	-2	        -1	        -1	        -2	        -1	                -1	                    -1	                异常
-    -1.6	-2	        -1	        -1	        -2	        -2	                -2	                    -2	                异常
-    -2.5	-3	        -2	        -2	        -3	        -3	                -2	                    -2	                异常
-    -5.5	-6	        -5	        -5	        -6	        -6	                -5	                    -6	                异常
-     */
     if (0) {
         //————————————————————————————BigDecimal的应用
-        /* 问题：
-        scala> 1.01+2.02
-        res0: Double = 3.0300000000000002
-        解决方式：BigDecimal
-         */
+        //问题1：
+        val a = 1.01
+        val b = 2.02
+        val c = a + b
+        println(c + " " + (c == 3.03))  //3.0300000000000002 false
+        //问题2：
+        println(1.1f == 1.1) //false
+        getTypeName(1.1) //默认Double
+        getTypeName(2)  //默认Integer
 
         //创建方式（一般传入String作为参数）
         val n1 = BigDecimal(1.01)
         val n2 = BigDecimal.apply(2.02D)
         val n3 = BigDecimal("23.34423534534532")
 
+        //类型装换
+        n1.doubleValue()
+        n1.toDouble
+        n1.intValue()
+        n1.toInt
 
         //重载了各种运算符
-        n1.+(n2)
-        n1 - n2
-        n1 * n2
-        n1 / n2
-        n1 > n2
-
-
-        //保留小数位数
-        n1.setScale(0) //报错，原因同下；会返回新的值，而不是修改原来的。
-        n1.setScale(0, BigDecimal.RoundingMode.UNNECESSARY) //增加scale，减小报错。
-        n1.setScale(0, BigDecimal.RoundingMode.HALF_UP)
-        n1.setScale(0, BigDecimal.RoundingMode.CEILING)
-        n1.setScale(0, BigDecimal.RoundingMode.FLOOR)
+        val res1 = n1.+(n2)
+        val res2 = n1 - n2
+        val res3 = n1 * n2
+        val res4 = n1 / n2
+        val (division, remainder) = (n2 + BigDecimal(0.01D)) /% n1
 
         //比较两个大小数
-        println(n1.compare(n2))
+        println(n1.compare(n2)) //-1
+        println(n2.compare(n1)) //1
+        println(n2.compare(n2))  //0 相等
+        println(n1 > n2)  //false
+        println(n1 >= n2)
+
+        //精度
+        n1.precision
+        n3.precision
+        BigDecimal(123.4567D).precision //7 精度，总位数
+        BigDecimal(123.4567D).scale  //4 小数位数
+
+        //保留小数位数
+        /*
+        输入数字	UP远离0	 DOWN靠近0	CEILING向上	FLOOR向下	HALF_UP远离0的舍入	HALF_DOWN靠近0的舍入	HALF_EVEN向相邻的偶数舍入	UNNECESSARY
+        5.5	     6	        5	        6	        5	        6	                5	                    6	                异常
+        2.5	     3	        2	        3	        2	        3	                2	                    2	                异常
+        1.6	     2	        1	        2	        1	        2	                2	                    2	                异常
+        1.1	     2	        1	        2	        1	        1	                1	                    1	                异常
+        1.0	     1	        1	        1	        1	        1	                1	                    1	                1
+        -1.0	-1	        -1	        -1	        -1	        -1	                -1	                    -1	                -1
+        -1.1	-2	        -1	        -1	        -2	        -1	                -1	                    -1	                异常
+        -1.6	-2	        -1	        -1	        -2	        -2	                -2	                    -2	                异常
+        -2.5	-3	        -2	        -2	        -3	        -3	                -2	                    -2	                异常
+        -5.5	-6	        -5	        -5	        -6	        -6	                -5	                    -6	                异常
+         */
+        val n4 = BigDecimal(1.123456789)
+        //n4.setScale(0) //报错，原因同下；会返回新的值，而不是修改原来的。
+        //n4.setScale(0, BigDecimal.RoundingMode.UNNECESSARY) //增加scale，减小会导致报错。
+        n4.setScale(0, BigDecimal.RoundingMode.HALF_UP)
+        n4.setScale(0, BigDecimal.RoundingMode.CEILING)
+        n4.setScale(0, BigDecimal.RoundingMode.FLOOR)
+
+
     }
 }
