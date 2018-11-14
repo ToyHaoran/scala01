@@ -36,6 +36,7 @@ object MatchDemo {
         str.foreach(char01 =>{
             //这里必须重新定义一下，foreach是识别不了类型的
             val char:Char = char01
+            //match是有返回值的
             val res = char match{
                 case 'h' => "匹配到h"
                 case E => "匹配到e" // 常量是大写的
@@ -44,6 +45,13 @@ object MatchDemo {
             }
             println(res)
         })
+        //或者这样写，用中括号,返回值为unit
+        val res = str.foreach{
+            case 'h' => "匹配到h"
+            case E => "匹配到e" // 常量是大写的
+            case 'o' => "匹配到o" //加单引号是小写常量
+            case ch => "匹配到其他字符" + ch //等价于case _
+        }
     }
 
     val 匹配类型 = 0

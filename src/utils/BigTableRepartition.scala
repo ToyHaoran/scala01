@@ -7,7 +7,7 @@ import org.apache.spark.sql.functions._
 
 import scala.util.Random
 import BaseUtil._
-import DateUtils._
+import DateUtil._
 
 /**
   * Created with IntelliJ IDEA.

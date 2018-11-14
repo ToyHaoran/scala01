@@ -7,7 +7,7 @@ import java.util.{Calendar, Date}
   * 操作日期工具类
   *
   */
-object DateUtils {
+object DateUtil {
     /**
       * 得到代码块的运行时间
       *

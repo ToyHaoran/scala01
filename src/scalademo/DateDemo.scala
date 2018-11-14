@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
 import utils.BaseUtil.int2boolen
-import utils.DateUtils._
+import utils.DateUtil._
 
 /**
   * Created with IntelliJ IDEA.
