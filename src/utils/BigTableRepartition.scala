@@ -6,6 +6,8 @@ import org.apache.spark.sql.{AnalysisException, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 
 import scala.util.Random
+import BaseUtil._
+import DateUtils._
 
 /**
   * Created with IntelliJ IDEA.
@@ -14,18 +16,36 @@ import scala.util.Random
   * Time: 9:15 
   * Description: 读取HDFS文件并且将大表重分区。
   */
-object HDFSRead {
+object BigTableRepartition {
     def main(args: Array[String]) {
-        val spark: SparkSession = SparkSession.builder().appName("测试文件大小和数据").getOrCreate()
-        val hdfsRoot = "hdfs://172.20.32.164:8020"
+
+        val spark = ConnectUtil.getClusterSpark
+        val hdfsRoot = "hdfs://172.20.32.163:8020"
         val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
         val files = hdfsUtil.list("/YXFK/compute/")
-        //写活方法失败(spark, hdfsRoot, files)
 
-        files.par.foreach(path =>{
+        //feikong6TableRepartition(hdfsRoot, files, spark)
+        val(res1, time1) = getMethodRunTime(readAllFileSize(spark,hdfsRoot,files))
+        println(time1)
+        /*明天用这个测试一下spark调优
+        /usr/hdp/2.6.0.3-8/spark2/bin/spark-submit --driver-memory 20g --executor-memory 5g --executor-cores 3  --num-executors 5 --master yarn-cluster --class utils.BigTableRepartition  --name lhrxx --driver-class-path /usr/local/jar/ojdbc7.jar,/usr/local/jar/mysql-connector-java-8.0.11.jar --jars /usr/local/jar/ojdbc7.jar,/usr/local/jar/mysql-connector-java-8.0.11.jar,/usr/local/jar/sparkts-0.4.0.jar,/usr/local/jar/json.jar,/usr/local/jar/spark-hbase-connector-2.2.0-1.1.2-3.4.6.jar  /usr/local/jar/lihaoran/lhrtest.jar {}
+         */
+
+        Thread.sleep(1000*60*10)
+    }
+
+    /**
+      * 处理费控相关的6个表的重分区
+      *
+      * @param hdfsRoot
+      * @param files
+      * @param spark
+      */
+    def feikong6TableRepartition(hdfsRoot: String, files: Array[String], spark: SparkSession): Unit = {
+        files.par.foreach(path => {
             //这里必须确定一下类型
-            val strPath:String = path
-            if (strPath != "/YXFK/compute/HS_DJWDMX" && strPath != "/YXFK/compute/open"){
+            val strPath: String = path
+            if (strPath != "/YXFK/compute/HS_DJWDMX" && strPath != "/YXFK/compute/open") {
                 strPath match {
                     case "/YXFK/compute/KH_JLD" =>
                         //读取/YXFK/compute/KH_JLD表并且重新分区
@@ -70,9 +90,151 @@ object HDFSRead {
                 }
             }
         })
+
+
     }
 
-    def getYdkhPartititon:UserDefinedFunction = {
+
+    /**
+      * 读取所有文件大小，以及供电单位编码的前5位。
+      *
+      * @param spark
+      * @param hdfsRoot
+      * @param files
+      */
+    def readAllFileSize(spark: SparkSession, hdfsRoot: String, files: Array[String]): Unit = {
+        println("文件个数：" + files.length)
+        println("大于100万的表记录数=========")
+        val list1: List[String] = List()
+        //不用并行读取的原因是防止打印的时候混乱。
+        for (filePath <- files) {
+            //将不符合的路径排除掉
+            if (filePath != "/YXFK/compute/HS_DJWDMX" && filePath != "/YXFK/compute/open") {
+                val df = spark.read.parquet(hdfsRoot + filePath)
+                val num = df.count()
+                println(filePath + ":" + num + "条记录====================")  //每个文件的记录数
+                if (num > 1000000) {
+                    list1.:+(filePath)
+                    // 对大于100万的数据进行处理
+                    try {
+                        // println("查询某列相同key的记录数==============")
+                        // df.getKeyNums("DQBM")
+                        // df.getKeyNums("GDDWBM")
+                        // 供电单位编码(前五位)
+                        val df2 = df.withColumn("SUBGDDWBM", getSubgddwbm(col("GDDWBM")))
+                        df2.getKeyNums("SUBGDDWBM")
+                    } catch {
+                        case ex: AnalysisException =>
+                            println(s"${filePath}没有xxxxx字段===")
+                    }
+                }else{
+                    //小于100万的另做处理
+                }
+            }
+        }
+    }
+
+    /**
+      * 得到前五位的供电单位编码
+      *
+      * @return
+      */
+    def getSubgddwbm: UserDefinedFunction = {
+        udf { (gddwbm: String) =>
+            if (gddwbm == null || gddwbm.trim().length == 0 || gddwbm.toLowerCase() == "null" || gddwbm.endsWith("00")) {
+                "80000"
+            } else {
+                var sub5 = ""
+                if (gddwbm.startsWith("0")) {
+                    // 注意还有以0开头的。。。
+                    sub5 = gddwbm.substring(1, 6)
+                } else {
+                    sub5 = gddwbm.substring(0, 5)
+                }
+                sub5
+            }
+        }
+    }
+
+    def 写活方法失败(spark: SparkSession, hdfsRoot: String, files: Array[String]): Unit = {
+        /*
+            如何将上面那种方式写活？
+            首先前5位编码和记录数是能够获取的。
+            对于大于20万的记录数：
+                然后将记录数/20，获得大致分区数。
+                然后设置随机数--分区数
+                然后怎么设置字段？能不能将一个列表中的元素随机返回一个？
+                    循环生成一个列表，可以用80890_1
+                    然后再随机生成一个随机数，然后返回list[i]
+                    这样就能处理了。
+            对于小于20万的记录数：
+                加起来/20，为800xx
+         */
+
+        for (filePath <- files) {
+            if (filePath != "/YXFK/compute/HS_DJWDMX" && filePath != "/YXFK/compute/open") {
+                val df = spark.read.parquet(hdfsRoot + filePath)
+                val num = df.count()
+                if (num > 1000000) {
+                    println(filePath + ":" + df.count())
+                    println("供电单位编码(前五位)==========")
+                    try {
+                        val rdd2 = df.select("GDDWBM")
+                            .withColumn("SUBGDDWBM", getSubgddwbm(col("GDDWBM")))
+                            .drop("GDDWBM")
+                            .rdd
+
+                        val map2 = rdd2.countByValue()
+                        println("共有" + map2.size + "个供电单位编码前5位")
+                        for ((gddwbm, num) <- map2) {
+                            println(gddwbm + "共有" + num + "条记录")
+                        }
+                        val df2 = df.withColumn("SUBGDDWBM", getSubgddwbm(col("GDDWBM")))
+                            .withColumn("PARTITION", getPartitionFild(col("GDDWBM"), col("SUBGDDWBM"), lit(num)))
+                        df2.repartition(col("PARTITION")).write.partitionBy("PARTITION").mode(SaveMode.Overwrite)
+                            .parquet(hdfsRoot + "/temp_data/temp_lihaoran/")
+
+                        println("写入完成=========")
+                    } catch {
+                        case ex: AnalysisException => {
+                            println("没有GDDWBM字段===")
+                        }
+                    }
+                }
+            }
+        }
+        def getPartitionFild: UserDefinedFunction = {
+            udf { (gddwbm: String, subgddwbm: String, num: Long) =>
+                var res = ""
+                if (num > 100000) {
+                    val partititonNum = (num / 200000 + 1).toInt
+                    val gddwbmlist = List[String]()
+                    for (i <- 1 to partititonNum) {
+                        gddwbmlist.+:(subgddwbm + "_" + i)
+                    }
+                    println(gddwbmlist.length)
+                    val ran = scala.util.Random.nextInt(partititonNum)
+                    try {
+                        res = gddwbmlist(ran)
+                    } catch {
+                        case ex: IndexOutOfBoundsException => {
+                            println("数组角标越界====")
+                            println(ran)
+                            println(gddwbmlist.last)
+                            println(gddwbmlist.indexOf(gddwbmlist.last))
+                        }
+                    }
+
+                } else {
+                    //小于10万的基本上没有
+                    res = "800xx"
+                }
+                res
+            }
+        }
+    }
+
+    def getYdkhPartititon: UserDefinedFunction = {
         udf { (gddwbm: String) => {
             val sub5 =
                 if (gddwbm == null || gddwbm.trim().length == 0 || gddwbm.toLowerCase() == "null" || gddwbm.endsWith("00")) {
@@ -87,7 +249,7 @@ object HDFSRead {
                     }
                     sub5
                 }
-            val partition: String  = sub5 match {
+            val partition: String = sub5 match {
                 case "80014" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
@@ -96,7 +258,7 @@ object HDFSRead {
                         case 2 => "80014C"
                     }
                 }
-                case "80011" =>{
+                case "80011" => {
                     val ran = scala.util.Random.nextInt(5)
                     ran match {
                         case 0 => "80011A"
@@ -106,7 +268,7 @@ object HDFSRead {
                         case 4 => "80011E"
                     }
                 }
-                case "80006" =>{
+                case "80006" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
                         case 0 => "80006A"
@@ -114,7 +276,7 @@ object HDFSRead {
                         case 2 => "80006C"
                     }
                 }
-                case "80083" =>{
+                case "80083" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
                         case 0 => "80083A"
@@ -122,7 +284,7 @@ object HDFSRead {
                         case 2 => "80083C"
                     }
                 }
-                case "80013" =>{
+                case "80013" => {
                     val ran = scala.util.Random.nextInt(4)
                     ran match {
                         case 0 => "80013A"
@@ -131,28 +293,28 @@ object HDFSRead {
                         case 3 => "80013D"
                     }
                 }
-                case "80084" =>{
+                case "80084" => {
                     val ran = scala.util.Random.nextInt(2)
                     ran match {
                         case 0 => "80084A"
                         case 1 => "80084B"
                     }
                 }
-                case "80004" =>{
+                case "80004" => {
                     val ran = scala.util.Random.nextInt(2)
                     ran match {
                         case 0 => "80004A"
                         case 1 => "80004B"
                     }
                 }
-                case "80003" =>{
+                case "80003" => {
                     val ran = scala.util.Random.nextInt(2)
                     ran match {
                         case 0 => "80003A"
                         case 1 => "80003B"
                     }
                 }
-                case "80005" =>{
+                case "80005" => {
                     val ran = scala.util.Random.nextInt(4)
                     ran match {
                         case 0 => "80005A"
@@ -168,7 +330,7 @@ object HDFSRead {
                         case 1 => "80015B"
                     }
                 }
-                case "80012" =>{
+                case "80012" => {
                     val ran = scala.util.Random.nextInt(2)
                     ran match {
                         case 0 => "80012A"
@@ -183,7 +345,7 @@ object HDFSRead {
         }
     }
 
-    def getYxdnbPartititon: UserDefinedFunction ={
+    def getYxdnbPartititon: UserDefinedFunction = {
         udf { (gddwbm: String) => {
             val sub5 =
                 if (gddwbm == null || gddwbm.trim().length == 0 || gddwbm.toLowerCase() == "null" || gddwbm.endsWith("00")) {
@@ -198,7 +360,7 @@ object HDFSRead {
                     }
                     sub5
                 }
-            val partition: String  = sub5 match {
+            val partition: String = sub5 match {
                 case "80014" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
@@ -207,7 +369,7 @@ object HDFSRead {
                         case 2 => "80014C"
                     }
                 }
-                case "80011" =>{
+                case "80011" => {
                     val ran = scala.util.Random.nextInt(4)
                     ran match {
                         case 0 => "80011A"
@@ -216,7 +378,7 @@ object HDFSRead {
                         case 3 => "80011D"
                     }
                 }
-                case "80006" =>{
+                case "80006" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
                         case 0 => "80006A"
@@ -225,7 +387,7 @@ object HDFSRead {
 
                     }
                 }
-                case "80083" =>{
+                case "80083" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
                         case 0 => "80083A"
@@ -233,7 +395,7 @@ object HDFSRead {
                         case 2 => "80083C"
                     }
                 }
-                case "80013" =>{
+                case "80013" => {
                     val ran = scala.util.Random.nextInt(4)
                     ran match {
                         case 0 => "80013A"
@@ -242,28 +404,28 @@ object HDFSRead {
                         case 3 => "80013D"
                     }
                 }
-                case "80084" =>{
+                case "80084" => {
                     val ran = scala.util.Random.nextInt(2)
                     ran match {
                         case 0 => "80084A"
                         case 1 => "80084B"
                     }
                 }
-                case "80004" =>{
+                case "80004" => {
                     val ran = scala.util.Random.nextInt(2)
                     ran match {
                         case 0 => "80004A"
                         case 1 => "80004B"
                     }
                 }
-                case "80003" =>{
+                case "80003" => {
                     val ran = scala.util.Random.nextInt(2)
                     ran match {
                         case 0 => "80003A"
                         case 1 => "80003B"
                     }
                 }
-                case "80005" =>{
+                case "80005" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
                         case 0 => "80005A"
@@ -295,7 +457,7 @@ object HDFSRead {
                     }
                     sub5
                 }
-            val partition: String  = sub5 match {
+            val partition: String = sub5 match {
                 case "80014" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
@@ -304,7 +466,7 @@ object HDFSRead {
                         case 2 => "80014C"
                     }
                 }
-                case "80011" =>{
+                case "80011" => {
                     val ran = scala.util.Random.nextInt(5)
                     ran match {
                         case 0 => "80011A"
@@ -314,7 +476,7 @@ object HDFSRead {
                         case 4 => "80011E"
                     }
                 }
-                case "80006" =>{
+                case "80006" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
                         case 0 => "80006A"
@@ -323,7 +485,7 @@ object HDFSRead {
 
                     }
                 }
-                case "80083" =>{
+                case "80083" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
                         case 0 => "80083A"
@@ -331,7 +493,7 @@ object HDFSRead {
                         case 2 => "80083C"
                     }
                 }
-                case "80013" =>{
+                case "80013" => {
                     val ran = scala.util.Random.nextInt(4)
                     ran match {
                         case 0 => "80013A"
@@ -340,14 +502,14 @@ object HDFSRead {
                         case 3 => "80013D"
                     }
                 }
-                case "80084" =>{
+                case "80084" => {
                     val ran = scala.util.Random.nextInt(2)
                     ran match {
                         case 0 => "80084A"
                         case 1 => "80084B"
                     }
                 }
-                case "80004" =>{
+                case "80004" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
                         case 0 => "80004A"
@@ -355,7 +517,7 @@ object HDFSRead {
                         case 2 => "80004C"
                     }
                 }
-                case "80003" =>{
+                case "80003" => {
                     val ran = scala.util.Random.nextInt(3)
                     ran match {
                         case 0 => "80003A"
@@ -363,7 +525,7 @@ object HDFSRead {
                         case 2 => "80003C"
                     }
                 }
-                case "80005" =>{
+                case "80005" => {
                     val ran = scala.util.Random.nextInt(4)
                     ran match {
                         case 0 => "80005A"
@@ -373,7 +535,7 @@ object HDFSRead {
                     }
                 }
                 case "80015" => "80015"
-                case "80012" =>{
+                case "80012" => {
                     val ran = scala.util.Random.nextInt(2)
                     ran match {
                         case 0 => "80012A"
@@ -383,9 +545,9 @@ object HDFSRead {
                 case _ => "800xx"
             }
             partition
-        }}
+        }
+        }
     }
-
 
 
     def getJldPartition: UserDefinedFunction = {
@@ -516,165 +678,5 @@ object HDFSRead {
         }
     }
 
-    /**
-      * 读取所有文件大小，以及供电单位编码的前5位。
-      *
-      * @param spark
-      * @param hdfsRoot
-      * @param files
-      */
-    def readAllFileSize(spark: SparkSession, hdfsRoot: String, files: Array[String]): Unit = {
-        println("所有文件大小：" + files.length)
-        println("大于100万的表记录数========")
-        val list1: List[String] = List()
-        for (filePath <- files) {
-            if (filePath != "/YXFK/compute/HS_DJWDMX" && filePath != "/YXFK/compute/open") {
-                val df = spark.read.parquet(hdfsRoot + filePath)
-                val num = df.count()
-                if (num > 1000000) {
-                    println(filePath + ":" + df.count())
-                    list1.:+(filePath)
-                    // 对大于100万的数据进行处理
-                    println("地区编码==============")
-                    val rdd = df.select("DQBM").rdd
-                    val map = rdd.countByValue()
-                    for ((dqbm, num) <- map) {
-                        println(dqbm + "共有" + num + "条记录")
-                    }
 
-                    println("供电单位编码(前五位)==========")
-                    try {
-                        /*//供电单位编码
-                        val rdd2 = df.select("GDDWBM").rdd
-                        val map2 = rdd2.countByValue()
-                        println("共有" + map2.size + "个供电单位编码")
-                        for ((gddwbm, num) <- map2) {
-                            println(gddwbm + "共有" + num + "条记录")
-                        }*/
-
-                        // 供电单位编码(前五位)
-                        val rdd2 = df.select("GDDWBM")
-                            .withColumn("SUBGDDWBM", getSubgddwbm(col("GDDWBM")))
-                            .drop("GDDWBM")
-                            .rdd
-                        val map2 = rdd2.countByValue()
-                        println("共有" + map2.size + "个供电单位编码前5位")
-                        for ((gddwbm, num) <- map2) {
-                            println(gddwbm + "共有" + num + "条记录")
-                        }
-
-                        //自定义分区
-                        df.repartition(getSubgddwbm(df.col("GDDWBM"))).write.parquet("xxxxx")
-
-                    } catch {
-                        case ex: AnalysisException => {
-                            println("没有GDDWBM字段===")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-      * 得到前五位的供电单位编码
-      *
-      * @return
-      */
-    def getSubgddwbm: UserDefinedFunction = {
-        udf { (gddwbm: String) =>
-            if (gddwbm == null || gddwbm.trim().length == 0 || gddwbm.toLowerCase() == "null" || gddwbm.endsWith("00")) {
-                "80000"
-            } else {
-                var sub5 = ""
-                if (gddwbm.startsWith("0")) {
-                    // 注意还有以0开头的。。。
-                    sub5 = gddwbm.substring(1, 6)
-                } else {
-                    sub5 = gddwbm.substring(0, 5)
-                }
-                sub5
-            }
-        }
-    }
-
-    def 写活方法失败(spark: SparkSession, hdfsRoot: String, files: Array[String]): Unit = {
-            /*
-                如何将上面那种方式写活？
-                首先前5位编码和记录数是能够获取的。
-                对于大于20万的记录数：
-                    然后将记录数/20，获得大致分区数。
-                    然后设置随机数--分区数
-                    然后怎么设置字段？能不能将一个列表中的元素随机返回一个？
-                        循环生成一个列表，可以用80890_1
-                        然后再随机生成一个随机数，然后返回list[i]
-                        这样就能处理了。
-                对于小于20万的记录数：
-                    加起来/20，为800xx
-             */
-
-            for (filePath <- files) {
-                if (filePath != "/YXFK/compute/HS_DJWDMX" && filePath != "/YXFK/compute/open") {
-                    val df = spark.read.parquet(hdfsRoot + filePath)
-                    val num = df.count()
-                    if (num > 1000000) {
-                        println(filePath + ":" + df.count())
-                        println("供电单位编码(前五位)==========")
-                        try {
-                            val rdd2 = df.select("GDDWBM")
-                                .withColumn("SUBGDDWBM", getSubgddwbm(col("GDDWBM")))
-                                .drop("GDDWBM")
-                                .rdd
-
-                            val map2 = rdd2.countByValue()
-                            println("共有" + map2.size + "个供电单位编码前5位")
-                            for ((gddwbm, num) <- map2) {
-                                println(gddwbm + "共有" + num + "条记录")
-                            }
-                            val df2 = df.withColumn("SUBGDDWBM", getSubgddwbm(col("GDDWBM")))
-                                .withColumn("PARTITION", getPartitionFild(col("GDDWBM"), col("SUBGDDWBM"), lit(num)))
-                            df2.repartition(col("PARTITION")).write.partitionBy("PARTITION").mode(SaveMode.Overwrite)
-                                .parquet(hdfsRoot + "/temp_data/temp_lihaoran/")
-
-                            println("写入完成=========")
-                        } catch {
-                            case ex: AnalysisException => {
-                                println("没有GDDWBM字段===")
-                            }
-                        }
-                    }
-                }
-            }
-            def getPartitionFild: UserDefinedFunction = {
-                udf { (gddwbm: String, subgddwbm: String, num: Long) =>
-                    var res = ""
-                    if (num > 100000) {
-                        val partititonNum = (num / 200000 + 1).toInt
-                        val gddwbmlist = List[String]()
-                        for (i <- 1 to partititonNum) {
-                            gddwbmlist.+:(subgddwbm + "_" + i)
-                        }
-                        println(gddwbmlist.length)
-                        val ran = scala.util.Random.nextInt(partititonNum)
-                        try {
-                            res = gddwbmlist(ran)
-                        } catch {
-                            case ex: IndexOutOfBoundsException => {
-                                println("数组角标越界====")
-                                println(ran)
-                                println(gddwbmlist.last)
-                                println(gddwbmlist.indexOf(gddwbmlist.last))
-                            }
-                        }
-
-                    } else {
-                        //小于10万的基本上没有
-                        res = "800xx"
-                    }
-                    res
-                }
-            }
-        }
-
-
-    }
+}

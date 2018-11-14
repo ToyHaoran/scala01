@@ -35,7 +35,7 @@ object BaseUtil {
           */
         def getKeyNums(column: Column): Unit ={
             val map = dataFrame.select(column).rdd.countByValue()
-            println(s"一共${map.size}个key====================")
+            println(s"一共${map.size}个key")
             for ((key, num) <- map) {
                 println(key + "共有" + num + "条记录")
             }

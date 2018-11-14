@@ -16,3 +16,10 @@ testfile文件夹是用来存放**测试文件**的, 注意在编译的时候Exc
 Thread.sleep(10 * 60 * 1000) // 挂住 10 分钟
 
 关掉json检查：Setting--Editor--inspections--Json
+
+
+# 一些bug
+- org.apache.hadoop.ipc.RemoteException(org.apache.hadoop.ipc.StandbyException): Operation category READ is not supported in state standby
+  - IP地址没写对，连接到了错误的节点服务器上
+  - 检查你连接HDFS的地址
+-
