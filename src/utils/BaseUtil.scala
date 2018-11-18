@@ -22,7 +22,7 @@ object BaseUtil {
     implicit def int2boolen(a: Int): Boolean = if (a == 0) false else true
 
     /**
-      * DF的装饰类
+      * DF的装饰类（隐式转换）
       *
       * @param dataFrame
       */
