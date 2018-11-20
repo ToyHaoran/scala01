@@ -9,21 +9,6 @@ import java.util.{Calendar, Date}
   */
 object DateUtil {
     /**
-      * 得到代码块的运行时间
-      *
-      * @param block 需要测试的代码块
-      * @tparam R
-      * @return Turple(代码块返回值 | 代码运行时间 毫秒值)
-      */
-    def getMethodRunTime[R](block: => R): (R, String) = {
-        val start = System.nanoTime() //系统纳米时间
-        val result = block
-        val end = System.nanoTime()
-        val delta = end - start
-        (result, (delta / 1000000d).toString + "ms")
-    }
-
-    /**
       * 日期date转化为日期str
       */
     def dateToStr(srcDate: Date, pattern: String = "yyyy-MM-dd HH:mm:ss"): String = {

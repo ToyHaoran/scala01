@@ -15,25 +15,41 @@ import scala.language.implicitConversions
 object BaseUtil {
     /**
       * 用来快捷控制代码的开关，将0，1隐式转换为false和true
-      *
-      * @param a
-      * @return
       */
     implicit def int2boolen(a: Int): Boolean = if (a == 0) false else true
 
     /**
-      * DF的装饰类（隐式转换）
+      * 得到参数的类型
+      */
+    def getTypeName(a:Any):String = {
+        a.getClass.getSimpleName
+    }
+
+    /**
+      * 得到代码块的运行时间
       *
-      * @param dataFrame
+      * @param block 需要测试的代码块
+      * @tparam R
+      * @return Turple(代码块返回值 | 代码运行时间 毫秒值)
+      */
+    def getMethodRunTime[R](block: => R): (R, String) = {
+        val start = System.nanoTime() //系统纳米时间
+        val result = block
+        val end = System.nanoTime()
+        val delta = end - start
+        (result, (delta / 1000000d).toString + "ms")
+    }
+
+    val DataFrame相关工具方法 = 0
+    /**
+      * DF的装饰类（隐式转换）
       */
     class RichDataFrame(dataFrame: DataFrame){
 
         /**
           * 用来统计相同key的记录数，常用于调整数据倾斜
-          *
-          * @param column
           */
-        def getKeyNums(column: Column): Unit ={
+        def printKeyNums(column: Column): Unit ={
             val map = dataFrame.select(column).rdd.countByValue()
             println(s"一共${map.size}个key")
             for ((key, num) <- map) {
@@ -41,15 +57,14 @@ object BaseUtil {
             }
         }
 
-        def getKeyNums(column: String): Unit ={
-            getKeyNums(dataFrame.col(column))
+        def printKeyNums(column: String): Unit ={
+            printKeyNums(dataFrame.col(column))
         }
     }
 
      /**
       * 扩展df的方法，隐式转换
       *
-      * @param src
       * @return
       */
     implicit def df2RichDF(src: DataFrame): RichDataFrame = new RichDataFrame(src)
@@ -57,7 +72,6 @@ object BaseUtil {
     /**
       * 打印map信息
       * 使用了泛型
-      * @param map
       */
     def printMap(map: Map[_ <: Any, _ <: Any]): Unit = {
         for ((key, value) <- map) {
@@ -67,11 +81,13 @@ object BaseUtil {
     }
 
 
+    val RDD相关工具方法 = 0
+
     /**
-      * 得到参数的类型
+      * 打印rdd的分区信息，需要用mapPartitionsWithIndex方法
       */
-    def getTypeName(a:Any):String = {
-        a.getClass.getSimpleName
+    def printLocationFunc(index: Int, iter: Iterator[Any]): Iterator[String] = {
+        iter.map(x => "分区" + index + "：" + x + "")
     }
 
 

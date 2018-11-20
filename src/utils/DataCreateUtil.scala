@@ -1,6 +1,6 @@
 package utils
 
-import DateUtil._
+import BaseUtil._
 /**
   * Created with IntelliJ IDEA.
   * User: lihaoran

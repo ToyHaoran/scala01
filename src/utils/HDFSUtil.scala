@@ -437,10 +437,9 @@ class HDFSUtil(hdfsBsePath: String) {
       * @param spark
       * @param files
       */
-    def readAllFileSize(spark: SparkSession, files: Array[String]): Unit = {
+    def readAllFileSize(spark: SparkSession, files: Array[String], colName:String): Unit = {
         val hdfsRoot = hdfsBsePath
         println("文件个数：" + files.length)
-        val colName = "DQBM" //需要统计的列名
         val list1: List[String] = List()
         //不用并行读取的原因是防止打印的时候混乱。
         for (filePath <- files) {
@@ -455,8 +454,8 @@ class HDFSUtil(hdfsBsePath: String) {
                     }
                     try {
                         // println("查询某列相同key的记录数==============")
-                        df.getKeyNums(colName)
-                        //df.getKeyNums(colName)
+                        df.printKeyNums(colName)
+                        //df.printKeyNums(colName)
                     } catch {
                         case ex: AnalysisException =>
                             println(s"${filePath}没有${colName}字段===")

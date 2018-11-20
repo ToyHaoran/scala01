@@ -1,6 +1,7 @@
 package sparkdemo
 
-import utils.BaseUtil.int2boolen
+import org.apache.spark.Partitioner
+import utils.BaseUtil._
 import utils.ConnectUtil
 
 // RDD就是分布式的元素集合（弹性分布式数据集）
@@ -10,10 +11,50 @@ object RddDemo extends App {
 
     val sc = ConnectUtil.getLocalSC
     val spark = ConnectUtil.getLocalSpark
+    /*val sc = ConnectUtil.getClusterSC
+    val spark = ConnectUtil.getClusterSpark*/
+
+
+    val RDD介绍 = 0
+    /*
+    代表一个不可变、可分区、里面的元素可并行计算的集合。
+
+    在群集安装中，单独的数据分区可以位于不同的节点上。使用RDD作为句柄，可以访问所有分区并使用包含的数据执行计算和转换。每当RDD
+    的一部分或整个RDD丢失时，系统就能够通过使用Lineage（谱系）信息来重建丢失分区的数据。谱系是指用于产生当前RDD的转换序列。
+    因此，Spark能够从大多数故障中自动恢复。
+
+    目前，spark中有四种可用的RDD API扩展：
+    （在数据项满足上述要求时自动为用户提供具有扩展功能的方法）
+    Double RDD Functions       此扩展包含许多用于聚合数值的有用方法。如果RDD的数据项可隐式转换为Scala数据类型double，则它们可用。
+    Ordered RDD Functions      如果数据项是双组件元组，其中键可以隐式排序，则此接口扩展中定义的方法变为可用。
+    PairRDDFunctions           当数据项具有双组件元组结构时，此接口扩展中定义的方法变为可用。
+                               Spark将第一元组项（即tuplename.1）解释为关键字，将第二项（即tuplename.2）解释为关联值。
+    SequenceFileRDDFunctions   此扩展包含几种允许用户从RDD创建Hadoop序列的方法。
+                               数据项必须是PairRDDFunctions要求的两个组件键值元组。但是，考虑到元组组件可转换为可写类型，还有其他要求。
+
+    RDD的属性
+    1、一组分片（Partition），即数据集的基本组成单位。
+        对于RDD来说，每个分片都会被一个计算任务处理，并决定并行计算的粒度。
+        用户可以在创建RDD时指定RDD的分片个数，如果没有指定，那么就会采用默认值。
+        默认值就是程序所分配到的CPU Core的数目。
+    2、一个计算每个分区的函数。
+        Spark中RDD的计算是以分片为单位的，每个RDD都会实现compute函数以达到这个目的。
+        compute函数会对迭代器进行复合，不需要保存每次计算的结果。
+    3、RDD之间的依赖关系。
+        RDD的每次转换都会生成一个新的RDD，所以RDD之间就会形成类似于流水线一样的前后依赖关系。
+        在部分分区数据丢失时，Spark可以通过这个依赖关系重新计算丢失的分区数据，而不是对RDD的所有分区进行重新计算。
+    4、一个Partitioner，即RDD的分片函数。
+        当前Spark中实现了两种类型的分片函数，一个是基于哈希的HashPartitioner，另外一个是基于范围的RangePartitioner。
+        只有对于key-value的RDD，才会有Partitioner，非key-value的RDD的Parititioner的值是None。
+        Partitioner函数不但决定了RDD本身的分片数量，也决定了parent RDD Shuffle输出时的分片数量。
+    5、一个列表，存储存取每个Partition的优先位置（preferred location）。
+        对于一个HDFS文件来说，这个列表保存的就是每个Partition所在的块的位置。
+        按照“移动数据不如移动计算”的理念，Spark在进行任务调度的时候，会尽可能地将计算任务分配到其所要处理数据块的存储位置。
+     */
 
     // 参考：http://homepage.cs.latrobe.edu.au/zhe/ZhenHeSparkRDDAPIExamples.html
     val 创建RDD的两种方式 = 0
-    if (1) {
+    if (0) {
         println("Scala中的parallelize()方法============")
         val lines = sc.parallelize(List("hello  scala", "hello java", "hello scala"))
             .flatMap(_.split("\\s+")).map((_, 1)).reduceByKey(_ + _).sortBy(_._2).collect
@@ -574,7 +615,7 @@ object RddDemo extends App {
         //24  //第三个分区
     }
 
-    val 不常用_lookup = 0
+    val lookup = 0
     if(0){
         //——————————————————————————lookup(key)
         //返回给定键对应的所有值
@@ -585,6 +626,87 @@ object RddDemo extends App {
 
     val 持久化 = 0
     //见笔记spark调优-01代码调优
+
+    val 分区 = 0
+    if(0){
+        import org.apache.spark.HashPartitioner
+        import org.apache.spark.RangePartitioner
+
+        println("partitionBy的使用========================================================================")
+        if (0) {
+            //参考：https://blog.csdn.net/zhangzeyuan56/article/details/80935034
+            println("HashPartitioner================")
+            //HashPartitioner确定分区的方式：partition = key.hashCode () % numPartitions
+            val counts = sc.parallelize(List((2, 'b'), (3, 'c'), (3, "cc"), (2, "bb"), (1, 'a'), (1, "aa")), 3)
+            counts.mapPartitionsWithIndex(printLocationFunc).collect()
+            val partition = counts.partitionBy(new HashPartitioner(3))
+            partition.mapPartitionsWithIndex(printLocationFunc).collect()
+
+            println("RangePartitioner==============")
+            //RangePartitioner会对key值进行排序，然后将key值划分成3份key值集合。
+            val partition2 = counts.partitionBy(new RangePartitioner(3, counts))
+            partition2.mapPartitionsWithIndex(printLocationFunc).collect()
+
+            println("CustomPartitioner===========")
+            //CustomPartitioner可以根据自己具体的应用需求，自定义分区。
+            //复杂的案例见sparkdemo.practice.Demo06
+
+            class CustomPartitioner(numParts: Int) extends Partitioner {
+                //分多少个区
+                override def numPartitions: Int = numParts
+
+                //什么数据放到哪个区
+                override def getPartition(key: Any): Int = {
+                    if (key == 2) {
+                        1
+                    } else if (key == 3) {
+                        1
+                    } else {
+                        2
+                    }
+                }
+            }
+            val partition3 = counts.partitionBy(new CustomPartitioner(3))
+            partition3.mapPartitionsWithIndex(printLocationFunc).collect()
+
+            // Spark从HDFS读入文件的分区数默认等于HDFS文件的块数(blocks)，HDFS中的block是分布式存储的最小单元。
+            // 如果我们上传一个30GB的非压缩的文件到HDFS，HDFS默认的块容量大小128MB，因此该文件在HDFS上会被分为235块(30GB/128MB)；
+            // Spark读取SparkContext.textFile()读取该文件，默认分区数等于块数即235
+
+            // 一般合理的分区数设置为总核数的2~3倍
+        }
+
+        println("事先使用partitionBy对RDD进行分区,可以减少大量的shuffle======================================")
+        if(0){
+            //如果一个RDD需要多次在join(特别是迭代)中使用,那么事先使用partitionBy对RDD进行分区,可以减少大量的shuffle
+            //参考：https://blog.csdn.net/wy250229163/article/details/52388305
+            //https://blog.csdn.net/yhb315279058/article/details/50955282
+
+            val rdd1 = sc.parallelize(Array((1, 1), (1, 2), (2, 1), (3, 1), (1, 2), (2, 1), (3, 1))).
+                partitionBy(new HashPartitioner(2)).persist()
+            val rdd2 = sc.parallelize(Array((1, 'x'), (2, 'y'), (2, 'z'), (4, 'w'), (2, 'y'), (2, 'z'), (4, 'w')))
+            //有优化效果,rdd1不再需要shuffle
+            val(res1,time1) = getMethodRunTime(rdd1.join(rdd2))
+            //有优化效果,rdd1不再需要shuffle
+            val(res2, time2) = getMethodRunTime(rdd1.join(rdd2 ,new HashPartitioner(2)))
+            //无优化效果,rdd1需要再次shuffle
+            val(res3, time3) = getMethodRunTime(rdd1.join(rdd2 ,new HashPartitioner(3)))
+        }
+
+        println("计算质数通过分区(Partition)提高Spark的运行性能=============================================")
+        //https://blog.csdn.net/u012102306/article/details/53101424
+        if(0){
+            val n = 2000000
+            //val composite = sc.parallelize(2 to n, 8).map(x => (x, 2 to n / x)).flatMap(kv => kv._2.map(_ * kv._1)) //14s
+            val composite = sc.parallelize(2 to n, 8).map(x => (x, (2 to (n / x)))).repartition(8).flatMap(kv => kv._2.map(_ * kv._1))//7s
+            val prime = sc.parallelize(2 to n, 8).subtract(composite)
+            prime.collect()
+
+            Thread.sleep(1000*60*10)
+        }
+    }
+
+
 
 
 }

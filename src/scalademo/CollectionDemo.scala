@@ -2,7 +2,7 @@ package scalademo
 
 import java.util.function.BiFunction
 
-import utils.BaseUtil.int2boolen
+import utils.BaseUtil._
 
 // 序列是继承自特质Seq的类，可以处理一组线性分布的数据。元素是有序的。
 object ArrayDemo extends App {
@@ -450,7 +450,7 @@ object ConcurrentHashMapDemo extends App {
         /* 费控代码测试，com/dingxin/entrance/Dlrk.scala:206
         带有par的运行时间========555.031426
         不带par的运行时间========2497.330679
-        val (res33, time33) = DateUtils.getMethodRunTime(temp123.par.foreach {
+        val (res33, time33) = BaseUtils.getMethodRunTime(temp123.par.foreach {
           case (yg, jldxxKey, res1, res2, res3) =>
             if (yg == 1){ //有功
              // 表示如果key为null，value值设置为xxx,否则设置为yyy，用到了上面的隐式转换
@@ -461,7 +461,7 @@ object ConcurrentHashMapDemo extends App {
             }
         })
 
-        val (res44, time44) = DateUtils.getMethodRunTime(temp123.foreach(name => {
+        val (res44, time44) = BaseUtils.getMethodRunTime(temp123.foreach(name => {
           val (yg, jldxxKey, res1, res2, res3) = name  //解析
           if (yg == 1){ //有功
             ygpowerMap33.compute(jldxxKey, (key: String, value: String) => if (value == null) res1 + res2 else value + "," + res2)

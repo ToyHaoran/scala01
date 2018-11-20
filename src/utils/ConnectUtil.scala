@@ -15,6 +15,15 @@ object ConnectUtil {
     }
 
     /**
+      * 得到集群SparkContext
+      * @return
+      */
+    def getClusterSC: SparkContext ={
+        val sc = new SparkContext(new SparkConf().setAppName("SparkContextDemo").setMaster("yarn-cluster"))
+        sc
+    }
+
+    /**
       * 得到本地SparkSession
       * @return
       */

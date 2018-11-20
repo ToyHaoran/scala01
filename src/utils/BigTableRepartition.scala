@@ -7,7 +7,6 @@ import org.apache.spark.sql.functions._
 
 import scala.util.Random
 import BaseUtil._
-import DateUtil._
 
 /**
   * Created with IntelliJ IDEA.
@@ -27,9 +26,7 @@ object BigTableRepartition {
         //feikong6TableRepartition(hdfsRoot, files, spark)
         val(res1, time1) = getMethodRunTime(readAllFileSize(spark,hdfsRoot,files))
         println(time1)
-        /*明天用这个测试一下spark调优
-        /usr/hdp/2.6.0.3-8/spark2/bin/spark-submit --driver-memory 20g --executor-memory 5g --executor-cores 3  --num-executors 5 --master yarn-cluster --class utils.BigTableRepartition  --name lhrxx --driver-class-path /usr/local/jar/ojdbc7.jar,/usr/local/jar/mysql-connector-java-8.0.11.jar --jars /usr/local/jar/ojdbc7.jar,/usr/local/jar/mysql-connector-java-8.0.11.jar,/usr/local/jar/sparkts-0.4.0.jar,/usr/local/jar/json.jar,/usr/local/jar/spark-hbase-connector-2.2.0-1.1.2-3.4.6.jar  /usr/local/jar/lihaoran/lhrtest.jar {}
-         */
+
 
         Thread.sleep(1000*60*10)
     }
@@ -118,11 +115,11 @@ object BigTableRepartition {
                     // 对大于100万的数据进行处理
                     try {
                         // println("查询某列相同key的记录数==============")
-                        // df.getKeyNums("DQBM")
-                        // df.getKeyNums("GDDWBM")
+                        // df.printKeyNums("DQBM")
+                        // df.printKeyNums("GDDWBM")
                         // 供电单位编码(前五位)
                         val df2 = df.withColumn("SUBGDDWBM", getSubgddwbm(col("GDDWBM")))
-                        df2.getKeyNums("SUBGDDWBM")
+                        df2.printKeyNums("SUBGDDWBM")
                     } catch {
                         case ex: AnalysisException =>
                             println(s"${filePath}没有xxxxx字段===")

@@ -16,7 +16,7 @@ object MatchDemo {
         println(res)
     }
 
-    val 守卫_case范围 = 0
+    val case范围 = 0
     if(1){
         val ran = scala.util.Random.nextInt(7)
         val res = ran match {

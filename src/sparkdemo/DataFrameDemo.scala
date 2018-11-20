@@ -29,7 +29,7 @@ object DataFrameDemo extends App{
         //注意shell中极有可能head对不齐，但是在Spark web UI中可以对齐
 
         //注意打印信息的时候,如果是并行计算，show会占用一点时间，导致print同时打印，然后show也打印在了一起。
-        //这种情况下，推荐println("")放在后面，或者类似DateUtils.getMethodRunTime那样打印
+        //这种情况下，推荐println("")放在后面，或者类似BaseUtils.getMethodRunTime那样打印
         (0 to 1).par.foreach{
             case 0 =>
                 println("df1========")
@@ -558,15 +558,13 @@ object DataFrameDemo extends App{
         //减少分区数量，避免shuffle
         df.coalesce(3)  //当df有10个分区减少到3个分区时，不会触发shuffle
         df.coalesce(100) //触发shuffle 返回一个100分区的DataFrame，等价于repartition(100)
-
-
     }
 
-    val df装饰类 = 0
+    val df装饰类方法演示 = 0
     //参考 utils.BaseUtil
     if(0){
         //获取key的数目，常用于调整数据倾斜
-        df.getKeyNums("key1")
+        df.printKeyNums("key1")
     }
 
 

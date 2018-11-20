@@ -3,7 +3,7 @@ package scalademo
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
-import utils.BaseUtil.int2boolen
+import utils.BaseUtil._
 import utils.DateUtil._
 
 /**
