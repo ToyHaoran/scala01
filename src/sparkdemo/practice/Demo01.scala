@@ -18,8 +18,10 @@ import utils.BaseUtil.int2boolen
   */
 object Demo01 extends App{
 
-    val sc = ConnectUtil.getLocalSC
-    val spark = ConnectUtil.getLocalSpark
+   /* val sc = ConnectUtil.getLocalSC
+    val spark = ConnectUtil.getLocalSpark*/
+    val spark = ConnectUtil.getClusterSpark
+    val sc = ConnectUtil.getClusterSC
     import spark.implicits._
 
     if(0){
