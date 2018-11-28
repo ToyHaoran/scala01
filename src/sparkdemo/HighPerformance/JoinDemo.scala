@@ -14,7 +14,7 @@ import org.apache.spark.sql.functions._
   */
 object JoinDemo {
     def main(args: Array[String]) {
-        val spark = ConnectUtil.getClusterSpark
+        val spark = ConnectUtil.spark
 
         val jldxx = spark.read.parquet("hdfs://172.20.32.164:8020/YXFK/compute/HS_JLDXX")
         val ydkh = spark.read.parquet("hdfs://172.20.32.164:8020/YXFK/compute/KH_YDKH")

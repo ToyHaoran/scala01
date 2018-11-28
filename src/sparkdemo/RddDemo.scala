@@ -9,10 +9,8 @@ import utils.ConnectUtil
 
 object RddDemo extends App {
 
-    val sc = ConnectUtil.getLocalSC
-    val spark = ConnectUtil.getLocalSpark
-    /*val sc = ConnectUtil.getClusterSC
-    val spark = ConnectUtil.getClusterSpark*/
+    val sc = ConnectUtil.sc
+    val spark = ConnectUtil.spark
 
 
     val RDD介绍 = 0
@@ -60,8 +58,8 @@ object RddDemo extends App {
             .flatMap(_.split("\\s+")).map((_, 1)).reduceByKey(_ + _).sortBy(_._2).collect
 
         println("从文件中读取======")
-        val lines2 = sc.textFile("src/sparkdemo/readme.md")
-        //val lines2 = sc.textFile("H:\\code\\idea\\scala01\\src\\sparkdemo\\readme.md")
+        val lines2 = sc.textFile("src/sparkdemo/xxxxxx.md")
+        //val lines2 = sc.textFile("H:\\code\\idea\\scala01\\src\\sparkdemo\\xxxxxx.md")
         lines2.foreach(println(_))
     }
 

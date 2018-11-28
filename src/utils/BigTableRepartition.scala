@@ -18,7 +18,7 @@ import BaseUtil._
 object BigTableRepartition {
     def main(args: Array[String]) {
 
-        val spark = ConnectUtil.getClusterSpark
+        val spark = ConnectUtil.spark
         val hdfsRoot = "hdfs://172.20.32.163:8020"
         val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
         val files = hdfsUtil.list("/YXFK/compute/")

@@ -22,7 +22,7 @@ object SharedVariables extends App{
      通用且支持 read-write（读-写） 的共享变量在任务间是不能胜任的。
      所以，Spark 提供了两种特定类型的共享变量 : broadcast variables（广播变量）和 accumulators（累加器）。
       */
-    val sc = ConnectUtil.getLocalSC
+    val sc = ConnectUtil.sc
 
     val 累加器 = 0
     if (0) {

@@ -446,6 +446,10 @@ class HDFSUtil(hdfsBsePath: String) {
             try{
                 val df = spark.read.parquet(hdfsRoot + filePath) //抛出异常 将不符合的路径排除掉
                 val num = df.count()
+                //临时添加
+                println(filePath + ":" + num + "================================")
+                df.show()
+                df.printSchema()
                 if (num > 1000000) {
                     if (num > 5000000) {
                         println(filePath + ":" + num + "条记录，大于500万================================")

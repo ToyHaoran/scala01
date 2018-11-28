@@ -24,7 +24,7 @@ object Demo06 {
         //从数据库中加载规则
         //val arr = Array("java.learn.com", "php.learn.com", "net.learn.com")
 
-        val sc = ConnectUtil.getLocalSC
+        val sc = ConnectUtil.sc
 
         //获取数据
         //val file = sc.textFile("H:\\code\\idea\\scala01\\src\\sparkdemo\\testfile\\learn.log")

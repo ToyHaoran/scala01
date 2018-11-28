@@ -40,6 +40,14 @@ object BaseUtil {
         (result, (delta / 1000000d).toString + "ms")
     }
 
+    /**
+      * 用于睡眠程序（10分钟），以查看spark UI
+      */
+    def sleepApp(): Unit ={
+        println("程序已结束，睡眠10分钟，请查看Spark UI, 或者kill应用")
+        Thread.sleep(1000 * 60 * 10)
+    }
+
     val DataFrame相关工具方法 = 0
     /**
       * DF的装饰类（隐式转换）
@@ -75,7 +83,12 @@ object BaseUtil {
       */
     def printMap(map: Map[_ <: Any, _ <: Any]): Unit = {
         for ((key, value) <- map) {
-            println(key.toString + " : " + value.toString)
+            try{
+                println(key.toString + " : " + value.toString)
+            }catch {
+                case e:NullPointerException =>
+                    println(s"${key} : 为空")
+            }
         }
         println("===================")
     }

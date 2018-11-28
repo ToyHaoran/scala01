@@ -11,8 +11,8 @@ import utils.ConnectUtil
 
 object DataFrameDemo extends App{
 
-    val sc = ConnectUtil.getLocalSC  //基本上后来不用sc了，用spark.sparkContext代替
-    val spark = ConnectUtil.getLocalSpark
+    val sc = ConnectUtil.sc  //基本上后来不用sc了，用spark.sparkContext代替
+    val spark = ConnectUtil.spark
     import spark.implicits._
 
     val df = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")

@@ -14,7 +14,7 @@ import utils.BaseUtil._
 object ReadUseSpark {
     def main(args: Array[String]) {
         //读写数据前提：Hbase中必须存在phoenix相关的jar包，IDEA中必须有相关jar包
-        val spark = ConnectUtil.getClusterSpark
+        val spark = ConnectUtil.spark
 
         //———————————————————————读取数据——————————————————————————————
         if(0){
