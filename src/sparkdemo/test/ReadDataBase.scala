@@ -12,54 +12,63 @@ import utils.database.JdbcUtil
   * Time: 14:01 
   * Description:
   */
-object ReadDBUseJdbc extends App {
+object ReadDataBase extends App {
 
-    val 同时操作30个表 = 0
-    if(0){
+    val 批量处理多个表 = 0
+    if (0) {
         //注意表名之间不要加空格
-        val tables = "FW_YKYXBYQLSXX"//,ZW_FK_YCHQRZ,ZW_FK_CBXX,ZW_FK_CSJG,ZW_FK_SSYDXXHQJL,LC_CBQDXX,XT_DMBM"
+        val tables = "FW_YKYXBYQLSXX,ZW_FK_YCHQRZ,ZW_FK_CBXX,ZW_FK_CSJG,ZW_FK_SSYDXXHQJL,LC_CBQDXX,XT_DMBM"
         //注意如果par并行数太多，会导致达到DB最大进程参数，报错ORA-12516, TNS:listener could not find available handler
-        tables.split(",").foreach(table=>{
-            println("处理："+table + "=============")
-            JdbcUtil.execute("yxfk","UPDATE HS_DJDM SET CZSJ = to_date('2018-11-27 19:10:55','yyyy-mm-dd hh24:mi:ss') WHERE ROWNUM = 1")
+        tables.split(",") /*.par*/ .foreach(table => {
+            println("处理：" + table + "=============")
+            JdbcUtil.execute("yxfk", s"UPDATE $table SET CZSJ = to_date('2018-11-27 19:10:55','yyyy-mm-dd hh24:mi:ss') WHERE ROWNUM = 1")
+            JdbcUtil.queryAndPrintH("yxfk", s"select CZSJ from $table where rownum = 1")
         })
     }
 
-    val 使用spark读取DB_Demo = 0
-    if(0){
+    val Demo_使用spark读取DB = 0
+    if (1) {
         //空指向异常：配置文件需要大写，否则读取不到
         JdbcUtil.load("local", "(select ID,Name from student) as st").show()
 
-        JdbcUtil.load("gzdb", "HS_DJBB").show()
-        JdbcUtil.load("yxfk", "HS_DJBB").show()
+        //JdbcUtil.load("gzdb", "HS_DJBB").show()
+        //JdbcUtil.load("yxfk", "HS_DJBB").show()
     }
 
-    val 使用JDBC修改DB_Demo = 0
-    if(1){
-        JdbcUtil.execute("local","update student set Name='6666666' where ID='003'")
-
-        JdbcUtil.queryAndPrintV("local","select * from student")
-    }
-
-    val 使用JDBC读取DB_Demo = 0
+    val Demo_使用JDBC修改DB = 0
     if (0) {
-        JdbcUtil.queryAndPrintH("gzdb","select * from HS_DJBB where rownum = 1")
-
-        JdbcUtil.queryAndPrintH("local", "select * from student")
-
-        val lst: List[Map[String, Any]] = JdbcUtil.queryAndWrap("local", "select * from student")
-        lst.foreach(map =>{
-            printMap(map)
-        })
+        if (0) {
+            JdbcUtil.execute("local", "update student set Name='6666666' where ID='003'")
+            JdbcUtil.queryAndPrintV("local", "select * from student")
+        }
+        if (0) {
+            JdbcUtil.queryAndPrintH("yxfk", "select CZSJ from FW_YKYXBYQLSXX where rownum = 1")
+            JdbcUtil.execute("yxfk", "UPDATE FW_YKYXBYQLSXX SET CZSJ = to_date('2018-11-27 19:10:55','yyyy-mm-dd hh24:mi:ss') WHERE ROWNUM = 1")
+            JdbcUtil.queryAndPrintH("yxfk", "select CZSJ from FW_YKYXBYQLSXX where rownum = 1")
+        }
     }
-    if(0){
-        JdbcUtil.queryAndPrintH("yxfk","select * from FW_YKYXBYQLSXX where rownum = 1")
+
+    val Demo_使用JDBC读取DB = 0
+    if (0) {
+        if (0) {
+            JdbcUtil.queryAndPrintH("gzdb", "select * from HS_DJBB where rownum = 1")
+        }
+
+        if (0) {
+            JdbcUtil.queryAndPrintH("yxfk", "select * from FW_YKYXBYQLSXX where rownum = 1")
+        }
+
+        if (0) {
+            JdbcUtil.queryAndPrintH("local", "select * from student")
+            val lst: List[Map[String, Any]] = JdbcUtil.queryAndWrap("local", "select * from student")
+            JdbcUtil.queryAndPrintV("local", "select * from student")
+        }
     }
 
     /**
       * 读取mysql数据库，废弃
       */
-    private def old03: Unit ={
+    private def old03: Unit = {
         val spark = ConnectUtil.spark
 
         val propUtil = PropUtil("localdb.properties")
@@ -84,7 +93,7 @@ object ReadDBUseJdbc extends App {
     /**
       * 读取Oracle数据库,废弃
       */
-    private def old02: Unit ={
+    private def old02: Unit = {
         val spark = ConnectUtil.spark
 
         val propUtil = PropUtil("yxfkdb")

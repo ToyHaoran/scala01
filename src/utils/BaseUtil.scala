@@ -16,7 +16,9 @@ object BaseUtil {
     /**
       * 用来快捷控制代码的开关，将0，1隐式转换为false和true
       */
-    implicit def int2boolen(a: Int): Boolean = if (a == 0) false else true
+    implicit def int2boolen(a: Int): Boolean = {
+        if (a == 0) false else true
+    }
 
     /**
       * 得到参数的类型

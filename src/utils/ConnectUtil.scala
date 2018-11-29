@@ -5,6 +5,8 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
 
 object ConnectUtil {
+    private final val NAME = "lihaoran"
+
     private final val COMPANY = "llhr"
     private final val WHITE = "lihaoran"
 
@@ -20,13 +22,13 @@ object ConnectUtil {
     lazy val spark: SparkSession =
         if (scala.sys.props.get("user.name").head.equals(COMPANY)) {
             println("匹配到公司笔记本spark=======")
-            sparkBuilder.appName("LIHAORAN").master("local[*]").getOrCreate()
+            sparkBuilder.appName(NAME).master("local[*]").getOrCreate()
         } else if (scala.sys.props.get("user.name").head.equals(WHITE)) {
             println("匹配到宿舍笔记本spark==========")
-            sparkBuilder.appName("LIHAORAN").master("local[*]").getOrCreate()
+            sparkBuilder.appName(NAME).master("local[*]").getOrCreate()
         } else {
             println("匹配到公司集群spark=========")
-            sparkBuilder.appName("LIHAORAN").getOrCreate()
+            sparkBuilder.appName(NAME).getOrCreate()
         }
 
 
@@ -35,11 +37,11 @@ object ConnectUtil {
       */
     lazy val sc:SparkContext =
         if(scala.sys.props.get("user.name").head.equals(COMPANY)){
-            new SparkContext(new SparkConf().setAppName("SparkContextDemo").setMaster("local[*]"))
+            new SparkContext(new SparkConf().setAppName(NAME).setMaster("local[*]"))
         }else if(scala.sys.props.get("user.name").head.equals(WHITE)){
-            new SparkContext(new SparkConf().setAppName("SparkContextDemo").setMaster("local[*]"))
+            new SparkContext(new SparkConf().setAppName(NAME).setMaster("local[*]"))
         }else{
-            new SparkContext(new SparkConf().setAppName("SparkContextDemo").setMaster("yarn-cluster"))
+            new SparkContext(new SparkConf().setAppName(NAME).setMaster("yarn-cluster"))
         }
 
 }

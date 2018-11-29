@@ -1,9 +1,9 @@
-package sparkdemo.HighPerformance
+package sparkdemo.test
 
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import utils.ConnectUtil
-import utils.BaseUtil._
 import org.apache.spark.sql.functions._
+import utils.BaseUtil._
+import utils.ConnectUtil
 
 /**
   * Created with IntelliJ IDEA.

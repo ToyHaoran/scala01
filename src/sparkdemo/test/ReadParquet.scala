@@ -49,9 +49,9 @@ object ReadParquet extends App{
                 val num = df.count()
                 //对parquet进行处理
                 println(filePath + ":" + num + "================================")
-                //df.filter("CZSJ = '2018-11-25 19:10:55'").show()
-                df.show()
-                df.printSchema()
+                //df.show(5)
+                df.filter("CZSJ = '2018-11-27 19:10:55'").show()
+                //df.printSchema()
             }catch {
                 case ex:AnalysisException =>
                     println(s"${filePath}不是正常的parquet文件,读取失败========")

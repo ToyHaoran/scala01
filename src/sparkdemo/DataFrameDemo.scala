@@ -1,45 +1,42 @@
 package sparkdemo
 
-import org.apache.spark.sql.expressions.{Aggregator, MutableAggregationBuffer, UserDefinedAggregateFunction, UserDefinedFunction}
+import org.apache.spark.sql.expressions._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import org.apache.spark.{SparkConf, SparkContext}
-
 import utils.BaseUtil._
 import utils.ConnectUtil
 
-object DataFrameDemo extends App{
+object DataFrameDemo extends App {
 
-    val sc = ConnectUtil.sc  //基本上后来不用sc了，用spark.sparkContext代替
+    val sc = ConnectUtil.sc
+    //1.6后基本上不用sc了，用spark.sparkContext代替
     val spark = ConnectUtil.spark
+
     import spark.implicits._
 
-    val df = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
+    val df = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("bbb", 1, 5), ("bbb", 2, 1), ("ccc", 4, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
+
     case class Person(name: String, age: Int)
-    //val people = sc.textFile("src/sparkdemo/testfile/person.txt")
-    val people = sc.textFile("file:/usr/local/jar/lihaoran/person.txt")
+
+    val people = sc.textFile("src/sparkdemo/testfile/person.txt")
         .map(_.split(",")).map(p => Person(p(0), p(1).trim.toInt)).toDF() //转化为df后，统统为Row类型
 
     val DF打印操作 = 0
     if (0) {
+        //打印的时候对不齐没事。
         df.show(30) //最多打印30行
         df.show(30, truncate = 20) // 每个元素最大20个字符，其他折叠
         df.show(30, truncate = false) // 每个元素不折叠
-        //注意shell中极有可能head对不齐，但是在Spark web UI中可以对齐
 
-        //注意打印信息的时候,如果是并行计算，show会占用一点时间，导致print同时打印，然后show也打印在了一起。
-        //这种情况下，推荐println("")放在后面，或者类似BaseUtils.getMethodRunTime那样打印
-        (0 to 1).par.foreach{
-            case 0 =>
-                println("df1========")
-                df.show()
-            case 1 =>
-                println("df2========")
-                df.show()
-        }
-        println("正在睡眠，抓紧看UI界面")
-        Thread.sleep(10 * 60 * 1000) //挂住10分钟
+        //如果是并行打印，show会占用一点时间，导致print同时打印，然后show也打印在了一起。
+        //这种情况下，推荐println("")放在show后面
+
+        //打印Schema信息，常用于检查数据格式
+        df.printSchema()
+
+        //获取key的数目，常用于调整数据倾斜   //参考 src.utils.BaseUtil
+        df.printKeyNums("key1")
     }
 
     val 创建DF的方式 = 0
@@ -51,7 +48,7 @@ object DataFrameDemo extends App{
         val df_1 = Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6)).toDF("key1", "key2", "key3") //同上
         //通过case class + toDF创建DataFrame的示例：开头的people的创建
 
-        //方法二，Spark中使用createDataFrame函数创建DataFrame
+        //方法二，Spark中使用createDataFrame函数从RDD创建DataFrame
         import org.apache.spark.sql.types._
         val schema = StructType(List(
             StructField("integer_column", IntegerType, nullable = false),
@@ -64,39 +61,41 @@ object DataFrameDemo extends App{
             Row(2, "Second Value", java.sql.Date.valueOf("2010-02-01"))
         ))
         val df3 = spark.createDataFrame(rdd, schema)
+        df3.printSchema()
 
         //方法三，通过文件直接创建DataFrame(推荐)
-        val df4 = spark.read.parquet("hdfs:/path/to/file") //使用parquet文件创建
-        val df4_1 = spark.read.parquet("E:/hivedata1/xxxx")
-        val df5 = spark.read.json("examples/src/main/resources/people.json") //使用json文件创建
-        val df6 = spark.read.format("csv") //使用csv文件,spark2.0+之后,通用加载json, parquet, jdbc, orc, libsvm, csv, text
-                .option("sep", ",")
-                .option("inferSchema", "true")
-                .option("header", "true")
-                .load("file:/usr/local/jar/lihaoran/测试.csv").show()
-        //.load("sparkdemo/testfile/测试.csv")
+        spark.read.parquet("hdfs://xxx.xxx.xxx.xxx:8020/path/to/file") //使用parquet文件创建
+        spark.read.parquet("E:/hivedata1/xxxx")
+        spark.sql("SELECT * FROM parquet.'/src/xxx/xxxx/users.parquet'") //直接在文件上运行SQL
+        spark.read.json("examples/src/main/resources/people.json") //使用json文件创建
 
-        //直接在文件上运行SQL
-        val df7 = spark.sql("SELECT * FROM parquet.'examples/src/main/resources/users.parquet'")
+        //通用加载保存功能
+        spark.read.format("csv") //使用csv文件,spark2.0+之后,通用加载json, parquet, jdbc, orc, libsvm, csv, text
+            .option("sep", ",")
+            .option("inferSchema", "true")
+            .option("header", "true")
+            .load("file:/usr/local/jar/lihaoran/测试.csv")
+            //.load("sparkdemo/testfile/测试.csv")
+            .show()
 
         //从Hive中读取
         //Use SparkSession.builder.enableHiveSupport instead
         //详细参考文档：http://spark.apachecn.org/docs/cn/2.2.0/sql-programming-guide.html
-        import org.apache.spark.sql.hive.HiveContext
-        val hiveCtx = new HiveContext(sc)
-        val rows = hiveCtx.sql("SELECT key, value FROM mytable")
-        val keys = rows.map(row => row.getInt(0))
+        spark.read.table("student")
+        df.write.saveAsTable("student")
 
-        //通过JDBC加载数据并创建df
-        val url: String = "jdbc:oracle:thin:@172.20.32.97:1521:dyjc"
-        val user = "RT_DFJS"
-        val password = "ffffff"
+        //通过JDBC加载数据并创建df，参考：sparkdemo.test.ReadDataBase
+        val url: String = "jdbc:oracle:thin:@xxx.xxx.xxx.xxx:1521:dyjc"
         val dataBaseProps = new java.util.Properties()
-        dataBaseProps.setProperty("user", user)
-        dataBaseProps.setProperty("password", password)
-        dataBaseProps.setProperty("fetchsize", "1000") //批量读
-        dataBaseProps.setProperty("batchsize", "5000") //批量写
+        dataBaseProps.setProperty("user", "xxx")
+        dataBaseProps.setProperty("password", "xxxxx")
         val res = spark.read.jdbc(url, "(select * from lc_cbxx where rownum<=1000)", dataBaseProps) //write是一样的格式
+
+        df.write.format("jdbc")
+            .option("url","jdbc:dialect:serverName")
+            .option("user","user")
+            .option("password","pass")
+            .option("dbtable","table").save()
     }
 
     val RDD_DF_DS的相互转化 = 0
@@ -117,6 +116,13 @@ object DataFrameDemo extends App{
         ds.toDF() //带有name，age
         ds.toDF("k1", "k2") //更改Schema
 
+        //DS操作
+        ds.map(person => {
+            val name = person.name
+            val age = person.age + 10
+            (name, age)
+        })
+        ds.select($"name".as[String],($"age">10).as[Boolean]).toDF()
     }
 
     val DF数据持久化 = 0
@@ -203,16 +209,16 @@ object DataFrameDemo extends App{
         df.select(expr("upper(key1)"))
         df.select(expr("key2 + 1").as[Int])
 
-        //添加，修改，删除列操作，
+        //添加，修改，删除列操作（select中用when函数也可以，但是功能较少，被UDF取代）
         df.withColumn("key4", lit(1024)) //添加列key5，初始值为1024
         df.withColumn("key3", lit(1024)) //把第三列全部改为1024
         df.withColumn("key3", $"key3" * 2) //把第三列*2，会把原来的第三列覆盖掉。
-        df.withColumn("key5", expr("key3*2")) //添加列key5，值为key3的两倍
+        df.withColumn("key5", expr("key3 * 2")) //添加列key5，值为key3的两倍
 
         //常用的是UDF方法：重点重点重点
         df.withColumn("key6", getXXXInfo(col("key3")))
-        def getXXXInfo:UserDefinedFunction = {
-            udf((key:Int) =>
+        def getXXXInfo: UserDefinedFunction = {
+            udf((key: Int) =>
                 "这个数是：" + key
             )
         }
@@ -252,15 +258,19 @@ object DataFrameDemo extends App{
     if (0) {
         //———————————————————————————过滤操作———————————————————————
         //过滤操作
-        df.filter("key2 > 2")
-        val max = 4 //s表示简单的字符串插值器
-        df.filter(s"key2 = ${max + 2}").select("key1")
+        df.filter("key2 > 2 and key3 = 5").show()
+        df.filter((df("key2") > 2).and(df("key3") === 5)).show()
+        df.filter((df("key2") > 2) and (df("key3") === 5)).show()
+        df.filter((df("key2") > 2) || (df("key3") === 5)).show()
 
-        df.filter($"key1" > "aaa")
-        df.filter($"key2" === $"key3" - 1)
+        val max = 4
+        df.filter(s"key2 = ${max + 2}").select("key1").show()
+        df.filter(df("key1") > "aaa").show()
+        df.filter($"key2" === $"key3" - 1).show()
+
+        //where等价于filter
         df.where($"key2" > "2")
         df.where("key2 > 2")
-
 
         //传递过滤函数,where没法传递
         df.filter(row => {
@@ -272,21 +282,11 @@ object DataFrameDemo extends App{
 
     val 分组聚合操作 = 0
     if (0) {
-        //———————————————————————————分组聚合操作————————————————————————
-
-        //等价SQL: select key1, count(*) from table
-        df.groupBy("key1").count() //对groupBy的聚合结果的计数
+        //对groupBy的聚合结果的计数
+        df.groupBy("key1").count().show()
+        df.groupBy($"key1").count().show()
         df.groupBy("key1", "key2") //org.apache.spark.sql.RelationalGroupedDataset
-        df.groupBy($"key1") //会出错，不知道为什么。。。
 
-        //等价SQL: select distinct key1 from table
-        df.select("key1").distinct.show
-
-        //等价sql:  select key1 , count(*) from table  group by key1  order by count(*) desc
-        df.groupBy("key1").count.sort($"count".desc).show
-
-        //用withColumnRenamed函数给列重命名
-        //等价sql: select key1 , count(*) as cnt from table group by key1 order by cnt desc
         df.groupBy("key1").count.withColumnRenamed("count", "cnt").sort($"cnt".desc).show
 
         //聚合函数
@@ -296,7 +296,6 @@ object DataFrameDemo extends App{
 
     val 对聚合操作后的Value进行操作 = 0
     if (0) {
-        //—————————————高级分组聚合———————————————————————————————
         //具体案例见sparkdemo.practice.Demo05
         df.groupByKey(row => row.getAs[String]("key1")).mapGroups((key1, group) => {
             var res = ""
@@ -312,10 +311,46 @@ object DataFrameDemo extends App{
         }).show()
     }
 
+    val 窗口函数 = 0
+    //参考：
+    //https://n3xtchen.github.io/n3xtchen/spark/2017/01/24/spark200-window-function
+    //https://www.jianshu.com/p/42be8650509f
+    if (0) {
+        /*
+        有些时候需要计算一些排序特征，窗口特征等，如一个店铺的首单特征。对于这样的特征显然是不能简单通过groupBy操作来完成
+        即：第一列是订单，第二列是店铺，第三列是支付时间，第四列是价格。
+        1、统计每个店铺每个订单和前一单的价格和，如果通过groupBy来完成特别费劲。
+        2、店铺这个订单与前一单的差值 TODO 怎么做，难道要自定义聚合函数？
+         */
+        val orders = Seq(
+            ("o1", "s1", "2017-05-01", 100),
+            ("o2", "s1", "2017-05-02", 200),
+            ("o3", "s2", "2017-05-01", 200),
+            ("o4", "s1", "2017-05-03", 200),
+            ("o5", "s2", "2017-05-02", 100),
+            ("o6", "s1", "2017-05-04", 300)
+        ).toDF("order_id", "seller_id", "pay_time", "price")
+
+        //店铺订单顺序
+        val rankSpec = Window.partitionBy("seller_id").orderBy("pay_time")
+        orders.withColumn("rank", dense_rank.over(rankSpec)).show()
+        //定义前一单和本单的窗口
+        val winSpec = Window.partitionBy("seller_id").orderBy("pay_time").rowsBetween(-1, 0)
+        //店铺这个订单及前一单的价格和
+        orders.withColumn("sum_pay", sum("price").over(winSpec)).show()
+        //店铺这个订单与前一单的差值,需要自定义聚合函数？？？
+        orders.withColumn("minus_pay", avg("price").over(winSpec)).show()
+    }
+
+    val 排序 = 0
+    if (0) {
+        //orderby是调用的sort
+        df.orderBy(df("key1").desc, df("key2").asc_nulls_first).limit(3).show()
+        df.sort(df("key1").desc).show()
+    }
+
     val 单表操作 = 0
     if (0) {
-        //—————————————————————————单表操作———————————————————————————————
-
         df.show(10, 2) //参数1表示显示10行，参数2表示截取前两个字符
         //排序
         df.orderBy($"key1".desc).show()
@@ -334,10 +369,9 @@ object DataFrameDemo extends App{
         df.collect()
         df.collectAsList()
 
-        //修改行操作
+        //删除重复行行操作
         df.distinct()
         df.dropDuplicates() //删除重复行，distinct的别名
-
         //删除某一列具有重复的元素所在的行
         df.dropDuplicates("key1") //常用
 
@@ -348,10 +382,16 @@ object DataFrameDemo extends App{
 
     val 多表操作 = 0
     if (0) {
-        //——————————————————————————多表操作—————————————————————————————————
         //两个DF的连接操作,通过主键连接
         val df1 = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
         val df2 = spark.createDataset(Seq(("aaa", 2, 2), ("bbb", 3, 5), ("ddd", 3, 5), ("bbb", 4, 6), ("eee", 1, 2), ("aaa", 1, 5), ("fff", 5, 6))).toDF("key1", "key2", "key4")
+
+        println("求并集：union====Cost：Low=========")
+        df1.union(df2).show()
+        println("求交集：intersect===Cost:Expensive=========")
+        df1.intersect(df2).show()
+        println("求差集：except===Cost:Expensive=========")
+        df1.except(df2).show()
 
         //内连接,左右必须同时满足的才可以显示
         df1.join(df2, "key1").show() //推荐
@@ -376,7 +416,7 @@ object DataFrameDemo extends App{
         df1.join(df2, df1("key1") === df2("key1"), "leftsemi").show()
         //右连接，对应的就不写了。
 
-        //  外连接，左右不管是否满足都显示出来
+        //外连接，左右不管是否满足都显示出来
         df1.join(df2, df1("key1") === df2("key1"), "outer")
         df1.join(df2, df1("key1") === df2("key1"), "full")
 
@@ -413,20 +453,20 @@ object DataFrameDemo extends App{
 
     val Schema合并 = 0
     //没什么卵用
-    if(0){
+    if (0) {
         val squaresDF = spark.sparkContext.makeRDD(1 to 5).map(i => (i, i * i)).toDF("value", "square")
-        squaresDF.write.parquet("data/test_table/key=1")
+        squaresDF.write.parquet("src/sparkdemo/testfile/test_table/key=1")
 
         val cubesDF = spark.sparkContext.makeRDD(6 to 10).map(i => (i, i * i * i)).toDF("value", "cube")
-        cubesDF.write.parquet("data/test_table/key=2")
+        cubesDF.write.parquet("src/sparkdemo/testfile/test_table/key=2")
 
-        val mergedDF = spark.read.option("mergeSchema", "true").parquet("data/test_table")
+        val mergedDF = spark.read.option("mergeSchema", "true").parquet("src/sparkdemo/testfile/test_table")
         mergedDF.printSchema()
     }
 
     val UDF = 0
-    if(0){
-        //使用方式1：不推荐(没有代码检查，容易出错)
+    if (0) {
+        //方式1：不推荐(没有代码检查，容易出错)
         df.createOrReplaceTempView("testUDF")
         //UDF用户定义的函数，针对单行输入，返回一个输出
         spark.udf.register("product", (x: Integer, y: Integer) => (x * y, 11))
@@ -448,13 +488,47 @@ object DataFrameDemo extends App{
         df.withColumn("key4", getUdf($"key1"))
     }
 
+    val 内置的聚合函数 = 0
+    /*
+    内置的聚合函数：
+    avg：平均值
+    first：分组第一个元素
+    last：分组最后一个元素
+    max：最大值
+    min：最小值
+    mean：平均值
+    count：计数
+    countDistinct：去重计数 SQL中用法   select count(distinct class)
+    sum：求和
+    sumDistinct：非重复值求和 SQL中用法    select sum(distinct class)
+    approx_count_distinct：count_distinct近似值
+    collect_list：聚合指定字段的值到list
+    collect_set：聚合指定字段的值到set
+    corr：计算两列的Pearson相关系数
+    covar_pop：总体协方差（population covariance）
+    covar_samp：样本协方差（sample covariance）
+    grouping
+    grouping_id
+    kurtosis：计算峰态(kurtosis)值
+    skewness：计算偏度(skewness)
+    stddev：即stddev_samp
+    stddev_samp：样本标准偏差（sample standard deviation）
+    stddev_pop：总体标准偏差（population standard deviation）
+    var_pop：总体方差（population variance）
+    var_samp：样本无偏方差（unbiased variance）
+    */
+
+
     val UDAF = 0
-    //UDAF用户定义的聚合函数。针对多行输入，返回一个输出。
-    //用不大到,还特别复杂。推荐使用DF中的groupByKey，以及mapGroups函数
-    //虽然UDAF可以用Java或者Scala实现，但是建议您使用Java，因为Scala的数据类型有时会造成不必要的性能损失。
-    //参考：https://help.aliyun.com/document_detail/69553.html
-    //具体案例见sparkdemo.practice.Demo05
-    if(0){
+    /*
+    UDAF用户定义的聚合函数。针对多行输入，返回一个输出。
+    用不大到,还特别复杂。推荐使用DF中的groupByKey，以及mapGroups函数
+    虽然UDAF可以用Java或者Scala实现，但是建议您使用Java，因为Scala的数据类型有时会造成不必要的性能损失。
+    参考：https://help.aliyun.com/document_detail/69553.html
+    具体案例见sparkdemo.practice.Demo05
+    */
+
+    if (0) {
         /*//如果是object，可以直接写spark.udf.register("wordCount", MyAverage)
         spark.udf.register("myAvg", new MyAverage)
         spark.sql("select key1, myAvg(key2) as avg from testUDF group by key1").show()
@@ -541,7 +615,7 @@ object DataFrameDemo extends App{
     // 涉及到关联操作的时候，对数据进行重新分区操作可以提高程序运行效率
     // 内部是通过shuffle进行操作的。
     // 很多时候效率的提升远远高于重新分区的消耗，所以进行重新分区还是很有价值的
-    if(0){
+    if (0) {
         //有明确的分区
         df.repartition(10)
 
@@ -556,15 +630,8 @@ object DataFrameDemo extends App{
         df.repartition(10, col("key1"))
 
         //减少分区数量，避免shuffle
-        df.coalesce(3)  //当df有10个分区减少到3个分区时，不会触发shuffle
+        df.coalesce(3) //当df有10个分区减少到3个分区时，不会触发shuffle
         df.coalesce(100) //触发shuffle 返回一个100分区的DataFrame，等价于repartition(100)
-    }
-
-    val df装饰类方法演示 = 0
-    //参考 utils.BaseUtil
-    if(0){
-        //获取key的数目，常用于调整数据倾斜
-        df.printKeyNums("key1")
     }
 
 

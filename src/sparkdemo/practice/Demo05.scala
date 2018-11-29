@@ -25,18 +25,18 @@ import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Locale}
 
-import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
+import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction, Window}
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.{SparkConf, SparkContext}
+import utils.ConnectUtil
 
 import scala.collection.mutable.ArrayBuffer
 
 object Demo05 extends App{
-    val sc = new SparkContext(new SparkConf().setAppName("AdvUrlCount").setMaster("local[2]"))
-    val spark = SparkSession.builder().appName("Spark SQL basic example").config("spark.some.config.option", "some-value").getOrCreate()
-
+    val sc = ConnectUtil.sc
+    val spark = ConnectUtil.spark
     import spark.implicits._
 
     //读取文件，返回DF
@@ -56,6 +56,12 @@ object Demo05 extends App{
     spark.udf.register("timeinterval",new Interval)
     spark.sql("select ID,timeinterval(INTIME) from dfb group by ID")
 
+    def getxxxx: UserDefinedAggregateFunction = {
+        new Interval
+    }
+
+    val winSpec = Window.partitionBy("seller_id").orderBy("pay_time").rowsBetween(-1, 0)
+    dfb.withColumn("indddd", getxxxx($"ID").over(winSpec))
 
     //UDAF类定义
     class Interval extends UserDefinedAggregateFunction{

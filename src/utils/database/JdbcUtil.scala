@@ -215,8 +215,7 @@ object JdbcUtil {
       * @param options  自定义参数，优先级：自定义参数>配置文件>默认配置
       * @return  DataFrame
       */
-    def load(database: String, table: String, predicates: Array[String] = Array(),
-             options: Map[String, String] = Map()): DataFrame = {
+    def load(database: String, table: String, predicates: Array[String] = Array(),options: Map[String, String] = Map()): DataFrame = {
         //没有此数据库会得到空指向异常，不需要处理，系统会打印错误信息
         val db = propertiesMap.getOrDefault(database, null)
         db.read(table, database, predicates, options)

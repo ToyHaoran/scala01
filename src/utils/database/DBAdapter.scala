@@ -14,7 +14,8 @@ case class DBAdapter(properties: Properties) {
 
     private val dbProperties: Properties = new Properties()
     private val dbPropArr: Array[database.PropertyKey.Value] = Array(USER_NAME, PASSWORD, DRIVER)
-    //将prop文件中的配置添加到dbProperties，key（小写）：value
+
+    //将prop文件中的配置项添加到dbProperties中，key（小写）：value
     private val moveProperties = { (k: String) =>
         //读取的时候不区分大小写
         val low = k.toLowerCase
@@ -27,6 +28,7 @@ case class DBAdapter(properties: Properties) {
         }
     }
     dbPropArr.foreach(x => moveProperties(x.toString))
+
 
     def save(data: DataFrame, table: String, saveMode: SaveMode, options: Map[String, String]): Unit = {
         val ops: mutable.Map[String, String] = mutable.Map()

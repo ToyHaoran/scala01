@@ -15,7 +15,7 @@ object RddDemo extends App {
 
     val RDD介绍 = 0
     /*
-    代表一个不可变、可分区、里面的元素可并行计算的集合。
+    代表一个惰性求值、不可变、可分区、里面的元素可并行计算的集合。
 
     在群集安装中，单独的数据分区可以位于不同的节点上。使用RDD作为句柄，可以访问所有分区并使用包含的数据执行计算和转换。每当RDD
     的一部分或整个RDD丢失时，系统就能够通过使用Lineage（谱系）信息来重建丢失分区的数据。谱系是指用于产生当前RDD的转换序列。
@@ -55,11 +55,10 @@ object RddDemo extends App {
     if (0) {
         println("Scala中的parallelize()方法============")
         val lines = sc.parallelize(List("hello  scala", "hello java", "hello scala"))
-            .flatMap(_.split("\\s+")).map((_, 1)).reduceByKey(_ + _).sortBy(_._2).collect
+        val count = lines.flatMap(_.split("\\s+")).map((_, 1)).reduceByKey(_ + _).sortBy(_._2).collect
 
         println("从文件中读取======")
         val lines2 = sc.textFile("src/sparkdemo/xxxxxx.md")
-        //val lines2 = sc.textFile("H:\\code\\idea\\scala01\\src\\sparkdemo\\xxxxxx.md")
         lines2.foreach(println(_))
     }
 
