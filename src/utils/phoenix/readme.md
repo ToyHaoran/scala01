@@ -15,7 +15,7 @@
     如果想再次在本地跑，需要把上面的文件Mark Directory as--Excluded.
 
 
-[scala版用spark操作phoenix](ReadUseSpark.scala)
+[scala版用spark操作phoenix](TestSpark01.scala)
 
 常用的是下面这个：
 

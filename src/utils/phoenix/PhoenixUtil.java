@@ -16,7 +16,7 @@ import java.util.List;
  * Date: 2018/11/14
  * Time: 14:01
  * Description: 大大简化版的Phoenix查询工具类：获取连接，然后查询，然后封装结果。
- * 而且避免了jar包冲突，
+ * 而且避免了与前端的jar包冲突，
  */
 public class PhoenixUtil {
     private static final String URL = "jdbc:phoenix:thin:url=http://172.20.32.211:8765;serialization=PROTOBUF";

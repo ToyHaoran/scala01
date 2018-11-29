@@ -11,9 +11,10 @@ import utils.BaseUtil._
   * Time: 8:40 
   * Description:Scala使用spark操作phoenix
   */
-object ReadUseSpark {
+object TestSpark01 {
     def main(args: Array[String]) {
         //读写数据前提：Hbase中必须存在phoenix相关的jar包，IDEA中必须有相关jar包
+        //本文件需要jar包：phoenix-4.10.0.2.6.0.3-8-client.jar
         val spark = ConnectUtil.spark
 
         //———————————————————————读取数据——————————————————————————————
