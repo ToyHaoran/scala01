@@ -5,6 +5,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import utils.BaseUtil._
+import utils.UdfUtil._
 import utils.ConnectUtil
 
 object DataFrameDemo extends App {
@@ -465,6 +466,10 @@ object DataFrameDemo extends App {
     }
 
     val UDF = 0
+    /*
+    UDF和UDAF对DataFrame来说是非常重要的，否则处理复杂业务还需要转化为RDD，然后再处理，代价是昂贵的。
+    如果你用Python的话，为避免性能损失，建议使用spark pandas。
+     */
     if (0) {
         //方式1：不推荐(没有代码检查，容易出错)
         df.createOrReplaceTempView("testUDF")
@@ -480,9 +485,7 @@ object DataFrameDemo extends App {
         )
         //特别推荐，因为可以将方法抽出来。
         def getUdf: UserDefinedFunction = {
-            udf((input: String) =>
-                input.length
-            )
+            udf((input: String) => input.length)
         }
         df.withColumn("key4", udf1($"key1"))
         df.withColumn("key4", getUdf($"key1"))
@@ -522,17 +525,30 @@ object DataFrameDemo extends App {
     val UDAF = 0
     /*
     UDAF用户定义的聚合函数。针对多行输入，返回一个输出。
-    用不大到,还特别复杂。推荐使用DF中的groupByKey，以及mapGroups函数
+    虽然特别复杂，但是比DF中的groupByKey——mapGroups函数更加高效。
     虽然UDAF可以用Java或者Scala实现，但是建议您使用Java，因为Scala的数据类型有时会造成不必要的性能损失。
     参考：https://help.aliyun.com/document_detail/69553.html
     具体案例见sparkdemo.practice.Demo05
     */
+    if (1) {
+        val df2 = df
+            .withColumn("key2",intToLong($"key2"))
+            .withColumn("key3",intToLong($"key3"))
+        df2.show()
 
-    if (0) {
-        /*//如果是object，可以直接写spark.udf.register("wordCount", MyAverage)
-        spark.udf.register("myAvg", new MyAverage)
+        df2.createOrReplaceTempView("testUDF")
+        //方式1：SQL
+        spark.udf.register("myAvg", new MyAverage) //参数2是个Object
         spark.sql("select key1, myAvg(key2) as avg from testUDF group by key1").show()
 
+        //方式2：DF
+        def getAvgUdaf:UserDefinedAggregateFunction = {
+            new MyAverage
+        }
+        df2.groupBy("key1").agg(getAvgUdaf($"key2")).show()
+        df2.withColumn("avg",getAvgUdaf($"key2")).show()
+
+       /*
         import org.apache.spark.sql.functions._
         //类型安全的用户自定义函数。
         val ds = df.as[KeyDemo]
@@ -540,49 +556,7 @@ object DataFrameDemo extends App {
         val result = ds.select(average_key2)
         result.show()
 
-
-        //无类型用户定义的聚合函数,用户必须扩展UserDefinedAggregateFunction抽象类以实现自定义无类型聚合函数。
-        class MyAverage extends UserDefinedAggregateFunction{
-
-            //继承抽象函数必须实现以下方法
-
-            //输入参数的数据类型
-            def inputSchema: StructType = StructType(StructField("inputColumn", LongType) :: Nil)
-            // 缓冲区中进行聚合时，所处理的数据的类型
-            def bufferSchema: StructType = {StructType(StructField("sum", LongType) :: StructField("count", LongType) :: Nil)}
-            // 返回值的数据类型
-            def dataType: DataType = DoubleType
-
-            // 初始化给定的聚合缓冲区，即聚合缓冲区的零值。
-            // 请注意，缓冲区内的数组和映射仍然是不可变的。
-            def initialize(buffer: MutableAggregationBuffer): Unit = {
-                buffer(0) = 0L
-                buffer(1) = 0L
-            }
-
-            //使用来自`input`的新输入数据更新给定的聚合缓冲区`buffer`。每个输入行调用一次。
-            def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
-                if (!input.isNullAt(0)) {
-                    buffer(0) = buffer.getLong(0) + input.getLong(0)
-                    buffer(1) = buffer.getLong(1) + 1
-                }
-            }
-
-            // 此函数是否始终在相同输入上返回相同的输出
-            def deterministic: Boolean = true
-
-            // Spark是分布式的，所以不同的区需要进行合并。
-            // 合并两个聚合缓冲区并将更新的缓冲区值存储回“buffer1”。当我们将两个部分聚合的数据合并在一起时调用此方法。
-            def merge(buffer1: MutableAggregationBuffer, buffer2: Row): Unit = {
-                buffer1(0) = buffer1.getLong(0) + buffer2.getLong(0)
-                buffer1(1) = buffer1.getLong(1) + buffer2.getLong(1)
-            }
-
-            //计算最终的结果
-            def evaluate(buffer: Row): Double = buffer.getLong(0).toDouble / buffer.getLong(1)
-        }
-
-        //类型安全的用户定义聚合函数;强类型数据集的用户定义聚合围绕Aggregator抽象类。例如，类型安全的用户定义平均值可能如下所示：
+       //类型安全的用户定义聚合函数;强类型数据集的用户定义聚合围绕Aggregator抽象类。例如，类型安全的用户定义平均值可能如下所示：
         case class KeyDemo(key1: String, key2: Integer, key3:Integer)
         case class Average(var sum: Long, var count: Long)
 
@@ -608,6 +582,45 @@ object DataFrameDemo extends App {
             // 为最终输出值类型指定编码器
             def outputEncoder: Encoder[Double] = Encoders.scalaDouble
         }*/
+    }
+
+    /**
+      * 无类型用户定义的聚合函数,用户必须扩展UserDefinedAggregateFunction抽象类以实现自定义无类型聚合函数。
+      * 而且必须定义为全局变量，放在if内部会报错：java.lang.InternalError: Malformed class name
+      */
+    class MyAverage extends UserDefinedAggregateFunction{
+        //继承抽象函数必须实现以下方法
+        // 输入参数的数据类型
+        def inputSchema: StructType = StructType(StructField("value", LongType) :: Nil)
+        // 缓冲区中进行聚合时，所处理的数据的类型
+        def bufferSchema: StructType = StructType(StructField("count", LongType) :: StructField("sum", DoubleType) :: Nil)
+
+        // 初始化给定的聚合缓冲区，即聚合缓冲区的零值。   请注意，缓冲区内的数组和映射仍然是不可变的。
+        def initialize(buffer: MutableAggregationBuffer): Unit = {
+            buffer(0) = 0L  //表示次数
+            buffer(1) = 0.0D  //表示总和
+        }
+        //使用来自input的新输入数据更新给定的聚合缓冲区`buffer`。每个输入行调用一次。
+        def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
+            if (!input.isNullAt(0)) {
+                buffer(0) = buffer.getLong(0) + 1L  //次数加1
+                buffer(1) = buffer.getDouble(1) + input.getAs[Long](0).toDouble  //求和
+            }
+        }
+        // 此函数是否始终在相同输入上返回相同的输出
+        def deterministic: Boolean = true
+        // 合并两个聚合缓冲区并将更新的缓冲区值存储回“buffer1”。当我们将两个部分聚合的数据合并在一起时调用此方法。
+        // Spark是分布式的，所以不同的区需要进行合并。
+        def merge(buffer1: MutableAggregationBuffer, buffer2: Row): Unit = {
+            buffer1(0) = buffer1.getLong(0) + buffer2.getLong(0)  //求次数
+            buffer1(1) = buffer1.getDouble(1) + buffer2.getDouble(1)  //求和
+        }
+        //计算最终的结果
+        def evaluate(buffer: Row): Double = {
+            buffer.getDouble(1) / buffer.getLong(0).toDouble
+        }
+        // 返回值的数据类型
+        def dataType: DataType = DoubleType
     }
 
     val repartition的三个重载函数的区别 = 0

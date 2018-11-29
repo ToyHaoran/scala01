@@ -13,11 +13,22 @@ import org.apache.spark.sql.functions._ //导入UDF需要用
   */
 object UdfUtil {
 
+
+    //改变DF的Schema信息
+    def intToLong: UserDefinedFunction = {
+        udf((input: Int) => input.toLong)
+    }
+    def intToDouble: UserDefinedFunction = {
+        udf((input: Int) => input.toDouble)
+    }
+    def longToDouble: UserDefinedFunction = {
+        udf((input: Long) => input.toDouble)
+    }
+
     /**
       * 将数值列中的空值转化为0
       * <p>
       * 例如：withColumn("Grade",nulltozero(col("Grade")))
-      * @return
       */
     def nulltozero: UserDefinedFunction = udf((input: String) =>
         //input.isEmpty是判断长度的

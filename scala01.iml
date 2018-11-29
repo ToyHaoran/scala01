@@ -43,5 +43,17 @@
         <jarDirectory url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../jars/jars-phoenix-cluster/phoenix-4.10.0.2.6.0.3-8-client.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../../jars/jars-phoenix-cluster/phoenix-4.10.0.2.6.0.3-8-client.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../jars/jars-phoenix-cluster/phoenix-4.10.0.2.6.0.3-8-client.jar!/org/apache/phoenix/shaded" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>
