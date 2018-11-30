@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import utils.PropUtil;
+
 /**
  * Created with IntelliJ IDEA.
  * User: lihaoran
@@ -19,6 +21,7 @@ import java.util.List;
  * 而且避免了与前端的jar包冲突，
  */
 public class PhoenixUtil {
+    //private static final String URL = "jdbc:phoenix:thin:url=http://" + PropUtil.getValueByKey("PHOENIX.QUERY.IP", "app.properties") + ";serialization=PROTOBUF";
     private static final String URL = "jdbc:phoenix:thin:url=http://172.20.32.211:8765;serialization=PROTOBUF";
     private static final String DRIVERNAME = "org.apache.phoenix.queryserver.client.Driver";
     private static Connection conn = null;
@@ -65,6 +68,10 @@ public class PhoenixUtil {
                 if(rs != null && !rs.isClosed()) {
                     rs.close();
                     rs = null;
+                }
+                if(ps != null && !ps.isClosed()) {
+                    ps.close();
+                    ps = null;
                 }
             } catch (SQLException e) {
                 e.printStackTrace();

@@ -11,7 +11,7 @@ object ConnectUtil {
     private final val WHITE = "lihaoran"
 
     //提示信息水平
-    Logger.getLogger("org.apache.spark").setLevel(Level.INFO) //Level.WARN
+    Logger.getLogger("org.apache.spark").setLevel(Level.WARN) //Level.WARN
 
     //公平调度程序
     private lazy val sparkBuilder = SparkSession.builder().config("spark.scheduler.mode", "FAIR")

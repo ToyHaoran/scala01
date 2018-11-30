@@ -70,6 +70,14 @@ object BaseUtil {
         def printKeyNums(column: String): Unit ={
             printKeyNums(dataFrame.col(column))
         }
+
+        /**
+          * 打印分区位置信息
+          */
+        def printLocation(): Unit ={
+            println("分区位置信息如下==============")
+            dataFrame.rdd.mapPartitionsWithIndex(printLocationFunc).collect().foreach(println(_))
+        }
     }
 
      /**
@@ -99,12 +107,10 @@ object BaseUtil {
     val RDD相关工具方法 = 0
 
     /**
-      * 打印rdd的分区信息，需要用mapPartitionsWithIndex方法
+      * 打印rdd的分区信息，需要用mapPartitionsWithIndex方法。
+      * 使用方法：df.rdd.mapPartitionsWithIndex(printLocationFunc).collect().foreach(println(_))
       */
     def printLocationFunc(index: Int, iter: Iterator[Any]): Iterator[String] = {
         iter.map(x => "分区" + index + "：" + x + "")
     }
-
-
-
 }

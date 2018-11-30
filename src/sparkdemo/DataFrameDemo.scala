@@ -35,6 +35,9 @@ object DataFrameDemo extends App {
 
         //打印Schema信息，常用于检查数据格式
         df.printSchema()
+        df.explain()
+        df.explain(true)
+        df.rdd.toDebugString
 
         //获取key的数目，常用于调整数据倾斜   //参考 src.utils.BaseUtil
         df.printKeyNums("key1")
@@ -313,15 +316,18 @@ object DataFrameDemo extends App {
     }
 
     val 窗口函数 = 0
-    //参考：
-    //https://n3xtchen.github.io/n3xtchen/spark/2017/01/24/spark200-window-function
-    //https://www.jianshu.com/p/42be8650509f
-    if (0) {
+    /*
+    参考：
+    https://n3xtchen.github.io/n3xtchen/spark/2017/01/24/spark200-window-function
+    https://www.jianshu.com/p/42be8650509f
+     */
+    if (1) {
         /*
         有些时候需要计算一些排序特征，窗口特征等，如一个店铺的首单特征。对于这样的特征显然是不能简单通过groupBy操作来完成
         即：第一列是订单，第二列是店铺，第三列是支付时间，第四列是价格。
         1、统计每个店铺每个订单和前一单的价格和，如果通过groupBy来完成特别费劲。
-        2、店铺这个订单与前一单的差值 TODO 怎么做，难道要自定义聚合函数？
+        2、店铺这个订单与前一单的差值，需要自定义聚合函数
+        还有计算前4秒的平均值、计算环比之类的，都要用到窗口函数。
          */
         val orders = Seq(
             ("o1", "s1", "2017-05-01", 100),
@@ -331,16 +337,37 @@ object DataFrameDemo extends App {
             ("o5", "s2", "2017-05-02", 100),
             ("o6", "s1", "2017-05-04", 300)
         ).toDF("order_id", "seller_id", "pay_time", "price")
+        //打印分区信息
+        orders.printLocation()
 
         //店铺订单顺序
         val rankSpec = Window.partitionBy("seller_id").orderBy("pay_time")
         orders.withColumn("rank", dense_rank.over(rankSpec)).show()
+        val rankSpec2 = Window.partitionBy("seller_id").orderBy("price")
+        orders.withColumn("rank2", rank.over(rankSpec2)).show() //1,2,2,4
+        orders.withColumn("dense_rank2", dense_rank.over(rankSpec2)).show()//1,2,2,3
+
         //定义前一单和本单的窗口
         val winSpec = Window.partitionBy("seller_id").orderBy("pay_time").rowsBetween(-1, 0)
         //店铺这个订单及前一单的价格和
         orders.withColumn("sum_pay", sum("price").over(winSpec)).show()
-        //店铺这个订单与前一单的差值,需要自定义聚合函数？？？
-        orders.withColumn("minus_pay", avg("price").over(winSpec)).show()
+        //店铺这个订单与前一单的平均值，用UDAF
+        def getAvgUdaf:UserDefinedAggregateFunction = new MyAverage
+        orders.withColumn("avg",getAvgUdaf($"price").over(winSpec)).show()
+        orders.withColumn("avg2", avg("price").over(winSpec)).show()
+
+        //每个店铺当前订单与前一单的差值,需要自定义聚合函数，或者lag函数
+        def getMinusUdaf:UserDefinedAggregateFunction = new MyMinus
+        orders.withColumn("rank", dense_rank.over(rankSpec))
+            .withColumn("prePrice", lag("price", 1).over(rankSpec))  //前一行的值
+            .withColumn("minus", getMinusUdaf($"price").over(winSpec))  //在前面的基础上用UDF也行
+            .show()
+
+        /*
+        lag(field, n): 就是取从当前字段往前第n个值，这里是取前一行的值
+        first/last(): 提取这个分组特定排序的第一个最后一个，在获取用户退出的时候，你可能会用到
+        lag/lead(field, n): lead 就是 lag 相反的操作，这个用于做数据回测特别用，结果回推条件
+         */
     }
 
     val 排序 = 0
@@ -530,7 +557,7 @@ object DataFrameDemo extends App {
     参考：https://help.aliyun.com/document_detail/69553.html
     具体案例见sparkdemo.practice.Demo05
     */
-    if (1) {
+    if (0) {
         val df2 = df
             .withColumn("key2",intToLong($"key2"))
             .withColumn("key3",intToLong($"key3"))
@@ -545,8 +572,8 @@ object DataFrameDemo extends App {
         def getAvgUdaf:UserDefinedAggregateFunction = {
             new MyAverage
         }
-        df2.groupBy("key1").agg(getAvgUdaf($"key2")).show()
-        df2.withColumn("avg",getAvgUdaf($"key2")).show()
+        df2.groupBy("key1").agg(getAvgUdaf($"key2").as("avg")).show()
+        //df2.withColumn("avg",getAvgUdaf($"key2")).show()  //报错
 
        /*
         import org.apache.spark.sql.functions._
@@ -584,10 +611,6 @@ object DataFrameDemo extends App {
         }*/
     }
 
-    /**
-      * 无类型用户定义的聚合函数,用户必须扩展UserDefinedAggregateFunction抽象类以实现自定义无类型聚合函数。
-      * 而且必须定义为全局变量，放在if内部会报错：java.lang.InternalError: Malformed class name
-      */
     class MyAverage extends UserDefinedAggregateFunction{
         //继承抽象函数必须实现以下方法
         // 输入参数的数据类型
@@ -621,6 +644,32 @@ object DataFrameDemo extends App {
         }
         // 返回值的数据类型
         def dataType: DataType = DoubleType
+    }
+
+    class MyMinus extends UserDefinedAggregateFunction{
+        def inputSchema: StructType = StructType(StructField("value", LongType) :: Nil)
+        def bufferSchema: StructType = StructType(StructField("minus", LongType) :: Nil)
+        def initialize(buffer: MutableAggregationBuffer): Unit = {
+            buffer(0) = 0L  //表示差值
+        }
+        def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
+            if (!input.isNullAt(0)) {
+                //输入的后者减去前者
+                buffer(0) = input.getLong(0) - buffer.getLong(0)
+            }
+        }
+        // 此函数是否始终在相同输入上返回相同的输出
+        def deterministic: Boolean = true
+        def merge(buffer1: MutableAggregationBuffer, buffer2: Row): Unit = {
+            //分区合并，也是后者减前者
+            buffer1(0) = buffer2.getLong(0) - buffer1.getLong(0)
+        }
+        //计算最终的结果
+        def evaluate(buffer: Row): Long = {
+            buffer.getLong(0)
+        }
+        // 返回值的数据类型
+        def dataType: DataType = LongType
     }
 
     val repartition的三个重载函数的区别 = 0

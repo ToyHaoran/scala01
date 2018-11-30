@@ -17,7 +17,7 @@ public class TestPhoenixUtil {
      * 这个是简化版的Phoenix查询，只能用来查询，而且需要开启的服务也不同。
      */
     public static void main(String[] args) throws SQLException {
-        String sql = "SELECT * FROM STUDENT";
+        String sql = "SELECT * FROM BMSD limit 100";
         List<HashMap<String, Object>> result = PhoenixUtil.query(sql);
         System.out.println(result.size());
     }
