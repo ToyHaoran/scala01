@@ -1,12 +1,8 @@
 package utils.phoenix;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
-import utils.phoenix.HbaseUtil;
-import utils.phoenix.HbaseUtilThin;
 
 /**
  * Created with IntelliJ IDEA.
@@ -26,17 +22,7 @@ public class TestHbaseUtil {
             System.out.println("result.size===================" + result.size());
             System.out.println(result.get(2).get("UUID"));
         }
-        
-        if(true){
-            //测试小型HbaseUtil
-            HbaseUtilThin hbaseUtil = new HbaseUtilThin();
-            Connection conn = HbaseUtilThin.getConnection();
-            ResultSet resultSet = HbaseUtilThin.query("select * from BMSD limit 100", conn);
-            List<HashMap<String, Object>> result = hbaseUtil.dataWrap(resultSet);
-            System.out.println("result.size===================" + result.size());
-            System.out.println(result.get(2).get("UUID"));
-        }
-        
+
         if(false){
             //测试phoenix查询数据另一个集群
             HbaseUtil hbaseUtil = new HbaseUtil();

@@ -247,6 +247,14 @@ object DataFrameDemo extends App {
         df.schema //res85: org.apache.spark.sql.types.StructType = StructType(StructField(key1,StringType,true), StructField(key2,IntegerType,false), StructField(key3,IntegerType,false))
     }
 
+    val 对列的操作 = 0
+    if(0){
+        //取前几行
+        val top5:DataFrame = df.limit(5)//取前5行
+        val top4:Array[Row] = df.head(4)
+        val sample = df.take(4)
+    }
+
     val 对Null的操作 = 0
     if (0) {
         //—————————————————————————对Null的操作—————————————————————————————————

@@ -2,7 +2,7 @@ package sparkdemo.test
 
 import org.apache.spark.sql.{AnalysisException, SparkSession}
 import utils.BaseUtil._
-import utils.{ConnectUtil, HDFSUtil}
+import utils.{ConnectUtil, HDFSUtil, PropUtil}
 
 /**
   * Created with IntelliJ IDEA.
@@ -33,11 +33,11 @@ object ReadParquet extends App{
     val 读取所有的parquet并且统一做一些处理 = 0
     if(1){
         val spark = ConnectUtil.spark
-        val hdfsRoot = "hdfs://172.20.32.163:8020"
+        val hdfsRoot = PropUtil.getValueByKey("HDFS.ROOT.162")
         val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
         //读取xxx目录下的所有parquet文件
-        val files = hdfsUtil.list("/YXFK/compute/")
         //val files = hdfsUtil.list("/YXFK/increment/20181126_UPDATE")
+        val files = hdfsUtil.list("/YXFK/compute/")
 
 
         println("文件个数：" + files.length)

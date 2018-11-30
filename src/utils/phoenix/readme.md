@@ -7,6 +7,11 @@
 
 一般是前台使用java+JDBC查询。 存储是spark处理，然后直接写入。
 
+## Phoenix数据类型
+https://blog.csdn.net/jiangshouzhuang/article/details/52400722
+
+
+
 ---
 
 [HbaseUtil](HbaseUtil.java) ， [TestHbaseUtil](TestHbaseUtil.java)
@@ -14,11 +19,11 @@
 Hbase详细工具类，用来直接操作Hbase以及使用Phoenix操作数据库，使用
 phoenix-4.10.0.2.6.0.3-8-client.jar包。
 
-[HbaseUtilThin](HbaseUtilThin.java)
+[PhoenixUtil](PhoenixUtil.java)
 
 全部是通过Phoenix来操作Hbase（删除了直接操作Hbase）
 
-[PhoenixUtil](PhoenixUtil.java)， [TestPhoenixUtil](TestPhoenixUtil.java)
+[PhoenixUtil](PhoenixUtil.java)，[TestPhoenixQueryUtil](TestPhoenixQueryUtil.java)
 
 只是用来查询，使用的phoenix-4.10.0.2.6.0.3-8-thin-client.jar包，避免了与前端的jar包冲突。
 
@@ -28,7 +33,10 @@ phoenix-4.10.0.2.6.0.3-8-client.jar包。
 
 ---
 
+## 总结
+前端只是用来查询使用[TestPhoenixQueryUtil](TestPhoenixQueryUtil.java)
 
+后端用来保存DF使用[Save2Hbase](Save2Hbase.scala)
 
 
 

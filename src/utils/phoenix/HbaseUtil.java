@@ -20,6 +20,7 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.phoenix.schema.PStringColumn;
 import org.apache.phoenix.schema.types.PVarchar;
+import utils.PropUtil;
 
 /**
  * Created with IntelliJ IDEA.
@@ -33,11 +34,13 @@ public class HbaseUtil {
     //初始化容量,提高访问速度
     private static final int INITIAL_CAPACITY = 25;
     //phoenix地址
-    private static final String URL = "jdbc:phoenix:172.19.27.123,172.19.27.124,172.19.27.125:2181";
+    //private static final String URL = "jdbc:phoenix:172.19.27.123,172.19.27.124,172.19.27.125:2181";
+    private static final String URL = PropUtil.getValueByKey("PHOENIX.URL","app");
     //1.获得Configuration实例并进行相关设置
     //2.获得Connection实例
     private static Connection connection;
     private static Admin admin;
+
     {
         try {
             //如果不用Hbase，只用phoenix，那么用到的也就最后四个方法，其他的都没用
@@ -51,9 +54,9 @@ public class HbaseUtil {
             Configuration configuration = HBaseConfiguration.create();
             configuration.set("hbase.client.ipc.pool.size", "1");
             configuration.addResource("");
-            configuration.set("hbase.zookeeper.quorum", "172.20.32.211,172.20.32.212,172.20.32.213:2181");
+            configuration.set("hbase.zookeeper.quorum", PropUtil.getValueByKey("HBASE.ZOOKEEPER.QUORUM","app"));
             configuration.set("hbase.zookeeper.property.clientPort", "2181");
-            configuration.set("hbase.master", "172.20.32.211:16000");
+            configuration.set("hbase.master", PropUtil.getValueByKey("HBASE.MASTER","app"));
             HbaseUtil.connection = ConnectionFactory.createConnection(configuration);
             //3.1获得Admin接口
             HbaseUtil.admin = HbaseUtil.connection.getAdmin();
@@ -155,11 +158,11 @@ public class HbaseUtil {
      * 删除表中的指定行
      *
      * @param tableName 表名
-     * @param rowKeys 行键
+     * @param rowKeys   行键
      */
     public void delete(String tableName, String... rowKeys) throws IOException {
         Table table = HbaseUtil.connection.getTable(TableName.valueOf(tableName));
-        for (String rowkey : rowKeys){
+        for (String rowkey : rowKeys) {
             Delete delete = new Delete(Bytes.toBytes(rowkey));
             table.delete(delete);
         }
@@ -193,6 +196,7 @@ public class HbaseUtil {
 
     /**
      * 获取所有的列名称
+     *
      * @param tableName
      * @return
      * @throws IOException
@@ -215,6 +219,7 @@ public class HbaseUtil {
 
     /**
      * 费控中用的，这里没用，先存着
+     *
      * @param tableName
      * @return
      * @throws IOException
@@ -235,6 +240,7 @@ public class HbaseUtil {
 
     /**
      * 根据表名，列族名，打印所有的column###value数据
+     *
      * @param tableName
      * @param family
      * @param columns
@@ -311,6 +317,7 @@ public class HbaseUtil {
 
     /**
      * 执行任何sql
+     *
      * @param sql
      * @param connection
      * @return
@@ -341,6 +348,7 @@ public class HbaseUtil {
 
     /**
      * 获取连接
+     *
      * @return phoenix连接
      * @throws SQLException
      */
@@ -349,12 +357,11 @@ public class HbaseUtil {
     }
 
 
-
     /**
      * 对jdbc的ResultSet进行封装
      *
      * @param resultSet 查询结果
-     * @return  list<HashMap>   每个HashMap是一行数据
+     * @return list<HashMap>   每个HashMap是一行数据
      */
     public List<HashMap<String, Object>> dataWrap(ResultSet resultSet) throws SQLException {
         List<HashMap<String, Object>> buffer = new ArrayList<HashMap<String, Object>>();

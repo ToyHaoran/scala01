@@ -61,7 +61,7 @@ object PropUtil {
       * 用于随时获取获取某个值
       */
     def getValueByKey(key: String, filePath: String = "app.properties"): String = {
-        new PropUtil(filePath).getConfig(key)
+        PropUtil(filePath).getConfig(key)
     }
 
     /**
@@ -79,8 +79,8 @@ object PropUtil {
         }
 
         //测试随时获取某个值
-        if(0){
-            val aaa = PropUtil.getValueByKey("aaa")
+        if(1){
+            val aaa = PropUtil.getValueByKey("PHOENIX.QUERY.URL","app")
             println(aaa)
         }
     }
