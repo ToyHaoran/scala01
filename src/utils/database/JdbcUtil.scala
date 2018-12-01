@@ -62,7 +62,7 @@ object JdbcUtil {
       *
       * @param database 所查询数据库
       * @param sql      查询语句
-      * @return         ResultSet
+      * @return ResultSet
       */
     private def query(database: String, sql: String): ResultSet = {
         val db = propertiesMap.get(database)
@@ -80,7 +80,7 @@ object JdbcUtil {
     /**
       * 查询并且横着打印信息
       */
-    def queryAndPrintH(database: String, sql: String): Unit ={
+    def queryAndPrintH(database: String, sql: String): Unit = {
         val db = propertiesMap.get(database)
         val url = db.get(URL.toString).toString
         val user = db.get(USER_NAME.toString).toString
@@ -108,8 +108,8 @@ object JdbcUtil {
     /**
       * 查询并且竖着打印信息
       */
-    def queryAndPrintV(database: String, sql: String): Unit ={
-        queryAndWrap(database,sql).foreach(printMap(_))
+    def queryAndPrintV(database: String, sql: String): Unit = {
+        queryAndWrap(database, sql).foreach(printMap(_))
     }
 
     /**
@@ -145,7 +145,6 @@ object JdbcUtil {
     }
 
 
-
     /**
       * 落库方法封装
       *
@@ -163,6 +162,7 @@ object JdbcUtil {
     }
 
     /**
+      * 将DataFrame落入数据库
       * 数据Save or update方法，只在Mysql中进行了测试
       * 原始数据（如果为时间类型）为空时，更新后时间为当前时间
       *
@@ -172,38 +172,43 @@ object JdbcUtil {
       */
     def update(database: String, table: String, dataFrame: DataFrame): Unit = {
         val columns = dataFrame.columns.mkString(",")
-        dataFrame.foreachPartition(
-            partition => {
-                val dbAdapter = getDBAdapter(database)
-                val connection = getConnection(dbAdapter.get(URL.toString).toString,
-                    dbAdapter.get(USER_NAME.toString).toString, dbAdapter.get(PASSWORD.toString).toString
-                )
-                partition.foreach(
-                    r => {
-                        val schema: Seq[StructField] = r.schema
-                        val placeholders = schema.map(_ => "?").mkString(",")
-                        val duplicateSetting = schema.map(_.name).map(i => s"$i=?").mkString(",")
-                        val sql = s"INSERT INTO $table ($columns) VALUES ($placeholders) ON DUPLICATE KEY UPDATE $duplicateSetting"
-                        val preparedStatement = connection.prepareStatement(sql)
-                        val setters = Setter.getSetter(schema.toList.toArray, connection, isUpdateMode = true)
-                        val setterLength = schema.length * 2
-                        (0 until setterLength).foreach(
-                            setterIndex => {
-                                val setter = setters(setterIndex)
-                                val rowIndex = if (setterIndex < schema.length) setterIndex else setterIndex - schema.length
-                                if (r.get(rowIndex) != null)
-                                    setter(preparedStatement, r, setterIndex + 1, rowIndex)
-                                else
-                                    preparedStatement.setNull(setterIndex + 1, Setter.nullType(schema(rowIndex).dataType))
-                            }
-                        )
-                        preparedStatement.execute()
-                        preparedStatement.close()
+        dataFrame.foreachPartition(partition => {
+            val dbAdapter = getDBAdapter(database)
+            val url = dbAdapter.get(URL.toString).toString
+            val user = dbAdapter.get(USER_NAME.toString).toString
+            val password = dbAdapter.get(PASSWORD.toString).toString
+
+            val connection = getConnection(url, user, password)
+
+            partition.foreach(r => {
+                val schema: Seq[StructField] = r.schema //StructType(StructField(key1,StringType,true), StructField(key2,IntegerType,false), StructField(key3,IntegerType,false))
+                val placeholders = schema.map(_ => "?").mkString(",") // ?,?,?  是占位符
+                val duplicateSetting = schema.map(_.name).map(i => s"$i=?").mkString(",") // key1=?,key2=?,key3=?
+                val sql = s"INSERT INTO $table ($columns) VALUES ($placeholders) ON DUPLICATE KEY UPDATE $duplicateSetting"
+                /*
+                INSERT INTO student (key1,key2,key3) VALUES (?,?,?) ON DUPLICATE KEY UPDATE key1=?,key2=?,key3=?
+                参考：https://9iphp.com/web/php/mysql-on-duplicate-key-update.html
+                ON DUPLICATE KEY UPDATE只是MySQL的特有语法，并不是SQL标准语法！
+                这个语法和适合用在需要 判断记录是否存在,不存在则插入存在则更新的场景
+                 */
+                val preparedStatement = connection.prepareStatement(sql)
+                val setters = Setter.getSetter(schema.toArray, connection, isUpdateMode = true)
+                val setterLength = schema.length * 2 // 因为上面那个SQL语句有两倍的问号。
+                (0 until setterLength).foreach(setterIndex => {
+                    val setter = setters(setterIndex) // 这是一个函数
+                    //注意这里判断是否是第二遍Index（后面的几个问号）
+                    val rowIndex = if (setterIndex < schema.length) setterIndex else setterIndex - schema.length
+                    if (r.get(rowIndex) != null){
+                        setter(preparedStatement, r, setterIndex + 1, rowIndex) // 设置SQL语句
+                    }else {
+                        preparedStatement.setNull(setterIndex + 1, Setter.nullType(schema(rowIndex).dataType)) //如果为null，设置对应的null类型
                     }
-                )
-                connection.close()
-            }
-        )
+                })
+                preparedStatement.execute()
+                preparedStatement.close()
+            })
+            connection.close()
+        })
     }
 
 
@@ -213,9 +218,9 @@ object JdbcUtil {
       * @param database 数据库名称
       * @param table    表名
       * @param options  自定义参数，优先级：自定义参数>配置文件>默认配置
-      * @return  DataFrame
+      * @return DataFrame
       */
-    def load(database: String, table: String, predicates: Array[String] = Array(),options: Map[String, String] = Map()): DataFrame = {
+    def load(database: String, table: String, predicates: Array[String] = Array(), options: Map[String, String] = Map()): DataFrame = {
         //没有此数据库会得到空指向异常，不需要处理，系统会打印错误信息
         val db = propertiesMap.getOrDefault(database, null)
         db.read(table, database, predicates, options)
@@ -260,8 +265,7 @@ object JdbcUtil {
     }
 
     private def getDBAdapter(database: String): DBAdapter = {
-        val db = propertiesMap.getOrDefault(database, null)
-        db
+        propertiesMap.getOrDefault(database, null)
     }
 
     def checkAvailable(database: String): Boolean = {

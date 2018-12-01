@@ -1,5 +1,6 @@
 package utils
 
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 
 //导入对应的规则类，以免出现警告
@@ -55,7 +56,6 @@ object BaseUtil {
       * DF的装饰类（隐式转换）
       */
     class RichDataFrame(dataFrame: DataFrame){
-
         /**
           * 用来统计相同key的记录数，常用于调整数据倾斜
           */
@@ -66,11 +66,9 @@ object BaseUtil {
                 println(key + "共有" + num + "条记录")
             }
         }
-
         def printKeyNums(column: String): Unit ={
             printKeyNums(dataFrame.col(column))
         }
-
         /**
           * 打印分区位置信息
           */
@@ -82,8 +80,6 @@ object BaseUtil {
 
      /**
       * 扩展df的方法，隐式转换
-      *
-      * @return
       */
     implicit def df2RichDF(src: DataFrame): RichDataFrame = new RichDataFrame(src)
 
@@ -105,6 +101,22 @@ object BaseUtil {
 
 
     val RDD相关工具方法 = 0
+
+    /**
+      * RDD的装饰类（隐式转换）,不加泛型读取不到
+      * @param rdd
+      */
+    class RichRDD(rdd:RDD[_ <: Any]){
+        def printLocation(): Unit ={
+            println("分区位置信息如下==============")
+            rdd.mapPartitionsWithIndex(printLocationFunc).collect().foreach(println(_))
+        }
+    }
+
+    /**
+      * 扩展RDD的方法，隐式转换
+      */
+    implicit def rdd2RichRDD(src: RDD[_ <: Any]): RichRDD = new RichRDD(src)
 
     /**
       * 打印rdd的分区信息，需要用mapPartitionsWithIndex方法。

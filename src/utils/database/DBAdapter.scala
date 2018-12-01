@@ -60,8 +60,7 @@ case class DBAdapter(properties: Properties) {
             appendOptions(Array(NUMPARTITIONS, FETCHSIZE), ops)
             if (options.nonEmpty)
                 options.foreach(x => ops.put(x._1.toLowerCase, x._2))
-            ConnectUtil.spark.read.options(ops.toMap)
-                .jdbc(properties.getProperty(URL.toString), table, predicates, dbProperties)
+            ConnectUtil.spark.read.options(ops.toMap).jdbc(properties.getProperty(URL.toString), table, predicates, dbProperties)
         }
     }
 

@@ -10,16 +10,20 @@ import utils.ConnectUtil
 
 object DataFrameDemo extends App {
 
-    val sc = ConnectUtil.sc
     //1.6后基本上不用sc了，用spark.sparkContext代替
+    val sc = ConnectUtil.sc
     val spark = ConnectUtil.spark
-
     import spark.implicits._
 
     val df = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("bbb", 1, 5), ("bbb", 2, 1), ("ccc", 4, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
+    df.foreachPartition(partition => partition.foreach(r => {
+        val schema: Seq[StructField] = r.schema
+        println(schema.toArray)
+        println(schema.map(_ => "?").mkString(","))
+        println(schema.map(_.name).map(i => s"$i=?").mkString(","))
+    }))
 
     case class Person(name: String, age: Int)
-
     val people = sc.textFile("src/sparkdemo/testfile/person.txt")
         .map(_.split(",")).map(p => Person(p(0), p(1).trim.toInt)).toDF() //转化为df后，统统为Row类型
 
@@ -257,7 +261,6 @@ object DataFrameDemo extends App {
 
     val 对Null的操作 = 0
     if (0) {
-        //—————————————————————————对Null的操作—————————————————————————————————
         //将key2，3的null全部填充为xxx
         df.na.fill("xxx", Seq("key2", "key3"))
         //将key2中的null修改为666，将key3中的null值修改为"你好"
@@ -268,7 +271,6 @@ object DataFrameDemo extends App {
 
     val 过滤操作 = 0
     if (0) {
-        //———————————————————————————过滤操作———————————————————————
         //过滤操作
         df.filter("key2 > 2 and key3 = 5").show()
         df.filter((df("key2") > 2).and(df("key3") === 5)).show()
@@ -416,7 +418,7 @@ object DataFrameDemo extends App {
 
     }
 
-    val 多表操作 = 0
+    val 多表合并 = 0
     if (0) {
         //两个DF的连接操作,通过主键连接
         val df1 = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
@@ -428,19 +430,24 @@ object DataFrameDemo extends App {
         df1.intersect(df2).show()
         println("求差集：except===Cost:Expensive=========")
         df1.except(df2).show()
+    }
 
-        //内连接,左右必须同时满足的才可以显示
+    val 多表Join = 0
+    if(0){
+        val df1 = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
+        val df2 = spark.createDataset(Seq(("aaa", 2, 2), ("bbb", 3, 5), ("ddd", 3, 5), ("bbb", 4, 6), ("eee", 1, 2), ("aaa", 1, 5), ("fff", 5, 6))).toDF("key1", "key2", "key4")
+
+        //DataFrame内连接,左右必须同时满足的才可以显示
         df1.join(df2, "key1").show() //推荐
         df1.join(df2, df1("key1") === df2("key1")).show() //多了一列key1,还要drop(df2.col("key1"))
         //等值连接（两个公共字段key1，key2）
         df1.join(df2, Seq("key1", "key2")).show()
-
-        //还是内连接，这次用joinWith。和join的区别是连接后的新Dataset的schema会不一样
-        df1.joinWith(df2, df1("key1") === df2("key1"))
+        //自连接
+        df1.as("a").join(df1.as("b")).where($"a.key1" === $"b.key1").show()
+        //DataSet内连接，这次用joinWith。和join的区别是连接后的新Dataset的schema会不一样
+        df1.joinWith(df2, df1("key1") === df2("key1")).show()
         /*
-        +---------+---------+
         |       _1|       _2|
-        +---------+---------+
         |[aaa,1,2]|[aaa,1,5]|
         |[aaa,1,2]|[aaa,2,2]|
          */
@@ -458,6 +465,14 @@ object DataFrameDemo extends App {
 
         //条件连接
         df1.join(df2, df1("key1") === df2("key1") && df1("key2") > df2("key2"))
+
+        /*
+        如果df2比df1小的多，将小表广播到其他节点，不走shuffle过程。
+        设置自动广播：config("spark.sql.autoBroadcastJoinThreshold", "209715200")
+        会自动广播小于10M的表，broadcast表的最大值10M（10485760），当为-1时，broadcasting不可用，内存允许的情况下加大这个值
+         */
+        df1.join(broadcast(df2), "key1").show()
+
     }
 
     val 保存DF的方式 = 0

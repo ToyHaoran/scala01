@@ -77,33 +77,27 @@ object SharedVariables extends App{
         //类继承extends AccumulatorV2[String, String]，第一个为输入类型，第二个为输出类型
         class MyAccumulator extends AccumulatorV2[String, String] {
             private var res = ""
-
             //isZero: 当累加器中为空时结束程序，res表示空值，对应不同的累加器，比如0，Nil，""
             override def isZero: Boolean = {
                 //res == ""
                 res.isEmpty
             }
-
             //merge: 合并数据
             override def merge(other: AccumulatorV2[String, String]): Unit = other match {
                 case o: MyAccumulator => res += o.res
                 case _ => throw new UnsupportedOperationException(
                     s"Cannot merge ${this.getClass.getName} with ${other.getClass.getName}")
             }
-
             //copy: 拷贝一个新的AccumulatorV2
             override def copy(): MyAccumulator = {
                 val newMyAcc = new MyAccumulator
                 newMyAcc.res = this.res
                 newMyAcc
             }
-
             //value: AccumulatorV2对外访问的数据结果
             override def value: String = res
-
             //add: 操作数据累加方法实现
             override def add(v: String): Unit = res += v + "-"
-
             //reset: 重置AccumulatorV2中的数据
             override def reset(): Unit = res = ""
         }

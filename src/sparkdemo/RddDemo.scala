@@ -132,13 +132,7 @@ object RddDemo extends App {
         // 第一个参数是分区的索引，第二个参数是该分区中所有项的迭代器。
         // 输出是一个迭代器，它包含应用函数编码的任何转换后的项列表。
         val rdd6 = sc.parallelize(List(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 3)
-        def myfunc3(index: Int, iter: Iterator[Int]): Iterator[String] = {
-            iter.map(x => "（分区" + index + "：" + x + ")")
-        }
-        rdd6.mapPartitionsWithIndex(myfunc3).collect()
-        //res57: Array[String] = Array(（分区0：1), （分区0：2), （分区0：3),
-        // （分区1：4), （分区1：5), （分区1：6),
-        // （分区2：7), （分区2：8), （分区2：9), （分区2：10))
+        rdd6.printLocation()
     }
 
     val flatMap_flatMapValues = 0
@@ -346,21 +340,23 @@ object RddDemo extends App {
     if (0) {
         val rdd = sc.parallelize(Seq(1, 2, 3))
         val other = sc.parallelize(Seq(3, 4, 5))
-        //————————————————————union()
+
         // 求并集：生成一个包含两个RDD中所有元素的RDD
         rdd.union(other) //{1, 2, 3, 3, 4, 5}
 
-        //————————————————————intersection()
         // 求交集：两个RDD共同的元素的RDD
         rdd.intersection(other) // {3}
 
-        //————————————————————subtract()
         // 求差集（相当于rdd减去两者的交集）：移除一个 RDD 中的内容
         rdd.subtract(other) //{1, 2}
 
-        //————————————————————cartesian()
         // 与另一个RDD的笛卡儿积
         rdd.cartesian(other) //{(1, 3), (1, 4), ... (3, 5)}
+    }
+
+    val 针对两个RDD的Join操作 = 0
+    if(0){
+        //见JoinDemo
     }
 
     val 针对两个pairRDD的连接操作 = 0
@@ -368,24 +364,19 @@ object RddDemo extends App {
         val rdd = sc.parallelize(Seq((1, 2), (3, 4), (3, 6)))
         val other = sc.parallelize(Seq((3,9)))//注意不要写成Seq(3,9)
 
-        //————————————————————————subtractByKey
         // 删掉RDD中键与other RDD 中的键相同的元素
         rdd.subtractByKey(other)                //{(1, 2)}
 
-        //————————————————————————join
         // join[W](other: RDD[(K, W)]): RDD[(K, (V, W))]
         //对两个RDD进行内连接（只有在两个 pair RDD中都存在的键才输出）
         rdd.join(other)                         //{(3, (4, 9)), (3, (6, 9))}
 
-        //————————————————————————rightOuterJoin
         // 对两个 RDD 进行连接操作，确保other的键必须存在（右外连接）
         rdd.rightOuterJoin(other)               //{(3,(Some(4),9)), (3,(Some(6),9))}
 
-        //————————————————————————leftOuterJoin
         // 对两个 RDD 进行连接操作，确保rdd的键必须存在（左外连接）
         rdd.leftOuterJoin(other)                 //{(1,(2,None)), (3, (4,Some(9))), (3, (6,Some(9)))}
 
-        //————————————————————————cogroup
         // cogroup[W](other: RDD[(K, W)]): RDD[(K, (Iterable[V], Iterable[W]))]
         // 一组非常强大的功能，允许使用键将最多3个键值RDD组合在一起。
         //案例1：
@@ -539,10 +530,7 @@ object RddDemo extends App {
         //案例1：
         val z = sc.parallelize(List(1,2,3,4,5,6), 2)
         //先用分区标签打出RDD的内容
-        def myfunc(index: Int, iter: Iterator[(Int)]) : Iterator[String] = {
-            iter.map(x => "[partID:" + index + ", val: " + x + "]")
-        }
-        z.mapPartitionsWithIndex(myfunc).collect     //如果加个7，分在第二个分区上。
+        z.mapPartitionsWithIndex(printLocationFunc).collect     //如果加个7，分在第二个分区上。
         //res28: Array[String] = Array([partID:0, val: 1], [partID:0, val: 2], [partID:0, val: 3],
         //                             [partID:1, val: 4], [partID:1, val: 5], [partID:1, val: 6])
 
@@ -576,14 +564,12 @@ object RddDemo extends App {
 
 
         println("aggregateByKey=================")
+        //HighPerformance5.2讲了一堆什么鬼？？？
         // aggregateByKey [Pair]
-        //  像聚合函数一样工作，除了聚合应用于具有相同键的值。与聚合函数不同，初始值不应用于第二个reduce。
+        // 像聚合函数一样工作，除了聚合应用于具有相同键的值。与聚合函数不同，初始值不应用于第二个reduce。
         val pairRDD = sc.parallelize(List( ("cat",2), ("cat", 5), ("mouse", 4),("cat", 12), ("dog", 12), ("mouse", 2)), 2)
         //让我们来看看分区中的内容
-        def myfunc2(index: Int, iter: Iterator[(String, Int)]) : Iterator[String] = {
-            iter.map(x => "[partID:" + index + ", val: " + x + "]")
-        }
-        pairRDD.mapPartitionsWithIndex(myfunc2).collect
+        pairRDD.mapPartitionsWithIndex(printLocationFunc).collect
         //res2: Array[String] = Array([partID:0, val: (cat,2)], [partID:0, val: (cat,5)], [partID:0, val: (mouse,4)],
         //                            [partID:1, val: (cat,12)], [partID:1, val: (dog,12)], [partID:1, val: (mouse,2)])
 
@@ -624,7 +610,7 @@ object RddDemo extends App {
     val 持久化 = 0
     //见笔记spark调优-01代码调优
 
-    val 分区 = 0
+    val 分区Partition = 0
     if(0){
         import org.apache.spark.HashPartitioner
         import org.apache.spark.RangePartitioner
