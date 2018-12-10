@@ -5,22 +5,22 @@ import utils.BaseUtil._
 object DataDemo extends App {
 
     val 基类及泛型 = 0
-    if(1){
+    if (1) {
         //Any是所有其他类的超类
-        val temp1:Any = "123"
-        val temp2:Any = List(1,2,3,4)
+        val temp1: Any = "123"
+        val temp2: Any = List(1, 2, 3, 4)
         //AnyRef类是Scala里所有引用类(reference class)的基类
-        val temp3:AnyRef = List(1,2,3,4)
+        val temp3: AnyRef = List(1, 2, 3, 4)
 
         //泛型
-        def getxxx(a:Any): Unit ={
+        def getxxx(a: Any): Unit = {
             println(a.toString)
         }
         getxxx(temp1)
         getxxx("444")
 
         def printMap(map: Map[_ <: Any, _ <: Any]): Unit = {
-            for ((key, value) <- map){
+            for ((key, value) <- map) {
                 println(key.toString + " : " + value.toString)
             }
             println("===================")
@@ -65,11 +65,11 @@ object DataDemo extends App {
         val a = 1.01
         val b = 2.02
         val c = a + b
-        println(c + " " + (c == 3.03))  //3.0300000000000002 false
+        println(c + " " + (c == 3.03)) //3.0300000000000002 false
         //问题2：
         println(1.1f == 1.1) //false
         getTypeName(1.1) //默认Double
-        getTypeName(2)  //默认Integer
+        getTypeName(2) //默认Integer
 
         //创建方式（一般传入String作为参数）
         val n1 = BigDecimal(1.01)
@@ -92,15 +92,15 @@ object DataDemo extends App {
         //比较两个大小数
         println(n1.compare(n2)) //-1
         println(n2.compare(n1)) //1
-        println(n2.compare(n2))  //0 相等
-        println(n1 > n2)  //false
+        println(n2.compare(n2)) //0 相等
+        println(n1 > n2) //false
         println(n1 >= n2)
 
         //精度
         n1.precision
         n3.precision
         BigDecimal(123.4567D).precision //7 精度，总位数
-        BigDecimal(123.4567D).scale  //4 小数位数
+        BigDecimal(123.4567D).scale //4 小数位数
 
         //保留小数位数
         /*
@@ -125,4 +125,84 @@ object DataDemo extends App {
 
 
     }
+}
+
+object StringDemo extends App {
+
+    val String的常用方法 = 0
+    if (0) {
+        val str = "hello"
+        println(str.charAt(1))
+        println(str.compareTo("hallo"))
+        println(str.compareToIgnoreCase("Hello"))
+        println(str.concat(" world"))
+        println(str.contentEquals(new StringBuilder("hello")))
+        println(String.copyValueOf(Array('a', 'b', 'c')))
+        println(str.endsWith("lo"))
+        println("-----------")
+        println(str.equals("hall"))
+        println(str.equalsIgnoreCase("HELLO"))
+        println(str.getBytes().mkString(" "))
+        println(str.getBytes("utf-8").mkString(" "))
+        val str2 = new Array[Char](10)
+        println(str.getChars(0, str.length-1, str2, 1))
+        println(str.hashCode)
+        println(str.indexOf("l"))
+        println(str.indexOf("l", 3))
+        println(str.lastIndexOf("o"))
+        println(str.lastIndexOf("lo",-1))
+        println("---------------")
+        println(str.intern())
+        println(str.matches("[a-z]+"))
+        println(str.replaceAll("he","kkkkk"))
+        println(str.replaceFirst("l","op"))
+        println(str.startsWith("he"))
+        println(str.split("l"))
+        println(str.substring(2,4))
+        println(str.toCharArray.mkString(" "))
+        println(str.toLowerCase)
+        println("=================")
+        println(str.toUpperCase)
+        println(str.trim)
+        println(getTypeName(String.valueOf(4645))) //以字符串形式返回
+        println(String.valueOf(4645.454d))
+    }
+
+    val stringBuilder的优势 = 0
+    if (0) {
+        val time1 = getMethodRunTime({
+            var str1 = ""
+            for (i <- 1 to 10000) {
+                str1 += "append"
+            }
+            str1
+        })._2
+
+        val time2 = getMethodRunTime({
+            val str2 = new StringBuilder()
+            for (i <- 1 to 10000) {
+                str2.append("append")
+            }
+            str2.toString()
+        })._2
+        print(time1 + " " + time2) //1.160s 0.004s
+    }
+
+    val stringBuilder的常用方法 = 0
+    if(1){
+        val str = new StringBuilder()
+        str.append("hello ").append(7878).append(" ").append(3.1415d)
+        println(str.toString())
+        println(str.insert(1," world ").toString())
+        println(str.delete(1, 5).toString()) //在上面的基础上删除
+        println(str.setCharAt(5,'H'))
+        println(str.replace(5,6,"oooooo"))
+        println(str.result())
+        println(str.reverseContents())
+        println(str.reverse)
+        println(str)
+        println(str.indexOf("8787"))
+    }
+
+
 }

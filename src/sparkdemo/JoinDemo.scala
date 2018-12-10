@@ -1,9 +1,11 @@
 package sparkdemo
 
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
 import utils.BaseUtil._
-import utils.ConnectUtil
+import utils.database.JdbcUtil
+import utils.{ConnectUtil, PropUtil}
 
 /**
   * Created with IntelliJ IDEA.
@@ -13,77 +15,100 @@ import utils.ConnectUtil
   * Description:
   */
 object JoinDemo extends App {
-    val sc = ConnectUtil.sc
-    val spark = ConnectUtil.spark
 
-
-    def main222(args: Array[String]) {
+    val 如何在1亿条数据中更新数据 = 0
+    if (0) {
         val spark = ConnectUtil.spark
-
-        val jldxx = spark.read.parquet("hdfs://172.20.32.164:8020/YXFK/compute/HS_JLDXX")
-        val ydkh = spark.read.parquet("hdfs://172.20.32.164:8020/YXFK/compute/KH_YDKH")
-
-        /*val (joinRes,time1) = getMethodRunTime(jldxx.join(ydkh, "col1"))
-        println(time1)//98.048085ms
-        val (res2,time2) = getMethodRunTime(joinRes.show(20))
-        println(time2)//47344.20967ms*/
-
-        //人为制造数据倾斜
-        val jldxx2 = jldxx.withColumn("col1", getCol1(col("GDDWBM")))
-        val ydkh2 = ydkh.withColumn("col1", getCol1(col("GDDWBM")))
-
-        /*//加cache内存一定要大，否则会导致内存不足Job aborted due to stage failure
-        val (joinRes,time1) = getMethodRunTime(jldxx2.join(ydkh2, "col1"))
-        println(time1)//72.66936ms
-        val (res2,time2) = getMethodRunTime(joinRes.show(20))
-        println(time2)//54024.426379ms*/
-
-        //修正数据倾斜
-        val jldxx3 = jldxx2.withColumn("col2", getCol2(col("col1")))
-        jldxx3.printKeyNums("col2")
-        val ydkh3 = ydkh2.withColumn("col2", getCol2(col("col1")))
-        ydkh3.printKeyNums("col2")
-
-        val (joinRes, time1) = getMethodRunTime(jldxx3.join(ydkh3, jldxx3("col2") === ydkh3("col2"))) //连接有问题，怎么都成CCC了？
-        println(time1)
-        val (res2, time2) = getMethodRunTime(joinRes.show(20))
-        println(time2)
-
-        //joinRes.printKeyNums("col2")
-
-
-        Thread.sleep(1000 * 60 * 10)
+        //主键
+        val keys = Array("YHBH")
+        //原始DF
+        val source = spark.read.parquet(PropUtil.getValueByKey("HDFS.ROOT.162") + "/YXFK/compute/KH_YDKH_TEMP")
+        //增量DF
+        val sql = s"(SELECT * FROM KH_YDKH_TEMP WHERE CZSJ > to_date('2018-12-04 18:31:30','yyyy-mm-dd hh24:mi:ss') AND CZSJ <= to_date('2018-12-04 23:59:59','yyyy-mm-dd hh24:mi:ss'))"
+        val update = JdbcUtil.loadByColumn("dfjs",sql,"GDDWBM")
+        //Join结果
+        val unionDf = updateBigDf(source,update,keys)
     }
 
-    def getCol1: UserDefinedFunction = {
-        udf((gddwbm: String) => {
-            val ran = scala.util.Random.nextInt(10)
-            ran match {
-                case _ if ran >= 0 && ran <= 5 => "AAA"
-                case 6 => "BBB"
-                case 7 => "CCC"
-                case 8 => "DDD"
-                case 9 => "EEE"
-            }
-        })
+    /**
+      * 根据主键更新大表。
+      *
+      * @param sourceDf 原始的大表DF，上亿数据
+      * @param updateDf 需要更新的数据,上百万数据
+      * @param keys     主键列
+      * @return 更新后的DF
+      */
+    def updateBigDf(sourceDf: DataFrame, updateDf: DataFrame, keys: Array[String]): DataFrame = {
+        //增加判断是否更新的标志
+        val df1 = sourceDf.withColumn("FLAG", lit("1"))
+        val df2 = updateDf.withColumn("FLAG", lit("1"))
+        //控制字段选择的顺序
+        val columnName = sourceDf.columns
+        //将df1和df2进行fullouter join，df1是大表。
+        val df3 = getCondition(df1, df2, keys)
+        /*
+        逻辑：
+            进行outjoin后判断Flag标记：
+            1   ，null   表示不需要更新
+            1   ，1      表示需要更新
+            nul ，1      表示增量数据
+         */
+        //如果是需要更新的数据就选择 增量DF 的字段
+        val df4 = df3.filter(df2("FLAG") === "1").select(columnName.map(c => df2(c)): _*)
+        //如果是不需要更新的数据就选择 原始DF 的字段
+        val df5 = df3.filter(df2("FLAG").isNull).select(columnName.map(c => df1(c)): _*)
+        df4.union(df5).drop("FLAG")
     }
 
-    def getCol2: UserDefinedFunction = {
-        udf((col1: String) => {
-            col1 match {
-                case "AAA" => {
-                    val ran = scala.util.Random.nextInt(5)
-                    ran match {
-                        case 0 => "AAA_1"
-                        case 1 => "AAA_2"
-                        case 2 => "AAA_3"
-                        case 3 => "AAA_4"
-                        case 4 => "AAA_5"
-                    }
-                }
-                case _ => col1
-            }
-        })
+    /**
+      * 将DF1和DF2根据主键个数进行full outer join
+      *
+      * @param df1  大表
+      * @param df2  小表(在右边会自动广播)
+      * @param keys 主键列
+      * @return join后的DF
+      */
+    def getCondition(df1: DataFrame, df2: DataFrame, keys: Array[String]): DataFrame = {
+        /*
+          这里有个Bug：
+          1、如果用Seq(String)作为条件，select的时候就会导致df2,df1的主键消失
+              这种情况下，无论是select(df1("key1")),还是df2("key1"),都会报错：key1不存在：
+              coalesce(key1#204, key1#218) AS key1#458, key2#205, key3#206, key2#219, key4#220]
+              上面的报错信息可以看到原来的键被合并了。
+              必须select($"key1",df1("key2"),df2("key3"))，这个select语句不好拼接。
+                  可以在map里面加条件判断是不是主键，然后进行拼接。
+                  主键多了判断也多。。
+          2、如果用df1("YHBH") === df2("YHBH")，条件还不能统一制定。
+              可以判断主键有几个，然后按主键个数选择连接条件
+          3、如果注册成临时表：
+              判断条件也不好写，而且select a.* 字段也不一定能对齐。
+          4、用RDD处理
+              性能较低，上亿数据处理不了。
+          综上：选择第二种方式。
+           */
+        val keysSize = keys.length
+        val joinType = "fullouter"
+        keysSize match {
+            case 1 =>
+                val key1 = keys(0)
+                df1.join(df2, df1(key1) === df2(key1), joinType)
+            case 2 =>
+                val (key1, key2) = (keys(0), keys(1))
+                df1.join(df2, df1(key1) === df2(key1) && df1(key2) === df2(key2), joinType)
+            case 3 =>
+                val (key1, key2, key3) = (keys(0), keys(1), keys(2))
+                df1.join(df2, df1(key1) === df2(key1) && df1(key2) === df2(key2) && df1(key3) === df2(key3), joinType)
+            case 4 =>
+                val (key1, key2, key3, key4) = (keys(0), keys(1), keys(2), keys(3))
+                df1.join(df2, df1(key1) === df2(key1) && df1(key2) === df2(key2) && df1(key3) === df2(key3) &&
+                    df1(key4) === df2(key4), joinType)
+            case 7 =>
+                val (key1, key2, key3, key4, key5, key6, key7) = (keys(0), keys(1), keys(2), keys(3),
+                    keys(4), keys(5), keys(6))
+                df1.join(df2, df1(key1) === df2(key1) && df1(key2) === df2(key2) && df1(key3) === df2(key3) &&
+                    df1(key4) === df2(key4) && df1(key5) === df2(key5) && df1(key6) === df2(key6)
+                    && df1(key7) === df2(key7), joinType)
+        }
     }
 
 }

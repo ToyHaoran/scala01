@@ -31,7 +31,6 @@ object ConnectUtil {
             sparkBuilder.appName(NAME).getOrCreate()
         }
 
-
     /**
       * 获得SparkContext，已自动区分本机和集群
       */

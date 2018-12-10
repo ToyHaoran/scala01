@@ -433,23 +433,21 @@ class HDFSUtil(hdfsBsePath: String) {
 
     /**
       * 读取所有文件大小,以及某一列的数目
-      *
-      * @param spark
-      * @param files
       */
-    def readAllFileSize(spark: SparkSession, files: Array[String], colName:String): Unit = {
+    def readAllFileSize(spark: SparkSession, files: Array[String], colName: String): Unit = {
+        println("要统计的列名==========" + colName + "===========================")
         val hdfsRoot = hdfsBsePath
         println("文件个数：" + files.length)
         val list1: List[String] = List()
         //不用并行读取的原因是防止打印的时候混乱。
         for (filePath <- files) {
-            try{
+            try {
                 val df = spark.read.parquet(hdfsRoot + filePath) //抛出异常 将不符合的路径排除掉
                 val num = df.count()
                 //临时添加
-                println(filePath + ":" + num + "================================")
+                /*println(filePath + ":" + num + "================================")
                 df.show()
-                df.printSchema()
+                df.printSchema()*/
                 if (num > 1000000) {
                     if (num > 5000000) {
                         println(filePath + ":" + num + "条记录，大于500万================================")
@@ -468,8 +466,8 @@ class HDFSUtil(hdfsBsePath: String) {
                     println(filePath + ":" + num + "条记录=======")
                     //小于100万的另做处理
                 }
-            }catch {
-                case ex:AnalysisException =>
+            } catch {
+                case ex: AnalysisException =>
                     println(s"${filePath}不是正常的parquet文件==")
             }
         }

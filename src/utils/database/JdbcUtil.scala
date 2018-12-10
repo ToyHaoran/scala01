@@ -16,20 +16,15 @@ import scala.collection.mutable.ArrayBuffer
 
 
 object JdbcUtil {
-
     private val PROJECT_ROOT_PATH = PropUtil.getValueByKey("PROJECT.ROOT.PATH")
-
     //存放数据库的map
     private val propertiesMap: ConcurrentHashMap[String, DBAdapter] = new ConcurrentHashMap[String, DBAdapter]()
-
     PropUtil.getValueByKey("DATABASE.PATH").split(",").foreach(property => {
         val propUtil = PropUtil(property)
         val prop = propUtil.getProperties()
         val name = propUtil.getConfig("name")
-
         //提示信息
         Logger.getLogger("org.apache.spark").warn("Loading database  " + name)
-
         //增加数据库
         propertiesMap.put(name, DBAdapter(prop))
     })
@@ -144,9 +139,50 @@ object JdbcUtil {
         buffer.toList
     }
 
+    /**
+      * 通过Spark加载Column信息
+      */
+    def getTableColumnsBySpark(db: String, table: String): Set[String] = {
+        val sql = s"(SELECT * FROM $table WHERE ROWNUM = 1)"
+        load(db, sql).columns.toSet
+    }
 
     /**
-      * 落库方法封装
+      * 通过JDBC加载Column信息
+      */
+    def getTableColumnsByJdbc(database: String, sql: String): Array[String] = {
+        val db = propertiesMap.get(database)
+        val url = db.get(URL.toString).toString
+        val user = db.get(USER_NAME.toString).toString
+        val pass = db.get(PASSWORD.toString).toString
+        val connection = getConnection(url, user, pass)
+        val preparedStatement = connection.prepareStatement(sql)
+        val resultSet = preparedStatement.executeQuery()
+        val data: ResultSetMetaData = resultSet.getMetaData
+
+        val colNames = ArrayBuffer[String]()
+        for (i <- 1 to data.getColumnCount) {
+            val columnName = data.getColumnName(i) //列的名称
+            colNames += columnName
+        }
+        println(colNames.mkString(","))
+        //关闭连接
+        preparedStatement.close()
+        connection.close()
+        colNames.toArray
+    }
+
+    def loadTable(database: String, table: String): DataFrame = {
+        val columns = getTableColumnsBySpark(database, table)
+        if (columns.contains("GDDWBM")) {
+            loadByColumn(database, table, "GDDWBM")
+        } else {
+            load(database, table)
+        }
+    }
+
+    /**
+      * 将DF保存到数据库
       *
       * @param database 数据库名称
       * @param table    表名
@@ -162,7 +198,7 @@ object JdbcUtil {
     }
 
     /**
-      * 将DataFrame落入数据库
+      * 将DataFrame落入数据库，在费控中主要是用在mysql数据库上更新
       * 数据Save or update方法，只在Mysql中进行了测试
       * 原始数据（如果为时间类型）为空时，更新后时间为当前时间
       *
@@ -198,9 +234,9 @@ object JdbcUtil {
                     val setter = setters(setterIndex) // 这是一个函数
                     //注意这里判断是否是第二遍Index（后面的几个问号）
                     val rowIndex = if (setterIndex < schema.length) setterIndex else setterIndex - schema.length
-                    if (r.get(rowIndex) != null){
+                    if (r.get(rowIndex) != null) {
                         setter(preparedStatement, r, setterIndex + 1, rowIndex) // 设置SQL语句
-                    }else {
+                    } else {
                         preparedStatement.setNull(setterIndex + 1, Setter.nullType(schema(rowIndex).dataType)) //如果为null，设置对应的null类型
                     }
                 })
@@ -222,7 +258,7 @@ object JdbcUtil {
       */
     def load(database: String, table: String, predicates: Array[String] = Array(), options: Map[String, String] = Map()): DataFrame = {
         //没有此数据库会得到空指向异常，不需要处理，系统会打印错误信息
-        val db = propertiesMap.getOrDefault(database, null)
+        val db = getDBAdapter(database)
         db.read(table, database, predicates, options)
     }
 
@@ -239,7 +275,7 @@ object JdbcUtil {
     def loadByColumn(database: String, table: String, classifyColumn: String,
                      ignoreNull: Boolean = false, options: Map[String, String] = Map()): DataFrame = {
         val db = getDBAdapter(database)
-        val predicates = PredicatesUtil.predicates(database, table, classifyColumn, ignoreNull)
+        val predicates = PredicatesUtil.byColumn(database, table, classifyColumn, ignoreNull)
         db.read(table, database, predicates, options)
     }
 
@@ -252,48 +288,48 @@ object JdbcUtil {
       * @param lastDate   开始时期
       * @param t          多少天作为一个分区的周期
       * @param times      周期数
-      * @param ignoreNull 是否忽略 classifyColumn=null的数据
       * @param options    自定义参数，优先级：自定义参数>配置文件>默认配置
       * @return
       */
-    def loadByDateBefore(database: String, table: String, dateColumn: String,
-                         lastDate: java.sql.Date, t: Int, times: Int, ignoreNull: Boolean = false,
+    def loadByDateBefore(database: String, table: String, dateColumn: String, lastDate: java.sql.Date, t: Int, times: Int,
                          options: Map[String, String] = Map()): DataFrame = {
         val db = getDBAdapter(database)
-        val predicates = PredicatesUtil.predicates(dateColumn, lastDate, t, times)
+        val predicates = PredicatesUtil.byDate(dateColumn, lastDate, t, times)
         db.read(table, database, predicates, options)
     }
 
+    /**
+      * 得到数据库适配器
+      */
     private def getDBAdapter(database: String): DBAdapter = {
         propertiesMap.getOrDefault(database, null)
     }
 
-    def checkAvailable(database: String): Boolean = {
-        val db = getDBAdapter(database)
-        if (null != db) true else false
+    /**
+      * 打印所有的数据库
+      */
+    def showAll(): Unit = {
+        propertiesMap.values.toArray().foreach(println(_))
     }
 
-    final case class DatabaseUnavailableException(private val msg: String, private val cause: Throwable = None.orNull)
-        extends Exception(msg, cause)
-
-    def showAll(): Unit = propertiesMap.values.toArray().foreach(println(_))
-
     /**
-      * 生成配置文件信息，需要在配置文件中配置项目名称
+      * 生成数据库配置文件信息，需要在配置文件中配置项目名称。
+      * 感觉没什么卵用
       *
       * @param name     数据库名称
-      * @param fileName 保存对配置文件名称
+      * @param fileName 保存的配置文件名称
       * @return 成功标志
       */
-    def writeProperties(name: String, fileName: String): Boolean = {
+    @deprecated
+    private def writeProperties(name: String, fileName: String): Boolean = {
         val file = if (fileName.contains(".properties")) fileName else s"$fileName.properties"
         val db = propertiesMap.getOrDefault(name, null)
         if (db != null) {
             db.write(s"$PROJECT_ROOT_PATH/source/$file")
             true
-        }
-        else
+        } else {
             false
+        }
     }
 
 }

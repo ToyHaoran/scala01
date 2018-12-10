@@ -16,12 +16,6 @@ object DataFrameDemo extends App {
     import spark.implicits._
 
     val df = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("bbb", 1, 5), ("bbb", 2, 1), ("ccc", 4, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
-    df.foreachPartition(partition => partition.foreach(r => {
-        val schema: Seq[StructField] = r.schema
-        println(schema.toArray)
-        println(schema.map(_ => "?").mkString(","))
-        println(schema.map(_.name).map(i => s"$i=?").mkString(","))
-    }))
 
     case class Person(name: String, age: Int)
     val people = sc.textFile("src/sparkdemo/testfile/person.txt")
@@ -267,6 +261,9 @@ object DataFrameDemo extends App {
         df.na.fill(Map(("key2", 666), ("key3", "你好")))
         //过滤掉key3,key5列中含有null的行
         df.na.drop(Seq("key3", "key5"))
+
+        //注意：下面这个会导致key1全部为null,推荐使用UDF
+        df.withColumn("key1", col("key1") + "A").show()
     }
 
     val 过滤操作 = 0
@@ -421,11 +418,13 @@ object DataFrameDemo extends App {
     val 多表合并 = 0
     if (0) {
         //两个DF的连接操作,通过主键连接
-        val df1 = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
-        val df2 = spark.createDataset(Seq(("aaa", 2, 2), ("bbb", 3, 5), ("ddd", 3, 5), ("bbb", 4, 6), ("eee", 1, 2), ("aaa", 1, 5), ("fff", 5, 6))).toDF("key1", "key2", "key4")
+        //val df1 = spark.createDataset(Seq(("aaa", 1, 2), ("bbb", 3, 4), ("ccc", 3, 5), ("bbb", 4, 6))).toDF("key1", "key2", "key3")
+        //val df2 = spark.createDataset(Seq(("aaa", 2, 2), ("bbb", 3, 5), ("ddd", 3, 5), ("bbb", 4, 6), ("eee", 1, 2), ("aaa", 1, 5), ("fff", 5, 6))).toDF("key1", "key2", "key4")
+        val df1 = spark.createDataset(Seq(("aaa", 1, 2))).toDF("key1", "key2", "key3")
+        val df2 = spark.createDataset(Seq(("aaa", 2, 2), ("bbb", 3, 5))).toDF("key3", "key2", "key1")
 
         println("求并集：union====Cost：Low=========")
-        df1.union(df2).show()
+        df1.union(df2).show() //注意Union字段必须对应，否则会出错。
         println("求交集：intersect===Cost:Expensive=========")
         df1.intersect(df2).show()
         println("求差集：except===Cost:Expensive=========")
@@ -439,13 +438,15 @@ object DataFrameDemo extends App {
 
         //DataFrame内连接,左右必须同时满足的才可以显示
         df1.join(df2, "key1").show() //推荐
-        df1.join(df2, df1("key1") === df2("key1")).show() //多了一列key1,还要drop(df2.col("key1"))
+        df1.join(df2, df1("key1") === df2("key1"), "fullouter").show() //多了一列key1,还要drop(df2.col("key1"))
         //等值连接（两个公共字段key1，key2）
         df1.join(df2, Seq("key1", "key2")).show()
         //自连接
         df1.as("a").join(df1.as("b")).where($"a.key1" === $"b.key1").show()
         //DataSet内连接，这次用joinWith。和join的区别是连接后的新Dataset的schema会不一样
         df1.joinWith(df2, df1("key1") === df2("key1")).show()
+
+        df1.withColumnRenamed("key3","key4")
         /*
         |       _1|       _2|
         |[aaa,1,2]|[aaa,1,5]|

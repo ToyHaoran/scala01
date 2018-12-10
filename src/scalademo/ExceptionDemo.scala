@@ -21,6 +21,7 @@ object ExceptionDemo extends App{
 
             case ex: IOException =>
                 println("IO Exception")
+                ex.printStackTrace()
 
         } finally {
             println("Exiting finally...")

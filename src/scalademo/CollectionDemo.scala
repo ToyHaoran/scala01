@@ -418,7 +418,6 @@ object ConcurrentHashMapDemo extends App {
             }
         }
         import utils.DataCreateUtil._
-        import utils.DateUtil._
         //990万数据
         val data = textCreate(9900000, " ").split("\\s+").filter(!_.trim.isEmpty)
 

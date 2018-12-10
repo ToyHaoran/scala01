@@ -34,24 +34,43 @@ object Save2Hbase extends App {
     if (1) {
         val spark = ConnectUtil.spark
         val hdfsroot = PropUtil.getValueByKey("HDFS.ROOT.211")
-        val tqdf = spark.read.parquet(hdfsroot+"/LGYP/result/ZXSTQTJXX/2018-10-15") //周线损台区统计信息
-        val xldf = spark.read.parquet(hdfsroot+"/LGYP/result/ZXSXLTJXX/2018-10-15") //周线损线路统计信息
-        val yhmxdf = spark.read.parquet(hdfsroot+"/LGYP/result/ZXSYHMX/2018-10-15")  //周线损用户明细
-        println(tqdf.count())//1119995
-        println(xldf.count())//811332075
-        println(yhmxdf.count())//312160
+        val tqdf = spark.read.parquet(hdfsroot + "/LGYP/result/ZXSTQTJXX/2018-10-15") //周线损台区统计信息
+        val xldf = spark.read.parquet(hdfsroot + "/LGYP/result/ZXSXLTJXX/2018-10-15") //周线损线路统计信息
+        val yhmxdf = spark.read.parquet(hdfsroot + "/LGYP/result/ZXSYHMX/2018-10-15") //周线损用户明细
+        /*println(tqdf.count()) //1119995
+        println(xldf.count()) //811332075
+        println(yhmxdf.count()) //312160*/
 
-        val df1 = tqdf.limit(1000).na.drop(Seq("TQBS"))
+        val getFormat = udf((rq:String)=>{
+            rq.replace("-","")
+        })
+
+        /*val df1 = tqdf.na.drop(Seq("TQBS")).dropDuplicates("TQBS")
+            .withColumn("RQQ",getFormat(col("RQQ")))
+            .withColumn("RQZ",getFormat(col("RQZ")))
         df1.printSchema()
-        val df2 = xldf.limit(10000).na.drop(Seq("XLXDBS"))
+        println(df1.count())
+        val df2 = xldf.na.drop(Seq("XLXDBS")).dropDuplicates("XLXDBS")
+            .withColumn("RQQ",getFormat(col("RQQ")))
+            .withColumn("RQZ",getFormat(col("RQZ")))
         df2.printSchema()
-        val df3 = yhmxdf.limit(1000).na.drop(Seq("YHBH"))
+        println(df2.count())*/
+        val df3 = yhmxdf.na.drop(Seq("YHBH")).dropDuplicates("YHBH")
+            .withColumn("RQQ",getFormat(col("RQQ")))
+            .withColumn("RQZ",getFormat(col("RQZ")))
         df3.printSchema()
+        println(df3.count())
 
         //然后将记录存入上面创建的表
-        save2Hbase(df1, "ZXSTQTJXX")
+        /*
+        问题：存到Hbase中就几千条数据，是因为主键没有设置对。
+         */
+        /*save2Hbase(df1, "ZXSTQTJXX")
+        println("df1   ok")
         save2Hbase(df2, "ZXSXLTJXX")
+        println("df2   ok")*/
         save2Hbase(df3, "ZXSYHMX")
+        println("df3   ok")
 
     }
 
@@ -67,16 +86,9 @@ object Save2Hbase extends App {
             .save()
     }
 
-    val old_创建表的思路2_根据dtype创建在代码中创建 = 0
-    //拼接一个创建表的字符串，放弃，太麻烦，还不灵活。以后实际需要的时候再做。
-    if(0){
-        //先通过一条记录创建一个表。
-         val connection = PhoenixUtil.getConnection
-         PhoenixUtil.execute("创建表的字符串", connection)
-    }
 
     val 创建表的思路1_Shell中创建 = 0
-    if(0){
+    if (0) {
         /*
         先打印DF的schame信息，然后复制过来，Ctrl+F替换成想要的格式，数据类型也改为Phoenix中的格式。
         然后创建表，注意必须要有主键，且主键不能为null。
@@ -135,6 +147,7 @@ object Save2Hbase extends App {
          BDZMC varchar,
          BQGDL double,
          BQSDL double,
+         BQZBSDL double,
          BQSSDL double,
          BQXSL varchar,
          ZHXX varchar,
@@ -166,7 +179,7 @@ object Save2Hbase extends App {
          ZHBL decimal(12,3),
          QM decimal(38,18),
          YHLBDM varchar,
-         SCBMRQ timestamp,
+         CBSJ timestamp,
          YHMC varchar,
          YDDZ varchar,
          YDLBDM varchar,
@@ -175,8 +188,8 @@ object Save2Hbase extends App {
          CBSXH decimal(5,0),
          RL decimal(14,2),
          JLDXH decimal(5,0),
-         YGZDL varchar,
-         YGBSDL varchar,
+         YGZDL double,
+         YGBSDL double,
          TQBH varchar,
          TQMC varchar,
          XLBH varchar,
@@ -191,6 +204,14 @@ object Save2Hbase extends App {
          constraint pk primary key(YHBH)
          );
          */
+    }
+
+    val X创建表的思路2_根据dtype创建在代码中创建 = 0
+    //拼接一个创建表的字符串，放弃，太麻烦，还不灵活。以后实际需要的时候再做。
+    if (0) {
+        //先通过一条记录创建一个表。
+        val connection = PhoenixUtil.getConnection
+        PhoenixUtil.execute("创建表的字符串", connection)
     }
 
     val Phoenix数据类型 = 0

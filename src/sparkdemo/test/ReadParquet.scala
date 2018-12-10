@@ -11,27 +11,31 @@ import utils.{ConnectUtil, HDFSUtil, PropUtil}
   * Time: 10:54 
   * Description:
   */
-object ReadParquet extends App{
+object ReadParquet extends App {
 
     val 读取文件大小_并且打印key的记录数 = 0
-    if(0){
+    if (0) {
         val spark = ConnectUtil.spark
-        val hdfsRoot = "hdfs://172.20.32.163:8020"
+        val hdfsRoot = PropUtil.getValueByKey("HDFS.ROOT.162")
         val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
-        //读取xxx目录下的所有parquet文件
-        val files = hdfsUtil.list("/YXFK/compute/")
+        //不知道表名的情况下读取所有的parquet文件
+        //val files = hdfsUtil.list("/YXFK/compute/")
+        //知道表名的情况下直接读取
+        val tables = "KH_YDKH_TEMP"
+        val files = tables.split(",").map(s => "/YXFK/compute/" + s).toList.toArray
         //需要统计的列名
-        val colName = "DQBM"
-
-        val (res1, time1) = getMethodRunTime(hdfsUtil.readAllFileSize(spark, files, colName))
-        println("一共运行" + time1)
-
+        val colName = "GDDWBM"
+        colName.split(",").foreach(name => {
+            val (res1, time1) = getMethodRunTime(hdfsUtil.readAllFileSize(spark, files, name))
+            println("一共运行" + time1)
+            println("=======================================================================================")
+        })
         //sleepApp()
     }
 
 
     val 读取所有的parquet并且统一做一些处理 = 0
-    if(1){
+    if (0) {
         val spark = ConnectUtil.spark
         val hdfsRoot = PropUtil.getValueByKey("HDFS.ROOT.162")
         val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
@@ -43,7 +47,7 @@ object ReadParquet extends App{
         println("文件个数：" + files.length)
         //不用并行读取的原因是防止打印的时候混乱。
         for (filePath <- files) {
-            try{
+            try {
                 //抛出异常 将不符合的路径排除掉
                 val df = spark.read.parquet(hdfsRoot + filePath)
                 val num = df.count()
@@ -52,8 +56,8 @@ object ReadParquet extends App{
                 //df.show(5)
                 df.filter("CZSJ = '2018-11-27 19:10:55'").show()
                 //df.printSchema()
-            }catch {
-                case ex:AnalysisException =>
+            } catch {
+                case ex: AnalysisException =>
                     println(s"${filePath}不是正常的parquet文件,读取失败========")
             }
         }
@@ -61,29 +65,22 @@ object ReadParquet extends App{
     }
 
     val 读取某几个parquet并分别做一些处理 = 0
-    if(0){
+    if (1) {
         val spark = ConnectUtil.spark
-        val hdfsRoot = "hdfs://172.20.32.163:8020"
-        val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
-        val files = hdfsUtil.list("/YXFK/compute/")
+        val hdfsRoot = PropUtil.getValueByKey("HDFS.ROOT.162")
 
-        //需要测试的路径,注意必须是大写
-        val PATH01 = "/YXFK/compute/KH_YDKH"
-        val PATH02 = "/YXFK/compute/ZW_FK_YCCBSJ"
+        val tables = "SB_YXDNB_TEMP,KH_JLD_TEMP,ZW_SSDFJL_TEMP,KH_JSH_TEMP,KH_YDKH_TEMP"
+        val files = tables.split(",").map(s => "/YXFK/compute/" + s).toList.toArray
 
         for (filePath <- files) {
             try {
-                filePath match {
-                    //修改这个条件
-                    case _ if filePath == PATH01 || filePath == PATH02  =>
-                        val df = spark.read.parquet(hdfsRoot + filePath)
-                        val num = df.count()
-                        //对parquet进行处理
-                        println(filePath + ":" + num + "================================")
-                        df.show()
-                    case _ =>
-
-                }
+                val df = spark.read.parquet(hdfsRoot + filePath)
+                val num = df.count()
+                println(filePath + ":" + num + "================================")
+                df.show()
+                /*val df2 = df.filter("CZSJ = '2018-12-05 19:10:55'")
+                df2.show()
+                println(df2.count())*/
             } catch {
                 case ex: AnalysisException =>
                     println(s"${filePath}不是正常的parquet文件,读取失败========")
@@ -92,7 +89,6 @@ object ReadParquet extends App{
 
         //sleepApp()
     }
-
 
 
 }

@@ -24,7 +24,7 @@ object BaseUtil {
     /**
       * 得到参数的类型
       */
-    def getTypeName(a:Any):String = {
+    def getTypeName(a: Any): String = {
         a.getClass.getSimpleName
     }
 
@@ -33,52 +33,58 @@ object BaseUtil {
       *
       * @param block 需要测试的代码块
       * @tparam R
-      * @return Turple(代码块返回值 | 代码运行时间 毫秒值)
+      * @return Turple(代码块返回值 | 代码运行时间 秒)
       */
     def getMethodRunTime[R](block: => R): (R, String) = {
         val start = System.nanoTime() //系统纳米时间
         val result = block
         val end = System.nanoTime()
         val delta = end - start
-        (result, (delta / 1000000d).toString + "ms")
+        val ms = delta / 1000000d  //毫秒
+        val s = ms / 1000d  //秒
+        //val min = s / 60d  //分钟
+        (result, s.formatted("%.3f") + "s") //保留三位小数
     }
 
     /**
       * 用于睡眠程序（10分钟），以查看spark UI
       */
-    def sleepApp(): Unit ={
+    def sleepApp(): Unit = {
         println("程序已结束，睡眠10分钟，请查看Spark UI, 或者kill应用")
         Thread.sleep(1000 * 60 * 10)
     }
 
     val DataFrame相关工具方法 = 0
+
     /**
       * DF的装饰类（隐式转换）
       */
-    class RichDataFrame(dataFrame: DataFrame){
+    class RichDataFrame(dataFrame: DataFrame) {
         /**
           * 用来统计相同key的记录数，常用于调整数据倾斜
           */
-        def printKeyNums(column: Column): Unit ={
+        def printKeyNums(column: Column): Unit = {
             val map = dataFrame.select(column).rdd.countByValue()
             println(s"一共${map.size}个key")
             for ((key, num) <- map) {
                 println(key + "共有" + num + "条记录")
             }
         }
-        def printKeyNums(column: String): Unit ={
+
+        def printKeyNums(column: String): Unit = {
             printKeyNums(dataFrame.col(column))
         }
+
         /**
           * 打印分区位置信息
           */
-        def printLocation(): Unit ={
+        def printLocation(): Unit = {
             println("分区位置信息如下==============")
             dataFrame.rdd.mapPartitionsWithIndex(printLocationFunc).collect().foreach(println(_))
         }
     }
 
-     /**
+    /**
       * 扩展df的方法，隐式转换
       */
     implicit def df2RichDF(src: DataFrame): RichDataFrame = new RichDataFrame(src)
@@ -89,10 +95,10 @@ object BaseUtil {
       */
     def printMap(map: Map[_ <: Any, _ <: Any]): Unit = {
         for ((key, value) <- map) {
-            try{
+            try {
                 println(key.toString + " : " + value.toString)
-            }catch {
-                case e:NullPointerException =>
+            } catch {
+                case e: NullPointerException =>
                     println(s"${key} : 为空")
             }
         }
@@ -104,10 +110,11 @@ object BaseUtil {
 
     /**
       * RDD的装饰类（隐式转换）,不加泛型读取不到
+      *
       * @param rdd
       */
-    class RichRDD(rdd:RDD[_ <: Any]){
-        def printLocation(): Unit ={
+    class RichRDD(rdd: RDD[_ <: Any]) {
+        def printLocation(): Unit = {
             println("分区位置信息如下==============")
             rdd.mapPartitionsWithIndex(printLocationFunc).collect().foreach(println(_))
         }

@@ -383,9 +383,9 @@ object RddDemo extends App {
         val a = sc.parallelize(List(1, 2, 1, 3), 1)
         val b = a.map((_, "b"))
         val c = a.map((_, "c"))
-        b.cogroup(c).collect
-        //res7: Array[(Int, (Iterable[String], Iterable[String]))] =
-        // Array((2,(ArrayBuffer(b),ArrayBuffer(c))), (3,(ArrayBuffer(b),ArrayBuffer(c))), (1,(ArrayBuffer(b, b),ArrayBuffer(c, c))) )
+        val d = a.map((_, "d"))
+        b.cogroup(c,d).collect
+        //Array[(Int, (Iterable[String], Iterable[String], Iterable[String]))] = Array((1,(CompactBuffer(b, b),CompactBuffer(c, c),CompactBuffer(d, d))), (3,(CompactBuffer(b),CompactBuffer(c),CompactBuffer(d))), (2,(CompactBuffer(b),CompactBuffer(c),CompactBuffer(d))))
     }
 
     val distinct_sample = 0
