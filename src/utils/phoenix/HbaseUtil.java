@@ -34,7 +34,6 @@ public class HbaseUtil {
     //初始化容量,提高访问速度
     private static final int INITIAL_CAPACITY = 25;
     //phoenix地址
-    //private static final String URL = "jdbc:phoenix:172.19.27.123,172.19.27.124,172.19.27.125:2181";
     private static final String URL = PropUtil.getValueByKey("PHOENIX.URL","app");
     //1.获得Configuration实例并进行相关设置
     //2.获得Connection实例

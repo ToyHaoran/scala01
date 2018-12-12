@@ -75,9 +75,7 @@ object DateUtil {
 
     /**
       * 计算相隔的天数
-      *
       */
-    // TODO 四舍五入的问题。。
     def getIntervalDays(startday: Calendar, endday: Calendar): Long = {
         var star = startday
         var end = endday
@@ -89,8 +87,8 @@ object DateUtil {
         }
         val d1 = star.getTimeInMillis
         val d2 = end.getTimeInMillis
-        val minus = (d2 - d1) / 1000 / 60 / 60 / 24
-        minus
+        val minus = (d2 - d1) / 1000d / 60d / 60d / 24d
+        minus.round
     }
 
 

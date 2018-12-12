@@ -21,7 +21,7 @@ public class TestPhoenixQueryUtil {
         System.out.println(result.size());
 
         /*
-        本机报错：
+        本机和集群报错：
         java.sql.SQLException: while preparing SQL: SELECT * FROM BMSD limit 100
         Caused by: java.lang.RuntimeException: response code 500
         估计是因为Spark自带的calcite-avatica-1.2.0-incubating.jar与Phoenix的1.10.0版本冲突，前者不支持PROTOBUF。
@@ -32,7 +32,6 @@ public class TestPhoenixQueryUtil {
         /*
         集群启动命令：
         /usr/hdp/2.6.0.3-8/spark2/bin/spark-submit --driver-memory 5g --executor-memory 5g --executor-cores 3  --num-executors 5  --master yarn-cluster --class utils.phoenix.TestPhoenixQueryUtil --name hbase-lhr --jars /usr/local/jar/lihaoran/phoenix-4.10.0.2.6.0.3-8-thin-client.jar,/usr/local/jar/lihaoran/spark-hbase-connector-2.2.0-1.1.2-3.4.6.jar  /usr/local/jar/lihaoran/lhrtest.jar
-        同样的错误。
          */
     }
 }
