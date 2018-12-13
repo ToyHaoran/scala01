@@ -40,7 +40,6 @@ object Excel2Oracle extends App {
     excel = excel
         .withColumn("GDDWBM", col("GDDWBM").cast(StringType))
         .withColumn("DQBM", col("DQBM").cast("string"))
-
     try {
       createTable("CBXX", excel.schema)
       println("创建表成功========")

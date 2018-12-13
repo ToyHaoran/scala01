@@ -286,16 +286,8 @@ object DataFrameDemo extends App {
     df.withColumn("key5", expr("key3 * 2")) //添加列key5，值为key3的两倍
 
     //更改列类型
-    df.withColumn("key3",col("key3").cast(DoubleType))
-    df.withColumn("key3",col("key3").cast("string"))
-
-    //常用的是UDF方法：重点重点重点
-    df.withColumn("key6", getXXXInfo(col("key3")))
-    def getXXXInfo: UserDefinedFunction = {
-      udf((key: Int) =>
-        "这个数是：" + key
-      )
-    }
+    df.withColumn("key3", col("key3").cast(DoubleType))
+    df.withColumn("key3", col("key3").cast("string"))
 
     df.withColumnRenamed("key3", "新名字")
 
@@ -317,13 +309,57 @@ object DataFrameDemo extends App {
     df.schema //res85: org.apache.spark.sql.types.StructType = StructType(StructField(key1,StringType,true), StructField(key2,IntegerType,false), StructField(key3,IntegerType,false))
   }
 
-  val 对列的操作 = 0
+  val 一列分割为多行_一列分割为多列 = 0
+  if (0) {
+    val df = spark.createDataset(Seq(("aaa", "你好 我来自山东 你呢"), ("bbb", "嗯嗯 我来自四川"))).toDF("name", "message")
+    /*
+      一列分割多行：在name不动的情况下，拆分message为多行
+        |name|message|
+        | aaa|     你好|
+        | aaa|  我来自山东|
+        | aaa|     你呢|
+        | bbb|     嗯嗯|
+        | bbb|  我来自四川|
+     */
+    //方式1：组合法：适合少量字段（麻烦）。 逆操作使用聚合就行。
+    df.flatMap(item => {
+      item.getString(1).split(" ").map(msg => (item.getString(0), msg))
+    }).toDF(df.columns: _*).show()
+    //方式2：使用高级函数explode切割数组。推荐。
+    df.withColumn("message", explode(split(col("message"), " "))).show()
+
+    /*
+    一列分割为多列：在name不动的情况下，拆分message为多列
+      |name|msg1| msg2|
+      | aaa|  你好|我来自山东|
+      | bbb|  嗯嗯|我来自四川|
+     */
+    df.withColumn("message", split(col("message"), " "))
+        //注意这里的getItem在split情况下是0 1，但是在流计算-窗口函数-里面的timestamp里面确是start，end，所以最好打印一下schema看一下
+        .select($"name", $"message".getItem(0).as("msg1"), $"message".getItem(1).as("msg2"))
+        .show()
+    //对ArrayType进行处理,一种方式是处理成两列，另一种方式是直接操作(放弃，没什么用)
+
+    /*
+    将多列合并为一列：将name和message合并。
+      |          value|
+      |aaa,你好 我来自山东 你呢|
+      |   bbb,嗯嗯 我来自四川|
+     */
+    //方式1：使用UDF
+    //方式2：使用内置函数concat_ws
+    df.select(concat_ws(",", $"name", $"message").as("value").cast("string")).show()
+  }
+
+  val 对行的操作 = 0
   if (0) {
     //取前几行
     val top5: DataFrame = df.limit(5) //取前5行
     val top4: Array[Row] = df.head(4)
     val sample = df.take(4)
   }
+  val 多列分割为多行 = 0
+  //见费控表码开放
 
   val 对Null的操作 = 0
   if (0) {
