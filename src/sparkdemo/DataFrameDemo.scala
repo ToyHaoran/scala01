@@ -436,7 +436,7 @@ object DataFrameDemo extends App {
   https://n3xtchen.github.io/n3xtchen/spark/2017/01/24/spark200-window-function
   https://www.jianshu.com/p/42be8650509f
    */
-  if (1) {
+  if (0) {
     /*
     有些时候需要计算一些排序特征，窗口特征等，如一个店铺的首单特征。对于这样的特征显然是不能简单通过groupBy操作来完成
     即：第一列是订单，第二列是店铺，第三列是支付时间，第四列是价格。
@@ -602,6 +602,7 @@ object DataFrameDemo extends App {
     //保存到持久表
     df.write.saveAsTable("df")
 
+    df.write.csv("src/sparkdemo/testfile/xxxxx")
     df.write.json("F:/桌面/API/Scala/SparkDemo1/src/source/test.json")
     df.write.parquet("src/sparkdemo/testfile/xxx")
     df.write.parquet("hdfs://localhost:9000/user/wcinput/df")

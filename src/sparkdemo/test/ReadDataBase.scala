@@ -1,8 +1,10 @@
 package sparkdemo.test
 
+import java.io.IOException
+
 import utils.BaseUtil._
 import utils.database.{JdbcUtil, PredicatesUtil}
-import utils.{ConnectUtil, PropUtil}
+import utils.{ConnectUtil, HDFSUtil, PropUtil}
 import utils.UdfUtil._
 import org.apache.spark.sql.functions._
 
@@ -84,6 +86,56 @@ object ReadDataBase extends App {
     }
     println("全部插入完成==============")
 
+  }
+
+  /*
+  重新初始化需要的表
+   */
+  val 初始化表并备份原来的数据 = 0
+  if (1) {
+    //ZW_FK_YHDA,ZW_SSDFJL,KH_YDKH,FW_WQXX,FW_KFGDXX,FW_GDYHGL  OK
+    //大表：FW_YKJLDLSXX,KH_JLD,KH_JSH,LC_HBXXJL
+    //小表：DW_YXBYQ,FW_YKYXBYQLSXX,HS_CQDLMX,HS_JTBS,HS_MFDYH,   OK
+    // LC_CBQDXX,XT_RY,ZW_FK_HCYCJL,ZW_FK_TFDGZD,ZW_FK_YHZZXX,ZW_FK_YJGZD   OK
+    val tables = "FW_YKJLDLSXX,KH_JLD,KH_JSH,LC_HBXXJL"
+    val hdfsRoot = PropUtil.getValueByKey("HDFS.ROOT.162")
+    val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
+    hdfsUtil.setUser("root")
+    tables.split(",").par.foreach(table => {
+      val df = JdbcUtil.loadTable("gzdb", table)
+      val path = hdfsRoot + "/YXFK/compute/" + table
+      val path_bak = path + "_BAK"
+      try {
+        hdfsUtil.rename(path, path_bak)
+        df.write.parquet(path)
+        println(s"$table 写入Parquet成功==========")
+      } catch {
+        case e: IOException =>
+          println(table + "重命名失败=========")
+          e.printStackTrace()
+        case e: Exception =>
+          println(table + "有问题，请检查路径==========")
+          e.printStackTrace()
+      }
+    })
+  }
+
+  val 还原原来的数据 = 0
+  if (0) {
+    val tables = "ZW_SSDFJL,KH_YDKH,FW_WQXX,FW_KFGDXX,FW_GDYHGL"
+    val hdfsRoot = PropUtil.getValueByKey("HDFS.ROOT.162")
+    val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
+    hdfsUtil.setUser("root")
+    tables.split(",").foreach(table => {
+      val path = hdfsRoot + "/YXFK/compute/" + table
+      val path_bak = path + "_BAK"
+      if (hdfsUtil.exists(path) && hdfsUtil.exists(path_bak)) {
+        hdfsUtil.delete(path)
+        hdfsUtil.rename(path_bak, path)
+      } else {
+        println(table + "路径不正确，请检查======")
+      }
+    })
   }
 
   /*

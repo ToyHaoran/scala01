@@ -49,28 +49,29 @@ object ReadParquet extends App {
     for (filePath <- files) {
       try {
         //抛出异常 将不符合的路径排除掉
-        val df = spark.read.parquet(hdfsRoot + filePath)
-        val num = df.count()
+        val df = spark.read.parquet(hdfsRoot + filePath).select("GDDWBM")
         //对parquet进行处理
+        val num = df.count()
         println(filePath + ":" + num + "================================")
+        df.printSchema()
         //df.show(5)
-        df.filter("CZSJ = '2018-11-27 19:10:55'").show()
+        //df.filter("CZSJ = '2018-11-27 19:10:55'").show()
         //df.printSchema()
       } catch {
         case ex: AnalysisException =>
-          println(s"${filePath}不是正常的parquet文件,读取失败========")
+          //println(s"${filePath}不是正常的parquet文件,读取失败========")
+          println(s"${filePath}无此字段,读取失败========")
       }
     }
     //sleepApp()
   }
 
   val 读取某几个parquet并分别做一些处理 = 0
-  if (0) {
+  if (1) {
     val spark = ConnectUtil.spark
     val hdfsRoot = PropUtil.getValueByKey("HDFS.ROOT.162")
 
-    //val tables = "SB_YXDNB_TEMP,KH_JLD_TEMP,ZW_SSDFJL_TEMP,KH_JSH_TEMP,KH_YDKH_TEMP"
-    val tables = "HS_DJBB"
+    val tables = "FW_KFGDXX"
     val files = tables.split(",").map(s => "/YXFK/compute/" + s).toList.toArray
 
     for (filePath <- files) {
@@ -80,7 +81,7 @@ object ReadParquet extends App {
         println(filePath + ":" + num + "================================")
         df.show()
         println(df.schema)
-        println(df.printSchema())
+        df.printSchema()
         println(df.schema.foreach(println(_)))
         /*val df2 = df.filter("CZSJ = '2018-12-05 19:10:55'")
         df2.show()
