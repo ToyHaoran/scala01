@@ -1,12 +1,10 @@
-package sparkdemo
+package sparkstreaming
 
-import java.sql.Timestamp
-
-import utils.BaseUtil._
-import utils.ConnectUtil
-import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.OutputMode
+import org.apache.spark.sql.types.StructType
+import utils.BaseUtil._
+import utils.ConnectUtil
 
 
 /**

@@ -31,7 +31,6 @@ object Save2Hbase extends App {
   /usr/hdp/2.6.0.3-8/spark2/bin/spark-submit --driver-memory 5g --executor-memory 5g --executor-cores 3  --num-executors 5  --master yarn-cluster --class utils.phoenix.Save2Hbase --name hbase-lhr --jars /usr/local/jar/lihaoran/phoenix-4.10.0.2.6.0.3-8-client.jar,/usr/local/jar/lihaoran/spark-hbase-connector-2.2.0-1.1.2-3.4.6.jar  /usr/local/jar/lihaoran/lhrtest.jar
   所需要的jar包已经上传。
    */
-
   val 根据df的Schema创建Hbase表并存入数据 = 0
   if (0) {
     val spark = ConnectUtil.spark
@@ -44,61 +43,28 @@ object Save2Hbase extends App {
   }
 
 
-  val 将HDFS上的parquet存到Hbase = 0
-  if (0) {
+  val 将HDFS上的线损计算结果parquet存到Hbase = 0
+  if (1) {
     val spark = ConnectUtil.spark
     val hdfsroot = PropUtil.getValueByKey("HDFS.ROOT.211")
-    val tqdf = spark.read.parquet(hdfsroot + "/LGYP/result/ZXSTQTJXX/2018-10-15") //周线损台区统计信息
-    val xldf = spark.read.parquet(hdfsroot + "/LGYP/result/ZXSXLTJXX/2018-10-15") //周线损线路统计信息
-    val yhmxdf = spark.read.parquet(hdfsroot + "/LGYP/result/ZXSYHMX/2018-10-15") //周线损用户明细
-    println(tqdf.count()) //1119995
-    println(xldf.count()) //811332075
-    println(yhmxdf.count()) //312160
+    val tablesAndKey = Map(("ZXSTQTJXX", Array("TQBS")), //周线损台区统计信息
+      ("ZXSXLTJXX", Array("XLXDBS")), //周线损线路统计信息
+      ("ZXSYHMX", Array("YHBH","JLDBH"))) //周线损用户明细
 
-    val getFormat = udf((rq: String) => {
-      rq.replace("-", "")
+    tablesAndKey.foreach(x => {
+      val table = x._1
+      val keys = x._2
+      println(s"${table}开始读取====↓↓↓↓================")
+      val df = spark.read.parquet(s"$hdfsroot/LGYP/result/$table/2018-11-15")
+      val df1 = df.na.drop(keys).dropDuplicates(keys) //删除null的和重复的主键
+      df1.printSchema()
+      //这个执行一次就行
+      createTable(table, keys, df1.schema)
+      save2Hbase(df1, table) //问题：存到Hbase中就几千条数据，是因为主键没有设置对，被覆盖了
+      println(s"${table}插入完成=====↑↑↑↑================")
     })
-
-    val df1 = tqdf.na.drop(Seq("TQBS")).dropDuplicates("TQBS")
-        .withColumn("RQQ", getFormat(col("RQQ")))
-        .withColumn("RQZ", getFormat(col("RQZ")))
-    df1.printSchema()
-    println(df1.count())
-    val df2 = xldf.na.drop(Seq("XLXDBS")).dropDuplicates("XLXDBS")
-        .withColumn("RQQ", getFormat(col("RQQ")))
-        .withColumn("RQZ", getFormat(col("RQZ")))
-    df2.printSchema()
-    println(df2.count())
-    val df3 = yhmxdf.na.drop(Seq("YHBH")).dropDuplicates("YHBH")
-        .withColumn("RQQ", getFormat(col("RQQ")))
-        .withColumn("RQZ", getFormat(col("RQZ")))
-    df3.printSchema()
-    println(df3.count())
-
-    //然后将记录存入上面创建的表
-    /*
-    问题：存到Hbase中就几千条数据，是因为主键没有设置对，被覆盖了。
-     */
-    save2Hbase(df1, "ZXSTQTJXX")
-    println("df1   ok")
-    save2Hbase(df2, "ZXSXLTJXX")
-    println("df2   ok")
-    save2Hbase(df3, "ZXSYHMX")
-    println("df3   ok")
-
   }
 
-  /**
-    * 将DF存到Hbase，前提是与表结构一致
-    */
-  def save2Hbase(df: DataFrame, table: String): Unit = {
-    df.write.format("org.apache.phoenix.spark")
-        .mode(SaveMode.Overwrite)
-        .option("driver", "org.apache.phoenix.jdbc.PhoenixDriver")
-        .option("zkUrl", PropUtil.getValueByKey("PHOENIX.URL"))
-        .option("table", table)
-        .save()
-  }
 
   @deprecated
   val 创建表的思路1_Shell中创建 = 0
@@ -224,6 +190,7 @@ object Save2Hbase extends App {
   val 创建表的思路2_根据dtype创建在代码中创建 = 0
 
   /**
+    * 根据df的Schema创建表。
     * 传入表名、主键数组、Schema，创建Hbase表。
     * 如果已存在，就先删除后创建。
     * TODO 暂时不考虑列族
@@ -234,10 +201,10 @@ object Save2Hbase extends App {
     sql.append(s"create table $tableName(")
     for (i <- schema) {
       //组合为： 字段 VARVHAR,
-      sql.append(i.name).append(" ").append(parquet2HbaseType(i.dataType)).append(",")
+      sql.append(i.name).append(" ").append(getHbaseType(i.dataType)).append(",")
     }
     sql.deleteCharAt(sql.length - 1) //删除最后一个逗号
-    sql.append(s" constraint pk primary key(${keys.mkString(",")}))")
+    sql.append(s" constraint pk primary key(${keys.mkString(",")}))") //增加主键
 
     //然后执行创建语句
     val connection = PhoenixUtil.getConnection
@@ -251,8 +218,6 @@ object Save2Hbase extends App {
     }
   }
 
-  val Phoenix数据类型 = 0
-
   /**
     * 将parquet中的类型转为Hbase对应的类型。
     * Phoenix数据类型: https://blog.csdn.net/jiangshouzhuang/article/details/52400722
@@ -260,7 +225,7 @@ object Save2Hbase extends App {
     * @param flag parquet中对应的类型
     * @return Hbase中的类型，字符串
     */
-  def parquet2HbaseType(flag: Any): String = {
+  def getHbaseType(flag: Any): String = {
     flag match {
       case a: IntegerType => "INTEGER"
       case a: LongType => "BIGINT"
@@ -275,5 +240,17 @@ object Save2Hbase extends App {
       case a: StringType => "VARCHAR"
       case _ => "VARCHAR"
     }
+  }
+
+  /**
+    * 将DF存到Hbase，前提是与表结构一致
+    */
+  def save2Hbase(df: DataFrame, table: String): Unit = {
+    df.write.format("org.apache.phoenix.spark")
+        .mode(SaveMode.Overwrite)
+        .option("driver", "org.apache.phoenix.jdbc.PhoenixDriver")
+        .option("zkUrl", PropUtil.getValueByKey("PHOENIX.URL"))
+        .option("table", table)
+        .save()
   }
 }

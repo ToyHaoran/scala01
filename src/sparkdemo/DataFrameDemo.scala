@@ -275,6 +275,10 @@ object DataFrameDemo extends App {
     df.select(upper(df.col("key1")))
 
     //selectExpr更强大，能使用sql函数
+    val strdd = "upper(key1),key2 AS haha2"
+    val arr05 = Array("aaa","bbb")
+    arr05.mkString("sss",",","dddd")
+    df.selectExpr(strdd.split(","): _*).show()
     df.selectExpr("upper(key1)", "key2 as haha2").show
     df.select(expr("upper(key1)"))
     df.select(expr("key2 + 1").as[Int])
@@ -385,7 +389,7 @@ object DataFrameDemo extends App {
     val max = 4
     df.filter(s"key2 = ${max + 2}").select("key1").show()
     df.filter(df("key1") > "aaa").show()
-    df.filter($"key2" === $"key3" - 1).show()
+    df.filter($"key2" === length($"key3") - 1).show()
 
     //where等价于filter
     df.where($"key2" > "2")

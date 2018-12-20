@@ -1,6 +1,6 @@
 package utils.database
 
-import java.sql.SQLSyntaxErrorException
+import java.sql.{SQLSyntaxErrorException, Types}
 
 import utils.BaseUtil._
 import utils.ConnectUtil
@@ -28,7 +28,7 @@ object Excel2Oracle extends App {
           方式2、调整启动模式为client，去掉：--master yarn-cluster
    */
   val 读取一个Excel并存到数据库 = 0
-  if (1) {
+  if (0) {
     val spark = ConnectUtil.spark
     //先读取一个文件试试
     var excel = spark.read.format("csv")
@@ -62,7 +62,7 @@ object Excel2Oracle extends App {
     sql.append(s"create table $tableName(")
     for (i <- schema) {
       //组合为： 字段 VARVHAR,
-      sql.append(i.name).append(" ").append(parquet2OracleType(i.dataType)).append(",")
+      sql.append(i.name).append(" ").append(getOracleType(i.dataType)).append(",")
     }
     if (keys.isEmpty) {
       //没有主键
@@ -78,21 +78,22 @@ object Excel2Oracle extends App {
 
   /**
     * 对应的数据库类型：https://blog.csdn.net/s592652578/article/details/78518148
+    * https://docs.oracle.com/cd/E19501-01/819-3659/gcmaz/
     */
-  def parquet2OracleType(flag: Any): String = {
+  def getOracleType(flag: Any): String = {
     flag match {
-      case a: IntegerType => "INTEGER"
-      case a: LongType => "NUMBER"
-      case a: ShortType => "NUMBER"
-      case a: FloatType => "NUMBER"
-      case a: DoubleType => "NUMBER" //double必须制定位数
+      case a: IntegerType => "INTEGER(10)"
+      case a: LongType => "NUMBER(19)"
+      case a: ShortType => "NUMBER(5)"
+      case a: FloatType => "NUMBER(19,4)"
+      case a: DoubleType => "NUMBER(19,4)" //double必须制定位数
       case a: DecimalType => a.typeName //decima(6,2)之类的
-      case a: BooleanType => "NUMBER"
-      case a: TimestampType => "TIMESTAMP"
+      case a: BooleanType => "NUMBER(1)"
+      case a: TimestampType => "DATE"
       case a: DateType => "DATE"
       //改为varchar2类型，节省空间
-      case a: StringType => "VARCHAR2(30)"
-      case _ => "VARCHAR(30)"
+      case a: StringType => "VARCHAR2(40)"
+      case _ => "VARCHAR(40)"
     }
   }
 

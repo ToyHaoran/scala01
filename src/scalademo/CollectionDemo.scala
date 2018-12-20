@@ -304,7 +304,7 @@ object SetDemo extends App {
     if (1) {
         val set = Set(1, 1, 2, 3, 4, 5, 5) //scala.collection.immutable.Set[Int] = Set(5, 1, 2, 3, 4)
         val set2 = Set("aaa", "aaa", "dfg", "abc") // scala.collection.immutable.Set[String] = Set(aaa, dfg, abc)
-        set + 5 //添加元素
+        val set3 = set + 5 //添加元素
         set - 3 //删除元素
         set ++ List(5, 7, 8) //scala.collection.immutable.Set[Int] = Set(5, 1, 2, 7, 3, 8, 4)
         set -- List(1, 2, 3)

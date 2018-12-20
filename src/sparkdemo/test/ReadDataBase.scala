@@ -92,7 +92,7 @@ object ReadDataBase extends App {
   重新初始化需要的表
    */
   val 初始化表并备份原来的数据 = 0
-  if (1) {
+  if (0) {
     //ZW_FK_YHDA,ZW_SSDFJL,KH_YDKH,FW_WQXX,FW_KFGDXX,FW_GDYHGL  OK
     //大表：FW_YKJLDLSXX,KH_JLD,KH_JSH,LC_HBXXJL
     //小表：DW_YXBYQ,FW_YKYXBYQLSXX,HS_CQDLMX,HS_JTBS,HS_MFDYH,   OK
@@ -259,7 +259,7 @@ object ReadDataBase extends App {
       val tables = "LC_YXDNBSS,SB_YXDNB,KH_JLD,ZW_SSDFJL,KH_JSH,KH_YDKH"
       tables.split(",").foreach(table => {
         println(s"${table}的Schema查询=======")
-        JdbcUtil.getTableColumnsByJdbc("yxfk", s"select * from ${table} where rownum <= 1")
+        JdbcUtil.getTableColumnsByJdbc("yxfk", s"select * from $table where rownum <= 1")
       })
       /*
       LC_YXDNBSS的Schema查询=======
