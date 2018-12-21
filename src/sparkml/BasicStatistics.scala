@@ -13,7 +13,7 @@ import org.apache.spark.sql.Row
   * User: lihaoran 
   * Date: 2018/12/18
   * Time: 11:37 
-  * Description:
+  * Description:基础统计
   */
 object BasicStatistics extends App {
   //

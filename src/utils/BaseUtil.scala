@@ -14,122 +14,154 @@ import scala.language.implicitConversions
   * Description:
   */
 object BaseUtil {
+  val spark = ConnectUtil.spark
+  import spark.implicits._
+  /**
+    * 用来快捷控制代码的开关，将0，1隐式转换为false和true
+    */
+  implicit def int2boolen(a: Int): Boolean = {
+    if (a == 0) false else true
+  }
+
+  /**
+    * 得到参数的类型
+    */
+  def getTypeName(a: Any): String = {
+    a.getClass.getSimpleName
+  }
+
+  /**
+    * 得到代码块的运行时间
+    *
+    * @param block 需要测试的代码块
+    * @tparam R
+    * @return Turple(代码块返回值 | 代码运行时间 秒)
+    */
+  def getMethodRunTime[R](block: => R): (R, String) = {
+    val start = System.nanoTime() //系统纳米时间
+    val result = block
+    val end = System.nanoTime()
+    val delta = end - start
+    val ms = delta / 1000000d //毫秒
+    val s = ms / 1000d //秒
+    //val min = s / 60d  //分钟
+    (result, s.formatted("%.3f") + "s") //保留三位小数
+  }
+
+  /**
+    * 用于睡眠程序（10分钟），以查看spark UI
+    */
+  def sleepApp(): Unit = {
+    println("程序已结束，睡眠10分钟，请查看Spark UI, 或者kill应用")
+    Thread.sleep(1000 * 60 * 10)
+  }
+
+  val DataFrame相关工具方法 = 0
+
+  /**
+    * DF的装饰类（隐式转换）
+    */
+  class RichDataFrame(df: DataFrame) {
     /**
-      * 用来快捷控制代码的开关，将0，1隐式转换为false和true
+      * 用来统计相同key的记录数，常用于调整数据倾斜
       */
-    implicit def int2boolen(a: Int): Boolean = {
-        if (a == 0) false else true
+    def printKeyNums(column: Column): Unit = {
+      val map = df.select(column).rdd.countByValue()
+      println(s"一共${map.size}个key")
+      for ((key, num) <- map) {
+        println(key + "共有" + num + "条记录")
+      }
+    }
+
+    def printKeyNums(column: String): Unit = {
+      printKeyNums(df.col(column))
     }
 
     /**
-      * 得到参数的类型
+      * 每个元素在分区位置信息
       */
-    def getTypeName(a: Any): String = {
-        a.getClass.getSimpleName
+    def printItemLoc(): Unit = {
+      println("每个元素在分区位置信息如下，不能打印太多元素==============")
+      df.rdd.printItemLoc()
     }
 
     /**
-      * 得到代码块的运行时间
-      *
-      * @param block 需要测试的代码块
-      * @tparam R
-      * @return Turple(代码块返回值 | 代码运行时间 秒)
+      * 每个元素在分区的位置信息，只选择特征列
       */
-    def getMethodRunTime[R](block: => R): (R, String) = {
-        val start = System.nanoTime() //系统纳米时间
-        val result = block
-        val end = System.nanoTime()
-        val delta = end - start
-        val ms = delta / 1000000d  //毫秒
-        val s = ms / 1000d  //秒
-        //val min = s / 60d  //分钟
-        (result, s.formatted("%.3f") + "s") //保留三位小数
+    def printItemLoc(column: String): Unit = {
+      df.select(column).rdd.printItemLoc()
     }
 
     /**
-      * 用于睡眠程序（10分钟），以查看spark UI
+      * 打印每个分区的元素数量
       */
-    def sleepApp(): Unit = {
-        println("程序已结束，睡眠10分钟，请查看Spark UI, 或者kill应用")
-        Thread.sleep(1000 * 60 * 10)
-    }
-
-    val DataFrame相关工具方法 = 0
-
-    /**
-      * DF的装饰类（隐式转换）
-      */
-    class RichDataFrame(dataFrame: DataFrame) {
-        /**
-          * 用来统计相同key的记录数，常用于调整数据倾斜
-          */
-        def printKeyNums(column: Column): Unit = {
-            val map = dataFrame.select(column).rdd.countByValue()
-            println(s"一共${map.size}个key")
-            for ((key, num) <- map) {
-                println(key + "共有" + num + "条记录")
-            }
-        }
-
-        def printKeyNums(column: String): Unit = {
-            printKeyNums(dataFrame.col(column))
-        }
-
-        /**
-          * 打印分区位置信息
-          */
-        def printLocation(): Unit = {
-            println("分区位置信息如下==============")
-            dataFrame.rdd.mapPartitionsWithIndex(printLocationFunc).collect().foreach(println(_))
-        }
+    def printPartItemNum(): Unit = {
+      df.select(df.schema.head.name).rdd.printPartItemNum()
     }
 
     /**
-      * 扩展df的方法，隐式转换
+      * 得到每个分区对应的元素个数DF
       */
-    implicit def df2RichDF(src: DataFrame): RichDataFrame = new RichDataFrame(src)
+    def getPartItemNum():DataFrame = {
+      df.select(df.schema.head.name).rdd
+          .mapPartitionsWithIndex{ case (partIdx, iter) =>
+            Iterator(("part_" + partIdx, iter.size))
+          }.toDF("partition","num")
+    }
+  }
 
-    /**
-      * 打印map信息
-      * 使用了泛型
-      */
-    def printMap(map: Map[_ <: Any, _ <: Any]): Unit = {
-        for ((key, value) <- map) {
-            try {
-                println(key.toString + " : " + value.toString)
-            } catch {
-                case e: NullPointerException =>
-                    println(s"${key} : 为空")
-            }
-        }
-        println("===================")
+  /**
+    * 扩展df的方法，隐式转换
+    */
+  implicit def df2RichDF(src: DataFrame): RichDataFrame = new RichDataFrame(src)
+
+  /**
+    * 打印map信息
+    * 使用了泛型
+    */
+  def printMap(map: Map[_ <: Any, _ <: Any]): Unit = {
+    for ((key, value) <- map) {
+      try {
+        println(key.toString + " : " + value.toString)
+      } catch {
+        case e: NullPointerException =>
+          println(s"${key} : 为空")
+      }
+    }
+    println("===================")
+  }
+
+
+  val RDD相关工具方法 = 0
+
+  /**
+    * RDD的装饰类（隐式转换）,不加泛型读取不到
+    */
+  class RichRDD(rdd: RDD[_ <: Any]) {
+
+    def printItemLoc(): Unit = {
+      println("每个元素在分区位置信息如下，不能打印太多元素==============")
+      rdd.mapPartitionsWithIndex { case (index, iter) =>
+        Iterator(s"part_$index：${iter.mkString(",")}")
+      }.collect().foreach(println(_))
     }
 
-
-    val RDD相关工具方法 = 0
-
     /**
-      * RDD的装饰类（隐式转换）,不加泛型读取不到
-      *
-      * @param rdd
+      * 打印每个分区的元素数量
       */
-    class RichRDD(rdd: RDD[_ <: Any]) {
-        def printLocation(): Unit = {
-            println("分区位置信息如下==============")
-            rdd.mapPartitionsWithIndex(printLocationFunc).collect().foreach(println(_))
-        }
+    def printPartItemNum(): Unit = {
+      println("每个分区的元素数量如下=============")
+      rdd.mapPartitionsWithIndex { case (partIdx, iter) =>
+        Iterator(("part_" + partIdx, iter.size))
+      }.collect().foreach(println)
     }
+  }
 
-    /**
-      * 扩展RDD的方法，隐式转换
-      */
-    implicit def rdd2RichRDD(src: RDD[_ <: Any]): RichRDD = new RichRDD(src)
 
-    /**
-      * 打印rdd的分区信息，需要用mapPartitionsWithIndex方法。
-      * 使用方法：df.rdd.mapPartitionsWithIndex(printLocationFunc).collect().foreach(println(_))
-      */
-    def printLocationFunc(index: Int, iter: Iterator[Any]): Iterator[String] = {
-        iter.map(x => "分区" + index + "：" + x + "")
-    }
+  /**
+    * 扩展RDD的方法，隐式转换
+    */
+  implicit def rdd2RichRDD(src: RDD[_ <: Any]): RichRDD = new RichRDD(src)
+
+
 }

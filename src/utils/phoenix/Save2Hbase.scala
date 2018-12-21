@@ -199,6 +199,7 @@ object Save2Hbase extends App {
     //先构建SQL
     val sql = new StringBuilder()
     sql.append(s"create table $tableName(")
+    //试试这种sql.append(schema.map(i => i.name + " " + parquet2HBaseType(i.dataType)).mkString(","))
     for (i <- schema) {
       //组合为： 字段 VARVHAR,
       sql.append(i.name).append(" ").append(getHbaseType(i.dataType)).append(",")

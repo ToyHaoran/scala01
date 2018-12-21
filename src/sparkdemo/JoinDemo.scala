@@ -78,6 +78,7 @@ object JoinDemo extends App {
           必须select(col("key1"),df1("key2"),df2("key3"))，这个select语句不好拼接。
               可以在map里面加条件判断是不是主键，然后进行拼接。
               主键多了判断也多。。
+              参考一下张春振的那个getMap,有点用。
       2、如果用df1("YHBH") === df2("YHBH")，条件还不能统一制定。
           可以判断主键有几个，然后按主键个数选择连接条件
       3、如果注册成临时表：

@@ -132,7 +132,7 @@ object RddDemo extends App {
         // 第一个参数是分区的索引，第二个参数是该分区中所有项的迭代器。
         // 输出是一个迭代器，它包含应用函数编码的任何转换后的项列表。
         val rdd6 = sc.parallelize(List(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 3)
-        rdd6.printLocation()
+        rdd6.printItemLoc()
     }
 
     val flatMap_flatMapValues = 0
@@ -530,7 +530,7 @@ object RddDemo extends App {
         //案例1：
         val z = sc.parallelize(List(1,2,3,4,5,6), 2)
         //先用分区标签打出RDD的内容
-        z.mapPartitionsWithIndex(printLocationFunc).collect     //如果加个7，分在第二个分区上。
+        z.printItemLoc()     //如果加个7，分在第二个分区上。
         //res28: Array[String] = Array([partID:0, val: 1], [partID:0, val: 2], [partID:0, val: 3],
         //                             [partID:1, val: 4], [partID:1, val: 5], [partID:1, val: 6])
 
@@ -569,7 +569,7 @@ object RddDemo extends App {
         // 像聚合函数一样工作，除了聚合应用于具有相同键的值。与聚合函数不同，初始值不应用于第二个reduce。
         val pairRDD = sc.parallelize(List( ("cat",2), ("cat", 5), ("mouse", 4),("cat", 12), ("dog", 12), ("mouse", 2)), 2)
         //让我们来看看分区中的内容
-        pairRDD.mapPartitionsWithIndex(printLocationFunc).collect
+        pairRDD.printItemLoc()
         //res2: Array[String] = Array([partID:0, val: (cat,2)], [partID:0, val: (cat,5)], [partID:0, val: (mouse,4)],
         //                            [partID:1, val: (cat,12)], [partID:1, val: (dog,12)], [partID:1, val: (mouse,2)])
 
@@ -621,14 +621,14 @@ object RddDemo extends App {
             println("HashPartitioner================")
             //HashPartitioner确定分区的方式：partition = key.hashCode () % numPartitions
             val counts = sc.parallelize(List((2, 'b'), (3, 'c'), (3, "cc"), (2, "bb"), (1, 'a'), (1, "aa")), 3)
-            counts.mapPartitionsWithIndex(printLocationFunc).collect()
+            counts.printItemLoc()
             val partition = counts.partitionBy(new HashPartitioner(3))
-            partition.mapPartitionsWithIndex(printLocationFunc).collect()
+            partition.printItemLoc()
 
             println("RangePartitioner==============")
             //RangePartitioner会对key值进行排序，然后将key值划分成3份key值集合。
             val partition2 = counts.partitionBy(new RangePartitioner(3, counts))
-            partition2.mapPartitionsWithIndex(printLocationFunc).collect()
+            partition2.printItemLoc()
 
             println("CustomPartitioner===========")
             //CustomPartitioner可以根据自己具体的应用需求，自定义分区。
@@ -650,7 +650,7 @@ object RddDemo extends App {
                 }
             }
             val partition3 = counts.partitionBy(new CustomPartitioner(3))
-            partition3.mapPartitionsWithIndex(printLocationFunc).collect()
+            partition3.printItemLoc()
 
             // Spark从HDFS读入文件的分区数默认等于HDFS文件的块数(blocks)，HDFS中的block是分布式存储的最小单元。
             // 如果我们上传一个30GB的非压缩的文件到HDFS，HDFS默认的块容量大小128MB，因此该文件在HDFS上会被分为235块(30GB/128MB)；

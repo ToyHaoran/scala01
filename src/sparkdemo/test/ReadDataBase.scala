@@ -142,42 +142,37 @@ object ReadDataBase extends App {
   实现分段读取数据库，每个段读取少量的数据库，需要建立索引。
       1、读取KH_YDKH，总数据量112119565，增量200万
       在没有GDDWBM索引的情况下：3556.813s
-  建立索引的情况下： 173s
+      建立索引的情况下： 173s
       2、关于数据库参数对读取的影响：
 
   问题：
       1、查看数据库连接数：https://blog.csdn.net/zmx729618/article/details/54018629
    */
   val 读取Oracle数据库速度测试 = 0
-  if (0) {
+  if (1) {
     //val tables = "LC_CBQDXX,XT_DMBM,HS_CQDLJL,HS_LTBZ,HS_BSBZ,FW_WQXX,HS_DJWDMX,HS_CQDLMX,ZW_FK_CSLJFMX,ZW_FK_YHDA,HS_DJBB,HS_DJDM,HS_DJMX,KH_JLD,KH_JSH,SB_YXDNB,KH_JLDGX,LC_YXDNBSS,ZW_FK_YHZZXX,DW_YXBYQ,KH_JLDBYQGX,HS_MFDYH,HS_JTBS,LC_HBXXJL,FW_YKJLDBYQGXLSXX,LC_JLDBGJL,XT_RY,XT_ZZ,XT_YXZZ,FW_KFGDXX,FW_GDYHGL,KH_df,ZW_SSDFJL,ZW_FK_HCYCJL,ZW_FK_YJGZD,ZW_FK_TFDGZD,ZW_FK_YCCBSJ,FW_YKJLDLSXX,FW_YKJLDGXLSXX,FW_YKYXBYQLSXX,ZW_FK_YCHQRZ,ZW_FK_CBXX,ZW_FK_CSJG,ZW_FK_SSYDXXHQJL"
     //val tables = "SB_YXDNB,KH_JLD,ZW_SSDFJL,KH_JSH,KH_YDKH" //600万以上的表 LC_YXDNBSS（没有GDDWBM）
-    val db = "dfjs"
-    val tables = "ZW_SSDFJL_TEMP" //KH_YDKH_TEMP
+    val db = "yxfk"
+    val tables = "ZW_SSDFJL" //KH_YDKH_TEMP
+    //一定要并行，虽然同时运行的就66个task，但是如果有空余的task可以用来运行那种无法并行的读取时间还长的task
     val parTable = tables.split(",").par
     println(s"一共${parTable.size}个表")
     //存放表和时间
     val parMap = new java.util.concurrent.ConcurrentHashMap[String, String]()
     parTable.foreach(table => parMap.put(table, "0"))
 
-    //时间较长的表  LC_YXDNBSS,SB_YXDNB,KH_JLD,ZW_SSDFJL,KH_JSH,KH_YDKH
-    parTable.par.foreach(table => {
+    parTable.foreach(table => {
       try {
         var df: DataFrame = null
         val (count, time1) = getMethodRunTime({
-          /*val sql = s"(SELECT * FROM $table WHERE CZSJ > to_date('2018-12-04 18:31:30','yyyy-mm-dd hh24:mi:ss') AND CZSJ <= to_date('2018-12-04 23:59:59','yyyy-mm-dd hh24:mi:ss'))"
-          JdbcUtil.loadByColumn(db, sql, "GDDWBM").count()*/
-
-          df = JdbcUtil.loadByColumn(db, table, "GDDWBM")
           /*
           加缓存前读取时间：23.175s，写入时间：1464.584s
           加缓存后读取时间：1597.801s ，写入时间：292.311s
           总时间都差不多半小时。
           说明还是读取的问题
-           */
-          /*df.cache()
-          df.show()*/
-          df.count() //有索引的情况下特别快
+          */
+          df = JdbcUtil.loadTable(db, table)/*.drop("RANDOMKEY")*/ //todo 加后面的drop会导致数据量为0，原因未知。
+          //加缓存，写两份数据11分钟。
         })
         println(s"${table}数量：$count,读取需要时间：$time1 =========")
         parMap.remove(table)
@@ -185,12 +180,14 @@ object ReadDataBase extends App {
 
         val (res2, time2) = getMethodRunTime({
           println(s"$table 写入HDFS开始=======")
-          df.write.mode(SaveMode.Overwrite).partitionBy("GDDWBM").parquet(s"${PropUtil.getValueByKey("HDFS.ROOT.162")}/YXFK/compute/$table")
+          df.write.mode(SaveMode.Overwrite).parquet(s"${PropUtil.getValueByKey("HDFS.ROOT.162")}/lihaoran/YXFK/compute/$table")
         })
         println(s"$table 写入HDFS完成，时间$time2")
+        df.unpersist()
       } catch {
         case e: Exception =>
-          println("出现异常==========================\n" + e.printStackTrace())
+          println(s"$table 出现异常==========================\n")
+          e.printStackTrace()
       }
     })
   }

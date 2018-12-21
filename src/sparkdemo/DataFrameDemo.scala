@@ -198,13 +198,19 @@ object DataFrameDemo extends App {
    */
   val DF数据持久化 = 0
   if (0) {
-
     df.cache() //调用下面方法
     df.persist() //默认MEMORY_AND_DISK
+    df.count() //必须计算一次才有缓存
+    //如果要写入两个parquet，必须加缓存，否则会重新计算两次。
+    //比如说费控数据初始化，不加缓存，写两个路径，又TM重新读取一次。
+
     //持久化级别
     import org.apache.spark.storage.StorageLevel
     df.persist(StorageLevel.DISK_ONLY)
     df.persist(StorageLevel.MEMORY_ONLY)
+
+    //取消缓存，这个一般不需要，JVM自动垃圾回收。
+    df.unpersist()
   }
 
   val SQL风格语法 = 0
@@ -457,7 +463,7 @@ object DataFrameDemo extends App {
       ("o6", "s1", "2017-05-04", 300)
     ).toDF("order_id", "seller_id", "pay_time", "price")
     //打印分区信息
-    orders.printLocation()
+    orders.printItemLoc()
 
     //店铺订单顺序
     val rankSpec = Window.partitionBy("seller_id").orderBy("pay_time")
@@ -829,6 +835,7 @@ object DataFrameDemo extends App {
   if (0) {
     //有明确的分区
     df.repartition(10)
+    df.rdd.getNumPartitions
 
     //它由保留现有分区数量的给定分区表达式划分。得到的DataFrame是哈希分区的。
     // 这与SQL (Hive QL)中的“distribution BY”操作相同
