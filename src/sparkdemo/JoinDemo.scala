@@ -45,6 +45,7 @@ object JoinDemo extends App {
     //控制字段选择的顺序
     val columnName = sourceDf.columns
     //将df1和df2进行fullouter join，df1是大表。
+    //如果将df1和
     val df3 = getCondition(df1, df2, keys)
     /*
     逻辑：

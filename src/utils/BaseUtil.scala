@@ -34,8 +34,7 @@ object BaseUtil {
     * 得到代码块的运行时间
     *
     * @param block 需要测试的代码块
-    * @tparam R
-    * @return Turple(代码块返回值 | 代码运行时间 秒)
+    * @return Turple(代码块返回值 | 代码运行时间)
     */
   def getMethodRunTime[R](block: => R): (R, String) = {
     val start = System.nanoTime() //系统纳米时间
@@ -52,7 +51,7 @@ object BaseUtil {
     * 用于睡眠程序（10分钟），以查看spark UI
     */
   def sleepApp(): Unit = {
-    println("程序已结束，睡眠10分钟，请查看Spark UI, 或者kill应用")
+    println("正在睡眠，持续10分钟，请查看Spark UI, 或者kill应用")
     Thread.sleep(1000 * 60 * 10)
   }
 

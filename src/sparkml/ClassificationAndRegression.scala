@@ -1,5 +1,8 @@
 package sparkml
 
+import utils.BaseUtil._
+
+
 /**
   * Created with IntelliJ IDEA.
   * User: lihaoran 
@@ -7,13 +10,15 @@ package sparkml
   * Time: 13:57 
   * Description:分类和回归：本页面包含分类和回归的算法。它还包括讨论特定算法类的部分，例如线性方法，树和集合。
   */
-object ClassificationAndRegression extends App{
+object ClassificationAndRegression extends App {
   val _______________分类________________ = 0
-
   /*
   http://spark.apache.org/docs/2.3.1/ml-classification-regression.html#logistic-regression
    */
   val 二项逻辑回归 = 0
+  if(0){
+
+  }
 
   val 多项逻辑回归 = 0
 
