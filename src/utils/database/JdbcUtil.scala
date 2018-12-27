@@ -260,9 +260,15 @@ object JdbcUtil {
   def loadTable(database: String, table: String): DataFrame = {
     val columns = getTableColumnsBySpark(database, table)
     if (columns.contains("GDDWBM")) {
-      loadByColumn(database, table, "GDDWBM")
+      val df = loadByColumn(database, table, "GDDWBM")
+      df.cache()
+      df.count()
+      df
     } else {
-      loadByRandom(database, table, 60)
+      val df = loadByRandom(database, table, 60)
+      df.cache() //必须加缓存，否则drop之后读取的数据为0
+      df.count()
+      df.drop("RANDOMKEY")
     }
   }
 
@@ -309,7 +315,7 @@ object JdbcUtil {
     */
   def loadByRandom(database: String, table: String, numpartition: Int, options: Map[String, String] = Map()): DataFrame = {
     val db = getDBAdapter(database)
-    val finsql = s"(select ROUND((DBMS_RANDOM.VALUE*$numpartition),0) AS RANDOMKEY,t.* from $table t)"
+    val finsql = s"(SELECT ROUND((DBMS_RANDOM.VALUE*$numpartition),0) AS RANDOMKEY,t.* from $table t)"
     val predicates = PredicatesUtil.byRandom("RANDOMKEY", numpartition)
     db.read(finsql, database, predicates, options)
   }

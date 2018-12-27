@@ -373,6 +373,16 @@ object DataFrameDemo extends App {
 
   val 对Null的操作 = 0
   if (0) {
+    //对某个键，比如说GDDWBM，想要找出来所有表中都有的GDDWBM，需要一个一个取交集。
+    //怎么判断一个df是否为null
+    var df007:DataFrame = null
+    //不要df007.head(1).isEmpty，使用.head的时候就报错:空指向异常。
+    if(null == df007){
+      df007 = df.distinct()
+    }else {
+      df007 = df007.intersect(df.distinct())
+    }
+
     //将key2，3的null全部填充为xxx
     df.na.fill("xxx", Seq("key2", "key3"))
     //将key2中的null修改为666，将key3中的null值修改为"你好"
@@ -380,7 +390,7 @@ object DataFrameDemo extends App {
     //过滤掉key3,key5列中含有null的行
     df.na.drop(Seq("key3", "key5"))
 
-    //注意：下面这个会导致key1全部为null,推荐使用UDF
+    //注意：下面这个会导致key1全部为null,必须使用UDF
     df.withColumn("key1", col("key1") + "A").show()
   }
 
@@ -388,6 +398,7 @@ object DataFrameDemo extends App {
   if (0) {
     //过滤操作
     df.filter("key2 > 2 and key3 = 5").show()
+    df.filter("key2 in (1,2,3)").show()
     df.filter((df("key2") > 2).and(df("key3") === 5)).show()
     df.filter((df("key2") > 2) and (df("key3") === 5)).show()
     df.filter((df("key2") > 2) || (df("key3") === 5)).show()

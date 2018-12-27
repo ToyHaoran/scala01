@@ -139,48 +139,51 @@ object ReadDataBase extends App {
   }
 
   /*
-  实现分段读取数据库，每个段读取少量的数据库，需要建立索引。
-      1、读取KH_YDKH，总数据量112119565，增量200万
-      在没有GDDWBM索引的情况下：3556.813s
-      建立索引的情况下： 173s
-      2、关于数据库参数对读取的影响：
+  关于读取数据库的一些经验：
+  1、spark.read.jdbc读取的时候一定要分区读取
+    a、通过某个带有索引的字段分区读取，比如说GDDWBM。
+    b、使用某个数值列分区读取，但是需要控制数据起始和间隔。
+    c、使用随机数读取，这种情况下，数据是随机分到每个分区的。计算的时候最好重分区一下。
+  2、数据库相关的问题：
+    a、没有索引的情况下插入快，但是读取慢。
+    b、有索引的情况下读取快，但是插入巨慢。
+    c、正在研究主键索引对插入的影响，听刘波说是数字类型自增列主键比较快，而字符串主键插入巨慢。
+    d、此外还有批量插入的影响，待研究。
+  3、并行读取:
+    a、一定要并行，虽然同时运行的就66个task，但是如果有空余的task可以用来运行那种无法并行的读取时间还长的task
+    b、那些无法并行运行，时间还长的任务，最好先运行，避免到最后就那几个单线程吭哧吭哧的运行。其他的线程还没事干。
+  4、缓存问题：
+    a、如果要写入hdfs两次，必须加缓存，否则会从数据库读取两次，双倍时间。
+    b、没用的缓存，如果能手动unpersist，就直接处理，不要等到垃圾回收。
+
 
   问题：
       1、查看数据库连接数：https://blog.csdn.net/zmx729618/article/details/54018629
    */
   val 读取Oracle数据库速度测试 = 0
   if (0) {
-    //val tables = "LC_CBQDXX,XT_DMBM,HS_CQDLJL,HS_LTBZ,HS_BSBZ,FW_WQXX,HS_DJWDMX,HS_CQDLMX,ZW_FK_CSLJFMX,ZW_FK_YHDA,HS_DJBB,HS_DJDM,HS_DJMX,KH_JLD,KH_JSH,SB_YXDNB,KH_JLDGX,LC_YXDNBSS,ZW_FK_YHZZXX,DW_YXBYQ,KH_JLDBYQGX,HS_MFDYH,HS_JTBS,LC_HBXXJL,FW_YKJLDBYQGXLSXX,LC_JLDBGJL,XT_RY,XT_ZZ,XT_YXZZ,FW_KFGDXX,FW_GDYHGL,KH_df,ZW_SSDFJL,ZW_FK_HCYCJL,ZW_FK_YJGZD,ZW_FK_TFDGZD,ZW_FK_YCCBSJ,FW_YKJLDLSXX,FW_YKJLDGXLSXX,FW_YKYXBYQLSXX,ZW_FK_YCHQRZ,ZW_FK_CBXX,ZW_FK_CSJG,ZW_FK_SSYDXXHQJL"
     //val tables = "SB_YXDNB,KH_JLD,ZW_SSDFJL,KH_JSH,KH_YDKH" //600万以上的表 LC_YXDNBSS（没有GDDWBM）
     val db = "yxfk"
-    val tables = "ZW_SSDFJL" //KH_YDKH_TEMP
-    //一定要并行，虽然同时运行的就66个task，但是如果有空余的task可以用来运行那种无法并行的读取时间还长的task
+    val tables = "SB_YXDNB,KH_JLD,ZW_SSDFJL,KH_JSH,KH_YDKH,LC_YXDNBSS"
     val parTable = tables.split(",").par
     println(s"一共${parTable.size}个表")
-    //存放表和时间
-    val parMap = new java.util.concurrent.ConcurrentHashMap[String, String]()
-    parTable.foreach(table => parMap.put(table, "0"))
 
     parTable.foreach(table => {
       try {
         var df: DataFrame = null
         val (count, time1) = getMethodRunTime({
-          /*
-          加缓存前读取时间：23.175s，写入时间：1464.584s
-          加缓存后读取时间：1597.801s ，写入时间：292.311s
-          总时间都差不多半小时。
-          说明还是读取的问题
-          */
-          df = JdbcUtil.loadTable(db, table)/*.drop("RANDOMKEY")*/ //todo 加后面的drop会导致数据量为0，原因未知。
-          //加缓存，写两份数据11分钟。
+          df = JdbcUtil.loadTable(db, table)
+          df.count()
         })
-        println(s"${table}数量：$count,读取需要时间：$time1 =========")
-        parMap.remove(table)
-        println("剩余：" + parMap.keys().mkString(","))
-
+        println(s"${table}数量：$count,读取时间：$time1 =========")
+        //如果要写入parquet，一定要先加缓存，否则会读取两次
         val (res2, time2) = getMethodRunTime({
-          println(s"$table 写入HDFS开始=======")
-          df.write.mode(SaveMode.Overwrite).parquet(s"${PropUtil.getValueByKey("HDFS.ROOT.162")}/lihaoran/YXFK/compute/$table")
+          (0 to 1).par.foreach {
+            case 0 =>
+              df.write.mode(SaveMode.Overwrite).parquet(s"${PropUtil.getValueByKey("HDFS.ROOT.162")}/lihaoran/YXFK/compute/$table")
+            case 1 =>
+              df.write.mode(SaveMode.Overwrite).parquet(s"${PropUtil.getValueByKey("HDFS.ROOT.162")}/lihaoran/YXFK/compute/${table}02")
+          }
         })
         println(s"$table 写入HDFS完成，时间$time2")
         df.unpersist()

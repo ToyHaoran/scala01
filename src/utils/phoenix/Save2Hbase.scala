@@ -2,7 +2,6 @@ package utils.phoenix
 
 import java.util.UUID
 
-import org.apache.hadoop.conf.Configuration
 import org.apache.phoenix.schema.TableAlreadyExistsException
 import org.apache.spark.sql.types._
 import utils.{ConnectUtil, PropUtil}

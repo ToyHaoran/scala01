@@ -34,7 +34,7 @@ object MatchDemo {
         val E = 'e'
         val o = 'o'
         str.foreach(char01 =>{
-            //这里必须重新定义一下，foreach是识别不了类型的
+            //这里必须重新定义一下，foreach在小括号内是识别不了类型的，或者用下面的方式
             val char:Char = char01
             //match是有返回值的
             val res = char match{
@@ -96,7 +96,7 @@ object MatchDemo {
         }
     }
 
-    val 提取器_█ = 0
+    val 提取器 = 0
     if (1) {
         println("使用正则表达式提取组=======")
         val pattern = "([0-9]+) ([a-z]+)".r

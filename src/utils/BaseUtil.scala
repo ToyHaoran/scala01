@@ -3,6 +3,8 @@ package utils
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 
+import scala.collection.immutable.ListMap
+
 //导入对应的规则类，以免出现警告
 import scala.language.implicitConversions
 
@@ -43,8 +45,9 @@ object BaseUtil {
     val delta = end - start
     val ms = delta / 1000000d //毫秒
     val s = ms / 1000d //秒
-    //val min = s / 60d  //分钟
-    (result, s.formatted("%.3f") + "s") //保留三位小数
+    val min = s / 60d  //分钟
+    //(result, s.formatted("%.3f") + "s") //保留三位小数  单位 秒
+    (result, min.formatted("%.2f") + "min") //保留两位小数   单位 分钟
   }
 
   /**
@@ -65,8 +68,10 @@ object BaseUtil {
       * 用来统计相同key的记录数，常用于调整数据倾斜
       */
     def printKeyNums(column: Column): Unit = {
-      val map = df.select(column).rdd.countByValue()
+      var map = df.select(column).rdd.countByValue()
       println(s"一共${map.size}个key")
+      //对map进行排序（默认从小到大）
+      map = ListMap(map.toSeq.sortBy(_._2):_*)
       for ((key, num) <- map) {
         println(key + "共有" + num + "条记录")
       }
@@ -135,11 +140,15 @@ object BaseUtil {
 
   /**
     * RDD的装饰类（隐式转换）,不加泛型读取不到
+    *
     */
   class RichRDD(rdd: RDD[_ <: Any]) {
 
+    /**
+      * 每个元素在分区位置信息，不能打印太多元素
+      */
     def printItemLoc(): Unit = {
-      println("每个元素在分区位置信息如下，不能打印太多元素==============")
+      println("分区位置信息========================")
       rdd.mapPartitionsWithIndex { case (index, iter) =>
         Iterator(s"part_$index：${iter.mkString(",")}")
       }.collect().foreach(println(_))

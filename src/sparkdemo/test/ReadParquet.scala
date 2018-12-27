@@ -15,12 +15,12 @@ object ReadParquet extends App {
 
   val 打印指定表key的记录数 = 0
   if (0) {
-    //这个不要抽出去，否则复制到其他地方麻烦。
     val spark = ConnectUtil.spark
     val hdfsRoot = PropUtil.getValueByKey("HDFS.ROOT.162")
     val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
     //val files = hdfsUtil.list("/YXFK/compute/")  //所有表
-    val tables = "KH_YDKH_TEMP" //指定表
+    //val tables = "KH_YDKH" //指定表
+    val tables:String = args(0)
     val files = tables.split(",").map(s => "/YXFK/compute/" + s).toList.toArray
     //需要统计的列名
     val colName = "GDDWBM"
@@ -40,7 +40,6 @@ object ReadParquet extends App {
             try {
               // println("查询某列相同key的记录数==============")
               df.printKeyNums(colName)
-              //df.printKeyNums(colName)
             } catch {
               case ex: AnalysisException =>
                 println(s"${filePath}没有${colName}字段===")
@@ -65,7 +64,7 @@ object ReadParquet extends App {
       解决：提高executor-memory，或者重新repartition。
    */
   val 处理所有parquet = 0
-  if (1) {
+  if (0) {
     val spark = ConnectUtil.spark
     val hdfsRoot = PropUtil.getValueByKey("HDFS.ROOT.103")
     val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)

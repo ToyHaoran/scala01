@@ -14,6 +14,8 @@ object ExtractingAndTransforming extends App {
   val spark = ConnectUtil.spark
   import spark.implicits._
 
+
+  val __________________001特征提取__________________ = 0
   /*
   http://spark.apache.org/docs/2.3.1/ml-features.html#tf-idf
 
@@ -26,7 +28,7 @@ object ExtractingAndTransforming extends App {
   其中，|D|是语料库中的文档总数。由于采用了对数，如果一个词出现在所有的文件，其IDF值变为0。
 
    */
-  val 特征提取_TF_IDF = 0
+  val TF_IDF = 0
   if (0) {
     /*
     在下面的代码段中，我们以一组句子开始。首先使用分解器Tokenizer把句子划分为单个词语。
@@ -62,7 +64,7 @@ object ExtractingAndTransforming extends App {
     该模型将每个词语映射到一个固定大小的向量。word2vecmodel使用文档中每个词语的平均数来将文档转换为向量，
     然后这个向量可以作为预测的特征，来计算文档相似度计算等等。
    */
-  val 特征提取_Word2Vec = 0
+  val Word2Vec = 0
   if (0) {
     /*
     在下面的代码段中，我们从一组文档开始，每个文档都表示为一系列单词。
@@ -104,7 +106,7 @@ object ExtractingAndTransforming extends App {
        一个可选的参数minDF也影响fitting过程中，它指定词汇表中的词语在文档中最少出现的次数。
        另一个可选的二进制切换参数控制输出向量，如果设置为true那么所有非零的计数为1。这对于模拟二进制而非整数计数的离散概率模型特别有用。
     */
-  val 特征提取_CountVectorizer = 0
+  val CountVectorizer = 0
   if (0) {
     import org.apache.spark.ml.feature.{CountVectorizer, CountVectorizerModel}
 
@@ -144,7 +146,7 @@ object ExtractingAndTransforming extends App {
   这里使用的哈希函数也是HashingTF中 使用的MurmurHash 3。
     由于散列值的简单模数用于确定向量索引，因此建议使用2的幂作为numFeatures参数; 否则，特征将不会均匀地映射到矢量索引。
    */
-  val 特征提取_FeatureHasher = 0
+  val FeatureHasher = 0
   if (0) {
     import org.apache.spark.ml.feature.FeatureHasher
 
@@ -164,13 +166,13 @@ object ExtractingAndTransforming extends App {
 
   }
 
-  val __________________001分割线__________________ = 0
+  val __________________002特征变换__________________ = 0
 
   /*
   https://blog.csdn.net/liulingyuan6/article/details/53397780
   http://spark.apache.org/docs/2.3.1/ml-features.html#tokenizer
    */
-  val 特征变换_Tokenizer_分词器 = 0
+  val Tokenizer_分词器 = 0
   if (0) {
     /*
       Tokenization将文本划分为独立个体（通常为单词）。下面的例子展示了如何把句子划分为单词。
@@ -210,7 +212,7 @@ object ExtractingAndTransforming extends App {
     停用词表由stopWords参数提供。一些语言的默认停用词表可以通过StopWordsRemover.loadDefaultStopWords(language)调用。
     布尔参数caseSensitive指明是否区分大小写（默认为否）
    */
-  val 特征变换_StopWordsRemover_停用词 = 0
+  val StopWordsRemover_停用词 = 0
   if (0) {
     import org.apache.spark.ml.feature.StopWordsRemover
 
@@ -232,7 +234,7 @@ object ExtractingAndTransforming extends App {
     参数n决定每个n-gram包含的对象个数。
     结果包含一系列n-gram，其中每个n-gram代表一个空格分割的n个连续字符。如果输入少于n个字符串，将没有输出结果。
    */
-  val 特征变换_Ngram = 0
+  val Ngram = 0
   if (0) {
     import org.apache.spark.ml.feature.NGram
 
@@ -252,7 +254,7 @@ object ExtractingAndTransforming extends App {
    二值化是根据阀值将连续数值特征转换为0-1特征的过程。
    Binarizer参数有输入、输出以及阀值。特征值大于阀值将映射为1.0，特征值小于等于阀值将映射为0.0。
    */
-  val 特征变换_Binarizer_二值化 = 0
+  val Binarizer_二值化 = 0
   if (0) {
     import org.apache.spark.ml.feature.Binarizer
 
@@ -275,7 +277,7 @@ object ExtractingAndTransforming extends App {
   成分分析是一种统计学方法，它使用正交转换从一系列可能相关的变量中提取线性无关变量集，提取出的变量集中的元素称为主成分。
   使用PCA方法可以对变量集合进行降维。下面的示例将会展示如何将5维特征向量转换为3维主成分向量。
    */
-  val 特征变换_PCA_主成分分析 = 0
+  val PCA_主成分分析 = 0
   if (0) {
     import org.apache.spark.ml.feature.PCA
     import org.apache.spark.ml.linalg.Vectors
@@ -301,7 +303,7 @@ object ExtractingAndTransforming extends App {
   http://spark.apache.org/docs/2.3.1/ml-features.html#polynomialexpansion
   多项式扩展通过产生n维组合将原始特征将特征扩展到多项式空间。下面的示例会介绍如何将你的特征集拓展到3维多项式空间。
    */
-  val 特征变换_PolynomialExpansion_多项式扩展 = 0
+  val PolynomialExpansion_多项式扩展 = 0
   if (0) {
     import org.apache.spark.ml.feature.PolynomialExpansion
     import org.apache.spark.ml.linalg.Vectors
@@ -329,7 +331,7 @@ object ExtractingAndTransforming extends App {
     （因为一个实偶函数的傅里叶变换仍然是一个实偶函数）。
   离散余弦变换，经常被信号处理和图像处理使用，用于对信号和图像（包括静止图像和运动图像）进行有损数据压缩。
    */
-  val 特征变换_DCT_离散余弦变换 = 0
+  val DCT_离散余弦变换 = 0
   if (0) {
     import org.apache.spark.ml.feature.DCT
     import org.apache.spark.ml.linalg.Vectors
@@ -357,7 +359,7 @@ object ExtractingAndTransforming extends App {
     如果输入列为数值型，我们先将之映射到字符串然后再对字符串的值进行指标。
     如果下游的管道节点需要使用字符串－指标标签，则必须将输入和钻还为字符串－指标列名。
    */
-  val 特征变换_StringIndexer = 0
+  val StringIndexer = 0
   if (0) {
     import org.apache.spark.ml.feature.StringIndexer
 
@@ -378,7 +380,7 @@ object ExtractingAndTransforming extends App {
   与StringIndexer对应，IndexToString将指标标签映射回原始字符串标签。
   一个常用的场景是先通过StringIndexer产生指标标签，然后使用指标标签进行训练，最后再对预测结果使用IndexToString来获取其原始的标签字符串。
    */
-  val 特征变换_IndexToString = 0
+  val IndexToString = 0
   if (0) {
     import org.apache.spark.ml.attribute.Attribute
     import org.apache.spark.ml.feature.{IndexToString, StringIndexer}
@@ -425,7 +427,7 @@ object ExtractingAndTransforming extends App {
   OneHotEncoderEstimator支持handleInvalid参数，以选择在转换数据期间如何处理无效输入。
     可用选项包括'keep'（任何无效输入分配给额外的分类索引）和'error'（抛出错误）。
    */
-  val 特征变换_OneHotEncoderEstimator = 0
+  val OneHotEncoderEstimator = 0
   if (0) {
     import org.apache.spark.ml.feature.OneHotEncoderEstimator
 
@@ -457,7 +459,7 @@ object ExtractingAndTransforming extends App {
    索引后的类别特征可以帮助决策树等算法处理类别型特征，并得到较好结果。
    在下面的例子中，我们读入一个数据集，然后使用VectorIndexer来决定哪些特征需要被作为非数值类型处理，将非数值型特征转换为他们的索引。
    */
-  val 特征变换_VectorIndexer = 0
+  val VectorIndexer = 0
   if (0) {
     import org.apache.spark.ml.feature.VectorIndexer
 
@@ -483,7 +485,7 @@ object ExtractingAndTransforming extends App {
   Interaction是一个Transformer，它接收向量或双值列，并生成一个向量列，其中包含每个输入列的一个值的所有组合的乘积。
   例如，如果您有2个矢量类型列，每个列都有3个维度作为输入列，那么您将获得9维向量作为输出列。
    */
-  val 特征变换_Interaction = 0
+  val Interaction = 0
   if (0) {
     import org.apache.spark.ml.feature.Interaction
     import org.apache.spark.ml.feature.VectorAssembler
@@ -523,7 +525,7 @@ object ExtractingAndTransforming extends App {
    参数为p（默认值：2）来指定正则化中使用的p-norm。正则化操作可以使输入数据标准化并提高后期学习算法的效果。
    下面的例子展示如何读入一个libsvm格式的数据，然后将每一行转换为L^1以及L^∞形式。
    */
-  val 特征变换_Normalizer_正则化 = 0
+  val Normalizer_正则化 = 0
   if (0) {
     import org.apache.spark.ml.feature.Normalizer
     import org.apache.spark.ml.linalg.Vectors
@@ -559,7 +561,7 @@ object ExtractingAndTransforming extends App {
     然后产生的模可以用来转换向量至统一的标准差以及（或者）零均值特征。注意如果特征的标准差为零，则该特征在向量中返回的默认值为0.0。
  下面的示例展示如果读入一个libsvm形式的数据以及返回有统一标准差的标准化特征。
    */
-  val 特征变换_StandardScaler = 0
+  val StandardScaler = 0
   if (0) {
     import org.apache.spark.ml.feature.StandardScaler
 
@@ -589,7 +591,7 @@ object ExtractingAndTransforming extends App {
    注意因为零值转换后可能变为非零值，所以即便为稀疏输入，输出也可能为稠密向量。
    下面的示例展示如果读入一个libsvm形式的数据以及调整其特征值到[0,1]之间。
    */
-  val 特征变换_MinMaxScaler = 0
+  val MinMaxScaler = 0
   if (0) {
     import org.apache.spark.ml.feature.MinMaxScaler
     import org.apache.spark.ml.linalg.Vectors
@@ -619,7 +621,7 @@ object ExtractingAndTransforming extends App {
   MaxAbsScaler计算数据集的摘要统计信息并生成MaxAbsScalerModel。然后，模型可以将每个特征单独转换为范围[-1,1]。
   下面的示例展示如果读入一个libsvm形式的数据以及调整其特征值到[-1,1]之间。
    */
-  val 特征变换_MaxAbsScaler = 0
+  val MaxAbsScaler = 0
   if (0) {
     import org.apache.spark.ml.feature.MaxAbsScaler
     import org.apache.spark.ml.linalg.Vectors
@@ -651,7 +653,7 @@ object ExtractingAndTransforming extends App {
        注意，当不确定分裂的上下边界时，应当添加Double.NegativeInfinity和Double.PositiveInfinity以免越界。
     下面将展示Bucketizer的使用方法。
    */
-  val 特征变换_Bucketizer = 0
+  val Bucketizer = 0
   if (0) {
     import org.apache.spark.ml.feature.Bucketizer
 
@@ -703,7 +705,7 @@ object ExtractingAndTransforming extends App {
     ElementwiseProduct按提供的“weight”向量，返回与输入向量元素级别的乘积。
     即是说，按提供的权重分别对输入数据进行缩放，得到输入向量v以及权重向量w的Hadamard积。
    */
-  val 特征变换_ElementwiseProduct = 0
+  val ElementwiseProduct = 0
   if (0) {
     import org.apache.spark.ml.feature.ElementwiseProduct
     import org.apache.spark.ml.linalg.Vectors
@@ -733,7 +735,7 @@ object ExtractingAndTransforming extends App {
     2. SELECTa, SQRT(b) AS b_sqrt FROM __THIS__ where a > 5
     3. SELECTa, b, SUM(c) AS c_sum FROM __THIS__ GROUP BY a, b
    */
-  val 特征变换_SQLTransformer = 0
+  val SQLTransformer = 0
   if (0) {
     import org.apache.spark.ml.feature.SQLTransformer
     val df = spark.createDataFrame(Seq((0, 1.0, 3.0), (2, 2.0, 5.0))).toDF("id", "v1", "v2")
@@ -747,7 +749,7 @@ object ExtractingAndTransforming extends App {
   它可以将原始特征和一系列通过其他转换器得到的特征合并为单一的特征向量，来训练如逻辑回归和决策树等机器学习算法。
   VectorAssembler可接受的输入列类型：数值型、布尔型、向量型。输入列的值将按指定顺序依次添加到一个新向量中。
    */
-  val 特征变换_VectorAssembler = 0
+  val VectorAssembler = 0
   if (0) {
     import org.apache.spark.ml.feature.VectorAssembler
     import org.apache.spark.ml.linalg.Vectors
@@ -781,7 +783,7 @@ object ExtractingAndTransforming extends App {
     请注意，使用“optimistic”会导致生成的数据帧处于不一致状态，
     me：应用VectorSizeHint列的元数据与该列的内容不匹配。用户应注意避免这种不一致的状态。
    */
-  val 特征变换_VectorSizeHint = 0
+  val VectorSizeHint = 0
   if (0) {
     import org.apache.spark.ml.feature.{VectorAssembler, VectorSizeHint}
     import org.apache.spark.ml.linalg.Vectors
@@ -823,7 +825,7 @@ object ExtractingAndTransforming extends App {
     下边界和上边界将是-Infinity和+ Infinity，覆盖所有实际值。
 
    */
-  val 特征变换_QuantileDiscretizer = 0
+  val QuantileDiscretizer = 0
   if (0) {
     import org.apache.spark.ml.feature.QuantileDiscretizer
 
@@ -845,7 +847,7 @@ object ExtractingAndTransforming extends App {
     输入列应为DoubleType或FloatType。目前，Imputer不支持分类功能，并且可能为包含分类功能的列创建不正确的值。
     Imputer可以通过.setMissingValue（custom_value）将除“NaN”以外的自定义值包括在内。例如，.setMissingValue（0）将计算所有出现的（0）。
    */
-  val 特征变换_Imputer = 0
+  val Imputer = 0
   if (0) {
     import org.apache.spark.ml.feature.Imputer
 
@@ -865,7 +867,7 @@ object ExtractingAndTransforming extends App {
     model.transform(df).show()
   }
 
-  val ____________________002分割线____________________ = 0
+  val ___________________003特征选择____________________ = 0
 
   /*
   http://spark.apache.org/docs/2.3.1/ml-features.html#feature-selectors
@@ -881,7 +883,7 @@ object ExtractingAndTransforming extends App {
   不允许使用重复的特征，所以所选的索引或者名字必须是没有独一的。注意如果使用名字特征，当遇到空值的时候将会报错。
   输出将会首先按照所选的数字索引排序（按输入顺序），其次按名字排序（按输入顺序）。
    */
-  val 特征选择_VectorSlicer = 0
+  val VectorSlicer = 0
   if (0) {
     import java.util.Arrays
 
@@ -915,7 +917,7 @@ object ExtractingAndTransforming extends App {
   http://spark.apache.org/docs/2.3.1/ml-features.html#rformula
   Formula通过R模型公式来选择列。支持R操作中的部分操作，包括‘~’, ‘.’, ‘:’, ‘+’以及‘-‘，基本操作如下
    */
-  val 特征选择_RFormula = 0
+  val RFormula = 0
   if (0) {
     import org.apache.spark.ml.feature.RFormula
 
@@ -939,7 +941,7 @@ object ExtractingAndTransforming extends App {
     ChiSqSelector代表卡方特征选择。它适用于带有类别特征的标签数据。
     ChiSqSelector根据类别的独立卡方2检验来对特征排序，然后选取类别标签主要依赖的特征。它类似于选取最有预测能力的特征。
    */
-  val 特征选择_ChiSqSelector = 0
+  val ChiSqSelector = 0
   if (0) {
     import org.apache.spark.ml.feature.ChiSqSelector
     import org.apache.spark.ml.linalg.Vectors
@@ -964,7 +966,7 @@ object ExtractingAndTransforming extends App {
     result.show()
   }
 
-  val ___________________003分割线_____________________ = 0
+  val ___________________004局部敏感哈希_____________________ = 0
 
   /*
   http://spark.apache.org/docs/2.3.1/ml-features.html#locality-sensitive-hashing
@@ -975,7 +977,7 @@ object ExtractingAndTransforming extends App {
 
   我们描述了LSH可用于的主要操作类型。拟合的LSH模型具有用于这些操作中的每一个的方法。
    */
-  val 局部敏感哈希_Locality_Sensitive_Hashing = 0
+  val Locality_Sensitive_Hashing = 0
 
   /*
   http://spark.apache.org/docs/2.3.1/ml-features.html#bucketed-random-projection-for-euclidean-distance   */
