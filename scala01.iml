@@ -6,8 +6,10 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/source" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/src/data" />
-      <excludeFolder url="file://$MODULE_DIR$/src/scalademo" />
+      <excludeFolder url="file://$MODULE_DIR$/src/sparkdemo" />
       <excludeFolder url="file://$MODULE_DIR$/src/sparkdemo/testfile" />
+      <excludeFolder url="file://$MODULE_DIR$/src/sparkgraphx" />
+      <excludeFolder url="file://$MODULE_DIR$/src/sparkml" />
       <excludeFolder url="file://$MODULE_DIR$/src/sparkstreaming" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
@@ -44,6 +46,7 @@
           <root url="jar://$USER_HOME$/.ideaLibSources/spark-catalyst_2.11-2.3.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ideaLibSources/spark-mllib-local_2.11-2.3.1-sources.jar!/" />
           <root url="jar://$USER_HOME$/.ideaLibSources/spark-mllib_2.11-2.3.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.ideaLibSources/spark-graphx_2.11-2.3.1-sources.jar!/" />
         </SOURCES>
         <jarDirectory url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" recursive="false" />
         <jarDirectory url="file://$MODULE_DIR$/../../jars/jars-spark2.3.1" recursive="false" type="SOURCES" />

@@ -94,7 +94,7 @@ object ReadDataBase extends App {
   val 初始化表并备份原来的数据 = 0
   if (0) {
     //ZW_FK_YHDA,ZW_SSDFJL,KH_YDKH,FW_WQXX,FW_KFGDXX,FW_GDYHGL  OK
-    //大表：FW_YKJLDLSXX,KH_JLD,KH_JSH,LC_HBXXJL
+    //大表：FW_YKJLDLSXX,KH_JLD,KH_JSH,LC_HBXXJL  OK
     //小表：DW_YXBYQ,FW_YKYXBYQLSXX,HS_CQDLMX,HS_JTBS,HS_MFDYH,   OK
     // LC_CBQDXX,XT_RY,ZW_FK_HCYCJL,ZW_FK_TFDGZD,ZW_FK_YHZZXX,ZW_FK_YJGZD   OK
     val tables = "FW_YKJLDLSXX,KH_JLD,KH_JSH,LC_HBXXJL"
@@ -195,10 +195,12 @@ object ReadDataBase extends App {
     })
   }
 
+  /*
+  比如说更改数据库200万的操作时间
+   */
   val 使用JDBC批量处理多个表 = 0
   if (0) {
     //注意表名之间不要加空格
-    //val tables = "FW_YKYXBYQLSXX,ZW_FK_YCHQRZ,ZW_FK_CBXX,ZW_FK_CSJG,ZW_FK_SSYDXXHQJL,LC_CBQDXX,XT_DMBM"
     val tables = "SB_YXDNB_TEMP,KH_JLD_TEMP,KH_JSH_TEMP,KH_YDKH_TEMP"
     val db = "dfjs"
     //注意如果par并行数太多，会导致达到DB最大进程参数，报错ORA-12516, TNS:listener could not find available handler
@@ -209,7 +211,9 @@ object ReadDataBase extends App {
     })
   }
 
-  val Demo_使用spark读取DB = 0
+  val _________demo__________ = 0
+
+  val 使用spark读取 = 0
   if (0) {
     /*
     集群中启动命令：
@@ -229,7 +233,7 @@ object ReadDataBase extends App {
     println(time1 + " " + time2) //2.24s 1.66s  //1.77s 1.88s
   }
 
-  val Demo_使用JDBC修改DB = 0
+  val 使用JDBC修改 = 0
   if (0) {
     if (0) {
       JdbcUtil.execute("local", "update student set Name='6666666' where ID='003'")
@@ -242,7 +246,7 @@ object ReadDataBase extends App {
     }
   }
 
-  val Demo_使用JDBC读取DB = 0
+  val 使用JDBC读取 = 0
   if (0) {
     if (0) {
       //测试
@@ -253,7 +257,6 @@ object ReadDataBase extends App {
       val lst: List[Map[String, Any]] = JdbcUtil.queryAndWrap("local", "select * from student")
       JdbcUtil.queryAndPrintV("local", "select * from student")
     }
-
     if (0) {
       //读取大表的Schema信息
       val tables = "LC_YXDNBSS,SB_YXDNB,KH_JLD,ZW_SSDFJL,KH_JSH,KH_YDKH"
@@ -261,100 +264,7 @@ object ReadDataBase extends App {
         println(s"${table}的Schema查询=======")
         JdbcUtil.getTableColumnsByJdbc("yxfk", s"select * from $table where rownum <= 1")
       })
-      /*
-      LC_YXDNBSS的Schema查询=======
-      YXDNBBS,JLDBH,SSLXDM,BSS,CBRQ,DQBM,CJSJ,CZSJ,JFGZDBH,DFNY,
-      SB_YXDNB的Schema查询=======
-      YXDNBBS,SBBS,ZCBH,CCBH,ZHBL,BMWSDM,FSWSDM,AZWZ,AZRQ,ZFBBZ,SCJYRQ,LHZQ,LHYXRQ,TXDZ1,TXDZ2,TXGYDM,BTL,TXFSDM,DQBM,XWDM,BXGSBBS,CBSXH,GDDWBM,CJSJ,CZSJ,XGNWZH,DHPCH,CSBS,SJZYBGSJ,YCBH,TZBZ,TZXE,YZJE,YJFZ1,YJFZ2,YJFZ3,TDFZ,FDYXJE,XYDJ,XYJDJ,XYFDJ,XYPDJ,XYGDJ,YXXMBS,JD,WD,BZ,CQGSDM,KGBZ,RGKZBZ,DKLX,DKJE,DKBL,DKKSSJ,DKJSSJ,SFKTYFFDK,SBYWZRBS,YWBZ,MJLXDM,MJ,SFAZCJDR,SFSXZCZS,FKKGXH,YXTXXY,YXTXFS,
-      KH_JLD的Schema查询=======
-      JLDBH,JSHH,YHBH,JFYXJ,JLDDZ,JLDMC,JLFSDM,JLDYDJDM,JLDYTDM,JLDWZDM,JXFSDM,ZXDJDFSDM,TYRQ,DYBH,DYZH,XLXDBS,TQBS,KGBH,JLZZFLDM,YDLBDM,DJDM,PJLXDM,CBFSDM,CBSXH,JLDZTDM,YGDDL,DLJSFSDM,DLDBZ,DBKJBZ,DLFTGS,BSFTFSDM,YGBSFTXYZ,WGBSFTXYZ,BSJFBZ,XSJSFSDM,XSJFBZ,XSFTBZ,XSFTXYZ,YGXSJSZ,WGXSJSZ,YDRL,SCECYJCSRQ,SCECFHCSRQ,PTBBDM,CTBBDM,GLYSBZDM,HYFLDM,FSJFBZ,JBDFJSFSDM,XLHDZ,GDLL,GLYSKHFSDM,DQBM,GNWZBM,GDDWBM,JLDLBDM,CJSJ,CZSJ,SWDLJLFX,JLDXH,SJZYBGSJ,JBDFFTFS,JBDFFTZ,BWTLX,DWDW,DCDW,XJJBDFJSFSDM,XJJBDFFTFS,XJJBDFFTZ,XJXLHDZ,TCDJDM,TCYXKSSJ,TCYXJSSJ,XJDJDM,JD,WD,
-      ZW_SSDFJL的Schema查询=======
-      YSZWLSH,SSZWLSH,JLDBH,JLDXH,GZDBH,CBQDBH,YHBH,JSHH,CBJHBH,DFNY,BQCBCS,YCBCS,JSLXDM,CZCS,CZNY,YXXBZ,YHMC,YDDZ,WYJRQ,HYFLDM,YHLBDM,PJLXDM,JFYXJ,CXDM,YDLBDM,YWLBDM,PJDYXXBS,DJDM,DJ,FSJFBZ,JFDL,YSDF,QF,QDDDF,QFJFHJ,QJBDF,QLTDF,YSWYJ,JSWYJRQ,QHZHXJE,QFZTDM,CLZTDM,XHBZ,SDRBS,SDWYJ,SDRQ,GDDWBM,DWBM,DQBM,SSLSH,SSSJ,SSRBS,SSZE,SSDF,SSDDDF,SSJBDF,SSLTDF,SSFJFHJ,SSHZHXJE,SSQT,SSWYJ,SSYS,DZSJ,DZBZ,BBNY,GXSJ,FXRBS,FXSJ,YYSZWLSH,YSSZWLSH,YJLDBH,ZJLXDM,JYFSDM,JFFSDM,SFRBM,DLSFRDM,DLSFLSH,DLSFSJ,JFPZDJH,PDHM,SSYHJFKYHDM,SFYHDM,YHRZLSH,YHKKPCH,GDFYHZH,YWZT,ZFRBS,ZFSJ,ZFYY,ZZRBS,ZZSJ,DZRQ,SJLX,CJSJ,CZSJ,DJBBBH,HZHXSJ,HZHXJE,KKKSRQ,QQT,JSHMC,JSHDZ,FPDYFS,FPHQFS,KKZH,JFQD,YCDZSJ,YCDZBZ,DLSFSBH,QZLX,DZWYBSM,ZZT,KKZHMC,RJQRBS,GRMZBZ,YHKBZ,BZ,JFDLX,CZRBS,YCBH,ZCBH,CCBH,JLDCBSXH,SSZKZYYS,LPZT,QDNDF,QSPDF,SSDNDF,SSSPDF,
-      KH_JSH的Schema查询=======
-      JSHH,KHBH,JSHMC,JSHDZ,JFFSDM,JFKH,FPDYFS,FPHQFS,DQYE,SDYE,YFXE,CDMSDM,DQBM,GDDWBM,CJSJ,CZSJ,ZDHBFSLX,KKLR,FPPSJGBM,ZDPDJGBM,QYTYXYDM,
-      KH_YDKH的Schema查询=======
-      YHBH,KHBH,YHMC,YDDZ,XYDJDM,XYFZ,JZDJDM,FXDJDM,YDLBDM,DYDJDM,HYFLDM,JLFSDM,YHLBDM,GDDWBM,CBQDBH,ZDYCXH,YYHBH,HTRL,YXRL,SCBCDM,FHXZDM,GHNHYLBDM,CXR,LHRQ,SDRQ,XHRQ,LSYDDQRQ,LSYDBZ,YHZTDM,YDJCZQ,SCJCRQ,JCQDBS,TDBZ,ZGLXDM,DQBM,DYLXDM,DYLSFSDM,DYQHFSDM,DYLSZZWZ,ZBDYBZ,ZBDYBSFSDM,ZBDYRL,XBYHBZ,CJFHYHBZ,GKKXBZ,XZQYDM,CXDM,SZLC,YFFLXDM,LSJFGXH,JCRYBS,CBSXH,DWTYDZ,YZBM,CZHM,KHSFDM,KHFQBZ,KHJLBS,SFYZBDC,ZBDCRL,BZFBZ,BZFZHS,BZFZMJ,BZFZRL,CJSJ,CZSJ,CBZQ,JTLX,CDM,SZXMBZ,SJZYBGSJ,YDJCSCZXJCRQ,GHRL,BSZDSJ,ZTQMSJ,FKMSDM,FFMSDM,SFYXTDBZ,TDLXDM,FDFSDM,JD,WD,SFLDHBZ,SCJYYHBZ,YHBZSXDM,YHTDFS,XYPJDF,XYPJDJ,XXCYDM,SFSLJJYH,
-       */
     }
-
   }
 
-  /**
-    * 读取mysql数据库，废弃
-    */
-  @deprecated
-  private def old03: Unit = {
-    val spark = ConnectUtil.spark
-
-    val propUtil = PropUtil("localdb.properties")
-    val url = propUtil.getConfig("url")
-    //注意第二个参数是TABLE_NAME，相当于子查询，需要别名
-    val table = "(select * from student) as st"
-    //properties文件中的key必须是小写的这里的spark才能读到。
-    val properties = propUtil.getProperties()
-
-    val temp = spark.read.jdbc(url, table, properties)
-    temp.show()
-    temp.printSchema()
-
-    //可以用来生成测试数据
-    /*temp.repartition(2).write.mode(SaveMode.Overwrite).parquet("src/sparkdemo/testfile/temp")
-
-    val temp02 = spark.read.parquet("src/sparkdemo/testfile/temp")
-    temp02.show()
-    temp02.printSchema()*/
-  }
-
-  /**
-    * 读取Oracle数据库,废弃
-    */
-  @deprecated
-  private def old02: Unit = {
-    val spark = ConnectUtil.spark
-
-    val propUtil = PropUtil("yxfkdb")
-    val url = propUtil.getConfig("URL")
-    val table = "(select * from hs_djbb)"
-    val dbProperties = propUtil.getProperties()
-
-    // val oracleDemo = spark.read.jdbc(url, "(select * from hs_jldxx where rownum<=1000)", dataBaseProps)
-    val temp = spark.read.jdbc(url, table, dbProperties)
-    temp.show()
-    temp.printSchema()
-  }
-
-  /**
-    * 读取oracle  废弃
-    */
-  @deprecated
-  private def old01: Unit = {
-    val spark = ConnectUtil.spark
-
-    val url = getOracleUrl("xxx.xxx.xxx.xxx", "hydb")
-    val user = "NWPMSKF"
-    val password = "NWPMSKF"
-    val dataBaseProps = new java.util.Properties()
-    dataBaseProps.setProperty("user", user)
-    dataBaseProps.setProperty("password", password)
-    dataBaseProps.setProperty("fetchsize", "1000") //批量读
-    dataBaseProps.setProperty("batchsize", "5000") //批量写
-
-    // val oracleDemo = spark.read.jdbc(url, "(select * from hs_jldxx where rownum<=1000)", dataBaseProps)
-    val temp = spark.read.jdbc(url, "(select * from hs_djbb)", dataBaseProps)
-    temp.show()
-    temp.printSchema()
-
-    /*temp.write.parquet("hdfs://172.20.32.163:8020/temp_data/temp_lihaoran/temp")
-
-    val temp02 = spark.read.parquet("hdfs://172.20.32.163:8020/temp_data/temp_lihaoran/temp")
-    temp02.show()
-    temp02.printSchema()*/
-  }
-
-  private def getOracleUrl(host: String, serviceName: String, port: String = "1521"): String = {
-    //需要有读取Oracle的jar包
-    //不知道为什么，简写版的连不上。  URL=jdbc:oracle:thin:@xxx.xxx.xxx.xxx:1521/hydb
-    //"jdbc:oracle:thin:@(DESCRIPTION =(ADDRESS_LIST =(ADDRESS = (PROTOCOL = TCP)(HOST = xxx.xxx.xxx.xxx)(PORT = 1521)))(CONNECT_DATA=(SERVER = DEDICATED)(SERVICE_NAME = hydb)))"
-    s"jdbc:oracle:thin:@(DESCRIPTION =(ADDRESS_LIST =(ADDRESS = (PROTOCOL = TCP)(HOST = $host)(PORT = $port)))(CONNECT_DATA=(SERVER = DEDICATED)(SERVICE_NAME = $serviceName)))"
-  }
 }

@@ -183,8 +183,9 @@ object JdbcUtil {
     * @param options  自定义参数，优先级：自定义参数>配置文件>默认配置
     * @return 成功标志
     */
-  def save(database: String, table: String, data: DataFrame, saveMode: SaveMode = SaveMode.Append,
-           options: Map[String, String] = Map()): Unit = {
+  def save(
+              database: String, table: String, data: DataFrame, saveMode: SaveMode = SaveMode.Append,
+              options: Map[String, String] = Map()): Unit = {
     val db = getDBAdapter(database)
     db.save(data, table, saveMode, options)
   }
@@ -255,18 +256,24 @@ object JdbcUtil {
   }
 
   /**
-    * 推荐使用这个，会自动去区分是否根据供电单位编码去读取。
+    * 通过分区去加载数据库表
+    *
+    * @param database 数据库
+    * @param table    表名
+    * @param column   需要分区的列，如果表中没有此列，通过随机数分区加载。
+    * @param defaultPartition 随机分区数，默认50
+    * @return DF
     */
-  def loadTable(database: String, table: String): DataFrame = {
+  def loadTable(database: String, table: String, column: String, defaultPartition: Int = 50): DataFrame = {
     val columns = getTableColumnsBySpark(database, table)
-    if (columns.contains("GDDWBM")) {
-      val df = loadByColumn(database, table, "GDDWBM")
+    if (columns.contains(column)) {
+      val df = loadByColumn(database, table, column)
       df.cache()
       df.count()
       df
     } else {
-      val df = loadByRandom(database, table, 60)
-      df.cache() //必须加缓存，否则drop之后读取的数据为0
+      val df = loadByRandom(database, table, defaultPartition)
+      df.cache() //必须加缓存，否则drop之后读取的数据为0,原因未知，估计是随机数又给删掉了。
       df.count()
       df.drop("RANDOMKEY")
     }
@@ -282,8 +289,11 @@ object JdbcUtil {
     * @param options        自定义参数，优先级：自定义参数>配置文件>默认配置
     * @return
     */
-  def loadByColumn(database: String, table: String, classifyColumn: String,
-                   ignoreNull: Boolean = false, options: Map[String, String] = Map()): DataFrame = {
+  def loadByColumn(database: String,
+                   table: String,
+                   classifyColumn: String,
+                   ignoreNull: Boolean = false,
+                   options: Map[String, String] = Map()): DataFrame = {
     val db = getDBAdapter(database)
     val predicates = PredicatesUtil.byColumn(database, table, classifyColumn, ignoreNull)
     db.read(table, database, predicates, options)
@@ -301,7 +311,12 @@ object JdbcUtil {
     * @param options    自定义参数，优先级：自定义参数>配置文件>默认配置
     * @return
     */
-  def loadByDateBefore(database: String, table: String, dateColumn: String, lastDate: java.sql.Date, t: Int, times: Int,
+  def loadByDateBefore(database: String,
+                       table: String,
+                       dateColumn: String,
+                       lastDate: java.sql.Date,
+                       t: Int,
+                       times: Int,
                        options: Map[String, String] = Map()): DataFrame = {
     val db = getDBAdapter(database)
     val predicates = PredicatesUtil.byDate(dateColumn, lastDate, t, times)
@@ -315,9 +330,9 @@ object JdbcUtil {
     */
   def loadByRandom(database: String, table: String, numpartition: Int, options: Map[String, String] = Map()): DataFrame = {
     val db = getDBAdapter(database)
-    val finsql = s"(SELECT ROUND((DBMS_RANDOM.VALUE*$numpartition),0) AS RANDOMKEY,t.* from $table t)"
+    val finalSql = s"(SELECT ROUND((DBMS_RANDOM.VALUE*$numpartition),0) AS RANDOMKEY,t.* from $table t)"
     val predicates = PredicatesUtil.byRandom("RANDOMKEY", numpartition)
-    db.read(finsql, database, predicates, options)
+    db.read(finalSql, database, predicates, options)
   }
 
   /**

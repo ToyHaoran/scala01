@@ -59,7 +59,7 @@ case class DBAdapter(properties: Properties) {
         if (options.nonEmpty) {
             options.foreach(x => ops.put(x._1.toLowerCase, x._2))
         }
-        println(s"$table 的参数：$ops")
+        //println(s"$table 的参数：$ops")
         ConnectUtil.spark.read.options(ops.toMap).jdbc(properties.getProperty(URL.toString), table, dbProperties)
     }
 
@@ -76,7 +76,7 @@ case class DBAdapter(properties: Properties) {
             if (options.nonEmpty) {
                 options.foreach(x => ops.put(x._1.toLowerCase, x._2))
             }
-            println(s"$table 的参数：$ops")
+            //println(s"$table 的参数：$ops")
             /*
             options的配置项在底层会和dbProperties配置项合并。
             因此为开头的Array(USER_NAME, PASSWORD, DRIVER)只有三个参数，因此其他的配置项是在这里加进去的。

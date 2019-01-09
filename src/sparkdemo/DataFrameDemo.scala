@@ -282,8 +282,8 @@ object DataFrameDemo extends App {
 
     //selectExpr更强大，能使用sql函数
     val strdd = "upper(key1),key2 AS haha2"
-    val arr05 = Array("aaa","bbb")
-    arr05.mkString("sss",",","dddd")
+    val arr05 = Array("aaa", "bbb")
+    arr05.mkString("sss", ",", "dddd")
     df.selectExpr(strdd.split(","): _*).show()
     df.selectExpr("upper(key1)", "key2 as haha2").show
     df.select(expr("upper(key1)"))
@@ -375,11 +375,11 @@ object DataFrameDemo extends App {
   if (0) {
     //对某个键，比如说GDDWBM，想要找出来所有表中都有的GDDWBM，需要一个一个取交集。
     //怎么判断一个df是否为null
-    var df007:DataFrame = null
+    var df007: DataFrame = null
     //不要df007.head(1).isEmpty，使用.head的时候就报错:空指向异常。
-    if(null == df007){
+    if (null == df007) {
       df007 = df.distinct()
-    }else {
+    } else {
       df007 = df007.intersect(df.distinct())
     }
 

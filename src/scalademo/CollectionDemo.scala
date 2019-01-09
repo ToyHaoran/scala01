@@ -9,6 +9,74 @@ import scala.collection.immutable.ListMap
 // 序列是继承自特质Seq的类，可以处理一组线性分布的数据。元素是有序的。
 object ArrayDemo extends App {
 
+  /*
+  https://blog.csdn.net/zyp13781913772/article/details/81428862
+   */
+  val 大量的集合操作 = 0
+  if (0) {
+    val (arr1, arr2, arr3, arr4, list1, list2, str1) = {
+      val arr1 = Array(1, 2)
+      val arr2 = Array(3, 4)
+      val arr3 = Array('a', 'b', 'c')
+      val arr4 = Array('d', 3, "c")
+      val list1 = List(1, 2, 3, 4)
+      val list2 = List(5, 6, 7, 8)
+      val str1 = new StringBuilder
+      (arr1, arr2, arr3, arr4, list1, list2, str1)
+    }
+
+    arr1 ++ arr2 //将a，b合并
+    arr1 ++: list1 // 合并后，右边的类型决定结果类型
+    0 +: arr1 //在数组前面添加一个元素，并返回新的对象
+    arr1 :+ 0 //与前面相反
+
+    (10 /: list1) (_ + _) //对数组中所有的元素进行相同的操作 ，foldLeft的简写
+    (10 /: list1) (_ * _)
+    (list1 :\ 10) (_ + _) //foldRight的简写
+
+    //等价于mkString，不过一个是StringBuilder，一个是String
+    list1.addString(str1)
+    list1.addString(str1, "-")
+    list1.addString(str1, "[", "-", "]")
+    //本质是调用的上面的方法
+    list1.mkString("[", "-", "]")
+
+    list1.par.aggregate(5)(_ + _, _ + _) //聚合，类似RDD的方法
+    list1.canEqual(list2) //判断两个对象是否能比较
+
+    arr3.collect { case 'a' => 'A'; case x => x } //通过执行一个并行计算（偏函数），得到一个新的数组对象
+    arr4.collectFirst { case x: Int => x * 100 } //在序列中查找第一个符合偏函数定义的元素，并执行偏函数计算
+    arr1.find(_ > 2) //查找第一个符合条件的元素
+
+    //排列组合，这个排列组合会选出所有包含字符不一样的组合，对于 “abc”、“cba”，只选择一个，参数n表示序列长度，就是几个字符为一组
+    arr3.combinations(2).foreach((item) => println(item.mkString(",")))
+    arr3.combinations(3).foreach((item) => println(item.mkString(",")))
+
+    list1.contains(2)
+    list1.exists(_ < 2)
+    arr1.endsWith(Array(3, 4))
+    list1.containsSlice(List(2, 3)) //是否包含子集
+    list1.containsSlice(List(4, 3)) //false
+
+    //判断两个序列长度以及对应位置元素是否符合某个条件。如果两个序列具有相同的元素数量并且p(x, y)=true，返回结果为true
+    //下面代码检查a和b长度是否相等，并且a中元素是否小于b中对应位置的元素
+    arr1.corresponds(arr2)(_ < _)
+
+    arr2.count(_ > 2) //统计符合条件的元素个数，下面统计大于 2 的元素个数
+    arr2.distinct //去重
+    arr2.diff(arr1) //计算当前数组与另一个数组的不同。将当前数组中没有在另一个数组中出现的元素返回
+
+    arr2.drop(2)
+    arr2.dropRight(2)
+    arr2.dropWhile(_ == 3)
+    arr2.filter(_ > 3)
+    arr2.filterNot(_ > 3)
+
+    arr1.flatMap(x => 1 to x)
+    Array(arr1, arr2, Array(1, 2, 3, 4)).flatten //将二维数组的所有元素联合在一起，形成一个一维数组返回
+
+  }
+
   // 数组能够让你保留一组元素序列并可以用基于0的索引高效访问（无论是获取还是添加）处于任意位置的元素。
   val 不可变数组 = 0
   if (1) {
@@ -367,8 +435,8 @@ object MapDemo extends App {
     mapSortSmall.foreach(line => println(line._1 + "\t" + line._2))
     val mapSortBig = map.toList.sortBy(-_._2) // 从大到小
     //排序方式2
-    val map3 = ListMap(map.toSeq.sortBy(_._2):_*)
-    val map4 = ListMap(map.toSeq.sortWith(_._2 < _._2):_*)
+    val map3 = ListMap(map.toSeq.sortBy(_._2): _*)
+    val map4 = ListMap(map.toSeq.sortWith(_._2 < _._2): _*)
 
 
     //有序的映射
@@ -484,34 +552,5 @@ object ConcurrentHashMapDemo extends App {
   }
 }
 
-object OptionDemo extends App {
-  /*
-  参考：http://www.runoob.com/scala/scala-options.html
-  Scala Option(选项)类型用来表示一个值是可选的（有值或无值)。
-  Option[T] 是一个类型为 T 的可选值的容器：
-  如果值存在， Option[T] 就是一个 Some[T] ，
-  如果不存在， Option[T] 就是对象 None 。
-   */
-  if (0) {
-    val myMap: Map[String, String] = Map("key1" -> "value")
-    /*
-    Scala 使用 Option[String] 来告诉你：「我会想办法回传一个 String，但也可能没有 String 给你」。
-    Option 有两个子类别，一个是 Some，一个是 None，
-    当他回传 Some 的时候，代表这个函式成功地给了你一个 String，而你可以透过 get() 这个函式拿到那个 String，
-    如果他返回的是 None，则代表没有字符串可以给你。
-     */
-    val value1: Option[String] = myMap.get("key1")
-    val value2: Option[String] = myMap.get("key2")
-    val value3: String = myMap.getOrElse("key2", "没东西给你")
-
-    println(value1) // Some("value")
-    println(value1.get)
-    println(value2) // None
-    println(value2.isEmpty)
-    println(value2.getOrElse("没钱"))
-    println(value3) // 没东西给你
-  }
-
-}
 
 

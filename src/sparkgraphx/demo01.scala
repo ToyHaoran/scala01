@@ -199,4 +199,37 @@ object demo01 {
     }
   }
 
+  val 结构操作_子图 = 0
+  if (0) {
+    //由已定义的顶点构成的子图
+    val subGraph = graph.subgraph(vpred = (id, attr) => attr._2 != "Missing")
+    subGraph.vertices.collect().foreach(println(_))
+    subGraph.triplets.map(triplet =>
+      triplet.srcAttr._1 + " is the " + triplet.attr + " of " + triplet.dstAttr._1).collect().foreach(println(_)
+    )
+  }
+
+  val 结构操作_图反向 = 0
+  if(0){
+    //图的反向操作，新的图形的所有边的方向相反，不修改顶点或边性属性、不改变的边的数目，它可以有效地实现不必要的数据移动或复制
+    var rGraph = graph.reverse
+  }
+
+  val 结构操作_Mask = 0
+  if(0){
+    //Mask操作也是根据输入图构造一个新图，达到一个限制制约的效果
+    val ccGraph = graph.connectedComponents()
+    val validGraph = graph.subgraph(vpred = (id, attr) => attr._2 != "Missing")
+    val validCCGraph = ccGraph.mask(validGraph)
+  }
+
+  /*
+  https://www.jianshu.com/p/0b1ce6e6b513
+  https://www.cnblogs.com/shishanyuan/p/4747793.html
+  http://spark.apache.org/docs/2.3.1/graphx-programming-guide.html
+   */
+  val 聚合操作 =0
+  if(0){
+  }
+
 }

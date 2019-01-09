@@ -16,8 +16,10 @@ import scala.language.implicitConversions
   * Description:
   */
 object BaseUtil {
-  val spark = ConnectUtil.spark
+  //延迟加载，用到的时候再加载
+  lazy val spark = ConnectUtil.spark
   import spark.implicits._
+
   /**
     * 用来快捷控制代码的开关，将0，1隐式转换为false和true
     */

@@ -21,7 +21,6 @@ Tools -> Run Scala Console （必须选中某个scala文件，否则没有这个
 再深化一下
 
 [13 集合](CollectionDemo.scala)
-![](img/集合.png)
 
 
 [14 模式匹配](MatchDemo.scala)

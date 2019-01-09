@@ -26,8 +26,7 @@ object ClassificationAndRegression extends App {
 
     // Load training data
     val training = spark.read.format("libsvm")
-        //.load("data/mllib/sample_libsvm_data.txt")
-        .load("file:/usr/local/jar/lihaoran/data/mllib/sample_libsvm_data.txt")
+        .load("data/mllib/sample_libsvm_data.txt")
 
     val lr = new LogisticRegression()
         .setMaxIter(10)
@@ -72,24 +71,22 @@ object ClassificationAndRegression extends App {
 
   val _______________回归________________ = 0
 
+  /*
+  API：http://spark.apache.org/docs/2.3.1/api/scala/index.html#org.apache.spark.ml.regression.LinearRegression
+   */
   val 线性回归_Linear_regression = 0
   if (0) {
     import org.apache.spark.ml.regression.LinearRegression
-
-    // Load training data
+    // 加载训练数据
     val training = spark.read.format("libsvm").load("data/mllib/sample_linear_regression_data.txt")
-
     val lr = new LinearRegression()
         .setMaxIter(10)
         .setRegParam(0.3)
         .setElasticNetParam(0.8)
-
     // Fit the model
     val lrModel = lr.fit(training)
-
     // Print the coefficients and intercept for linear regression
     println(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")
-
     // Summarize the model over the training set and print out some metrics
     val trainingSummary = lrModel.summary
     println(s"numIterations: ${trainingSummary.totalIterations}")
