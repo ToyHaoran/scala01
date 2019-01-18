@@ -221,6 +221,8 @@ object ReadDataBase extends App {
     注意：
     1、空指向异常：配置文件需要大写，否则读取不到
     2、--driver-class-path 以及 --jars 都要加上才能运行，否则会报错：java.lang.ClassNotFoundException: oracle.jdbc.OracleDriver
+    3、Oracle读取的时候要左右加小括号，Mysql读取的时候要加自己的别名
+      否则报错： Every derived table must have its own alias
      */
 
     //JdbcUtil.load("local", "(select ID,Name from student) as st").show()

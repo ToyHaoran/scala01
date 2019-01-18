@@ -38,7 +38,6 @@ object DataInit {
   def initData(): Unit = {
     (0 to 1).par.foreach {
       case 0 =>
-        //todo 这里能加载一个睡眠函数，然后where循环判断某个表部分现场时间比较长。不能。。
         //小表直接单线程并行读取
         PropUtil.getValueByKey("SMALL.TABLE").split(",").par.foreach(table =>
           Try {
@@ -48,7 +47,7 @@ object DataInit {
               println(s"${table}初始化成功====")
             case Failure(e) =>
               println(s"${table}初始化失败=========================")
-              e.printStackTrace()
+              println(e.printStackTrace())
           }
         )
       case 1 =>

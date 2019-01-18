@@ -48,8 +48,8 @@ object BaseUtil {
     val ms = delta / 1000000d //毫秒
     val s = ms / 1000d //秒
     val min = s / 60d  //分钟
-    //(result, s.formatted("%.3f") + "s") //保留三位小数  单位 秒
-    (result, min.formatted("%.2f") + "min") //保留两位小数   单位 分钟
+    (result, s.formatted("%.3f") + "s") //保留三位小数  单位 秒
+    //(result, min.formatted("%.2f") + "min") //保留两位小数   单位 分钟
   }
 
   /**

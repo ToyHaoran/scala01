@@ -1,16 +1,14 @@
 package utils.database
 
-import java.io.InputStreamReader
 import java.sql.{Connection, DriverManager, ResultSet, ResultSetMetaData}
-import java.util.Properties
 import java.util.concurrent.ConcurrentHashMap
 
-import utils.PropUtil
-import utils.BaseUtil._
-import org.apache.spark.sql.{DataFrame, SaveMode}
-import utils.database.PropertyKey._
 import org.apache.log4j.Logger
 import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.{DataFrame, SaveMode}
+import utils.BaseUtil._
+import utils.PropUtil
+import utils.database.PropertyKey._
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -255,12 +253,37 @@ object JdbcUtil {
     db.read(table, database, predicates, options)
   }
 
+
+  /**
+    * 带有条件的加载数据库表，(没有实现分区读取，和参数添加）
+    *
+    * @param database  数据库
+    * @param table     表名
+    * @param filed     字段名（一个str，中间用逗号分隔）
+    * @param condition 条件
+    * @return DF
+    */
+  def loadWithCondition(database: String, table: String, filed: String = "*", condition: Array[String] = Array("1=1")): DataFrame = {
+    val db = getDBAdapter(database)
+    val driver = db.properties.getProperty("DRIVER")
+    val sql =
+      if (driver.contains("oracle")) {
+        s"(select $filed from $table where ${condition.mkString(" AND ")})"
+      } else if (driver.contains("mysql")) {
+        s"(select $filed from $table where ${condition.mkString(" AND ")}) AS t"
+      } else {
+        throw new Exception("未知数据库，请添加对应的处理条件")
+        ""
+      }
+    db.read(sql, database, Array(), Map())
+  }
+
   /**
     * 通过分区去加载数据库表
     *
-    * @param database 数据库
-    * @param table    表名
-    * @param column   需要分区的列，如果表中没有此列，通过随机数分区加载。
+    * @param database         数据库
+    * @param table            表名
+    * @param column           需要分区的列，如果表中没有此列，通过随机数分区加载。
     * @param defaultPartition 随机分区数，默认50
     * @return DF
     */
