@@ -18,6 +18,7 @@ object ExceptionDemo extends App {
     try {
       val f = new FileReader("input.txt")
     } catch {
+      //模式匹配的语法
       case ex: FileNotFoundException =>
         println("Missing file exception===============")
         println(ex) //就打印第一行信息。  java.io.FileNotFoundException: input.txt (系统找不到指定的文件。)

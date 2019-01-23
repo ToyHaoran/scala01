@@ -84,5 +84,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" exported="" name="scalatest_2.12-3.0.5" level="application" />
   </component>
 </module>

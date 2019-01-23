@@ -18,6 +18,7 @@ import scala.language.implicitConversions
 object BaseUtil {
   //延迟加载，用到的时候再加载
   lazy val spark = ConnectUtil.spark
+
   import spark.implicits._
 
   /**
@@ -47,17 +48,17 @@ object BaseUtil {
     val delta = end - start
     val ms = delta / 1000000d //毫秒
     val s = ms / 1000d //秒
-    val min = s / 60d  //分钟
+    val min = s / 60d //分钟
     (result, s.formatted("%.3f") + "s") //保留三位小数  单位 秒
     //(result, min.formatted("%.2f") + "min") //保留两位小数   单位 分钟
   }
 
   /**
-    * 用于睡眠程序（10分钟），以查看spark UI
+    * 用于睡眠程序（默认10分钟），以查看spark UI
     */
-  def sleepApp(): Unit = {
-    println("正在睡眠，持续10分钟，请查看Spark UI, 或者kill应用")
-    Thread.sleep(1000 * 60 * 10)
+  def sleepApp(ms: Long = 1000 * 60 * 10): Unit = {
+    println("正在睡眠，持续10分钟..............")
+    Thread.sleep(ms)
   }
 
   val DataFrame相关工具方法 = 0
@@ -73,7 +74,7 @@ object BaseUtil {
       var map = df.select(column).rdd.countByValue()
       println(s"一共${map.size}个key")
       //对map进行排序（默认从小到大）
-      map = ListMap(map.toSeq.sortBy(_._2):_*)
+      map = ListMap(map.toSeq.sortBy(_._2): _*)
       for ((key, num) <- map) {
         println(key + "共有" + num + "条记录")
       }
@@ -108,11 +109,11 @@ object BaseUtil {
     /**
       * 得到每个分区对应的元素个数DF
       */
-    def getPartItemNum():DataFrame = {
+    def getPartItemNum(): DataFrame = {
       df.select(df.schema.head.name).rdd
-          .mapPartitionsWithIndex{ case (partIdx, iter) =>
+          .mapPartitionsWithIndex { case (partIdx, iter) =>
             Iterator(("part_" + partIdx, iter.size))
-          }.toDF("partition","num")
+          }.toDF("partition", "num")
     }
   }
 
