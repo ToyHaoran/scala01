@@ -40,10 +40,10 @@ object ImplicitDemo extends App {
     println("隐式类：通过在类名前使用 implicit 关键字定义=============")
     //例子：string中没有bark方法，通过隐式转换，调用对应的方法转换
     implicit class Dog(val name: String) {
-      def bark = println(s"$name is barking")
+      def bark() = println(s"$name is barking")
     }
 
-    "barkdo".bark //自动转换为一个类。 barkdo is barking
+    "barkdo".bark() //自动转换为一个类。 barkdo is barking
 
     //注意事项：
     //1.其所带的构造参数有且只能有一个
@@ -60,18 +60,20 @@ object ImplicitDemo extends App {
     //implicit val 变量名：类型=值
     //参数值隐式传入场景：当函数中有定义隐式参数时（需单独列出来），会在当前作用域寻找同类型的隐式变量/标量，直接传入，无需在调用时传入：
 
-    //定义一个带隐式参数的函数
+    //定义一个带隐式参数的函数,只能提供一个隐式字符串
     def sayHi(name: String)(implicit words: String) = print("Hi," + name + "!" + words)
     //sayHi: (name: String)(implicit words: String)Unit
 
     //定义一个隐式值（注意不能定义两个，否则引起歧义）
-    implicit val w = "nice to meet you!"
+    implicit val w = " nice to meet you!"
     //w: String = nice to meet you!
 
     //调用定义的sayHi函数，它将自行调用定义好的隐式值（从冥界召唤。。。）
-    sayHi("zhangsan") //Hi,zhangsan!nice to meet you!
-
+    sayHi("zhangsan") //Hi,zhangsan! nice to meet you!
   }
+
+  val 使用隐式参数进行隐式转换 = 0
+
 
 
 }
