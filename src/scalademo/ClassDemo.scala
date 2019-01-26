@@ -108,6 +108,7 @@ object ClassDemo extends App {
 
       def getBalance = balance
     }
+    //测试一波
 
 
     val acc = Account(1000.0)
