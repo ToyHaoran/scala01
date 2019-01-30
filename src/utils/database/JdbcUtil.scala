@@ -287,7 +287,7 @@ object JdbcUtil {
     * @param defaultPartition 随机分区数，默认50
     * @return DF
     */
-  def loadTable(database: String, table: String, column: String, defaultPartition: Int = 50): DataFrame = {
+  def loadTable(database: String, table: String, column: String = "GDDWBM", defaultPartition: Int = 50): DataFrame = {
     val columns = getTableColumnsBySpark(database, table)
     if (columns.contains(column)) {
       val df = loadByColumn(database, table, column)

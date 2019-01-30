@@ -520,6 +520,9 @@ object DataFrameDemo extends App {
     df.orderBy($"key1".desc).show()
     df.sort($"key1".desc).show()
 
+    df.selectExpr("max(key2)").show()
+
+
     //获取若干行记录,返回Row类型
     df.first() //res50: org.apache.spark.sql.Row = [aaa,1,2]
     df.head() //同上

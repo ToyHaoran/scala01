@@ -301,7 +301,7 @@ object ListDemo extends App {
     site.forall(_.length >= 5) //所有元素必须全部满足才返回true
     site.exists(_.length == 5) //只要有一个元素满足就返回true
 
-    //折叠操作(不懂，跳过)
+    //折叠操作(可以用来拼接join的连接条件,神级操作，见 sparkdemo.JoinDemo.scala:33)
     site.foldRight("lll")(_ + "--" + _) //String = Runoob--Google--Baidu--lll
     site.foldLeft("lll")(_ + "--" + _) // String = lll--Runoob--Google--Baidu
 
