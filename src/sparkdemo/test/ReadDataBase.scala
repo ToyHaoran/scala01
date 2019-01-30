@@ -50,7 +50,6 @@ object ReadDataBase extends App {
    */
   val 创建1亿条数据并存入数据库 = 0
   if (0) {
-
     val spark = ConnectUtil.spark
     //需要修改以下内容：
     val srcTable = "ZW_SSDFJL" //原来的表
@@ -102,7 +101,7 @@ object ReadDataBase extends App {
     val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
     hdfsUtil.setUser("root")
     tables.split(",").par.foreach(table => {
-      val df = JdbcUtil.loadTable("gzdb", table)
+      val df = JdbcUtil.loadTable("gzdb", table,"GDDWBM")
       val path = hdfsRoot + "/YXFK/compute/" + table
       val path_bak = path + "_BAK"
       try {
@@ -212,9 +211,8 @@ object ReadDataBase extends App {
   }
 
   val _________demo__________ = 0
-
   val 使用spark读取 = 0
-  if (0) {
+  if (1) {
     /*
     集群中启动命令：
         /usr/hdp/2.6.0.3-8/spark2/bin/spark-submit --driver-memory 5g --executor-memory 8g --executor-cores 4  --num-executors 5  --master yarn-cluster --class sparkdemo.test.ReadDataBase --name dbtest-lhr --driver-class-path /usr/local/jar/lihaoran/ojdbc7.jar  --jars /usr/local/jar/lihaoran/ojdbc7.jar /usr/local/jar/lihaoran/lhrtest.jar
@@ -225,14 +223,15 @@ object ReadDataBase extends App {
       否则报错： Every derived table must have its own alias
      */
 
-    //JdbcUtil.load("local", "(select ID,Name from student) as st").show()
-    JdbcUtil.load("gzdb", "HS_DJBB").show()
+    //注意后面加个temp，这样Oracle和Mysql就可以通用了。
+    //JdbcUtil.load("local", "(select ID,Name from student) temp").show()
+    //JdbcUtil.load("yxfk", "(select * from HS_DJBB) temp").show()
 
     //分区读取数据库
-    val (count2, time2) = getMethodRunTime(JdbcUtil.load("yxfk", "(select * from LC_YXDNBSS where rownum < 100000)").count()) //这种是数据库自己处理的
-    val (count1, time1) = getMethodRunTime(JdbcUtil.load("yxfk", "LC_YXDNBSS", Array("rownum < 100000")).count())
+    //val (count2, time2) = getMethodRunTime(JdbcUtil.load("yxfk", "(select * from LC_YXDNBSS where rownum < 100000) temp").count()) //这种是数据库自己处理的
+    //val (count1, time1) = getMethodRunTime(JdbcUtil.load("yxfk", "LC_YXDNBSS", Array("rownum < 100000")).count())
     //参考：https://www.jianshu.com/p/c18a8197e6bf
-    println(time1 + " " + time2) //2.24s 1.66s  //1.77s 1.88s
+    //println(time1 + " " + time2) //2.24s 1.66s  //1.77s 1.88s
   }
 
   val 使用JDBC修改 = 0
