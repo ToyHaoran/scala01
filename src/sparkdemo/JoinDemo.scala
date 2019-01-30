@@ -1,6 +1,6 @@
 package sparkdemo
 
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
 import utils.BaseUtil._
@@ -30,6 +30,21 @@ object JoinDemo extends App {
     val unionDf = updateBigDf(source, update, keys)
   }
 
+  val 将连接条件简化 = 0
+  if (0) {
+    val df1 = spark.createDataFrame(List(("a", "1", "2"), ("b", "2", "3"), ("c", "3", "4"))).toDF("id", "v1", "v2")
+    val df2 = spark.createDataFrame(List(("d", "1", "2"), ("e", "5", "6"), ("c", "3", "4"))).toDF("id", "v1", "v2")
+    val keysOpt = Array("id")
+    val conditions: Array[Column] = keysOpt.map(key => df1(key) === df2(key))
+    val head = conditions.head
+    val tail = conditions.tail
+    val res = tail.foldLeft(head)(_ && _)
+    val ss = df1.join(df2, res, "fullouter")
+    ss.show()
+    ss.select(df1.columns.map(c => df2(c)): _*).show()
+    ss.select(df1.columns.map(c => df1(c)): _*).show()
+  }
+
   /**
     * 根据主键更新大表。
     *
@@ -45,8 +60,12 @@ object JoinDemo extends App {
     //控制字段选择的顺序
     val columnName = sourceDf.columns
     //将df1和df2进行fullouter join，df1是大表。
-    //如果将df1和
-    val df3 = getCondition(df1, df2, keys)
+    //方案1：已经废弃：val df3 = getCondition(df1, df2, keys)
+    //方案2：
+    val conditions: Array[Column] = keys.map(key => df1(key) === df2(key))
+    val head = conditions.head
+    val tail = conditions.tail
+    val df3 = df1.join(df2, tail.foldLeft(head)(_ && _), "fullouter")
     /*
     逻辑：
         进行outjoin后判断Flag标记：
@@ -69,6 +88,7 @@ object JoinDemo extends App {
     * @param keys 主键列
     * @return join后的DF
     */
+  @deprecated("被foldLeft函数取代")
   def getCondition(df1: DataFrame, df2: DataFrame, keys: Array[String]): DataFrame = {
     /*
       这里有个Bug：
@@ -112,5 +132,6 @@ object JoinDemo extends App {
             && df1(key7) === df2(key7), joinType)
     }
   }
+
 
 }
