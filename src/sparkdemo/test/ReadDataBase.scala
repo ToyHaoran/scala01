@@ -212,7 +212,7 @@ object ReadDataBase extends App {
 
   val _________demo__________ = 0
   val 使用spark读取 = 0
-  if (1) {
+  if (0) {
     /*
     集群中启动命令：
         /usr/hdp/2.6.0.3-8/spark2/bin/spark-submit --driver-memory 5g --executor-memory 8g --executor-cores 4  --num-executors 5  --master yarn-cluster --class sparkdemo.test.ReadDataBase --name dbtest-lhr --driver-class-path /usr/local/jar/lihaoran/ojdbc7.jar  --jars /usr/local/jar/lihaoran/ojdbc7.jar /usr/local/jar/lihaoran/lhrtest.jar
@@ -224,7 +224,10 @@ object ReadDataBase extends App {
      */
 
     //注意后面加个temp，这样Oracle和Mysql就可以通用了。
-    //JdbcUtil.load("local", "(select ID,Name from student) temp").show()
+    //JdbcUtil.load("local", "(select ID,Name from student) temp",Array("ID='002'","ID='003'")).show()
+    JdbcUtil.load("local", "(select ID,Name from student) temp",Array("Name='LHQ' and ID='002' ","ID>='004'")).show()
+    //JdbcUtil.load("local", "(select ID,Name from student where ID!='888') temp",Array("Name='LHQ' and ID='002' ","ID>='004'")).show()
+    JdbcUtil.loadByColumn("local", "(select ID,Name from student) temp","ID").show()
     //JdbcUtil.load("yxfk", "(select * from HS_DJBB) temp").show()
 
     //分区读取数据库

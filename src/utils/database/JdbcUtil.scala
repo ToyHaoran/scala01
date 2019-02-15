@@ -265,16 +265,7 @@ object JdbcUtil {
     */
   def loadWithCondition(database: String, table: String, filed: String = "*", condition: Array[String] = Array("1=1")): DataFrame = {
     val db = getDBAdapter(database)
-    val driver = db.properties.getProperty("DRIVER")
-    val sql =
-      if (driver.contains("oracle")) {
-        s"(select $filed from $table where ${condition.mkString(" AND ")})"
-      } else if (driver.contains("mysql")) {
-        s"(select $filed from $table where ${condition.mkString(" AND ")}) AS t"
-      } else {
-        throw new Exception("未知数据库，请添加对应的处理条件")
-        ""
-      }
+    val sql = s"(select $filed from $table where ${condition.mkString(" AND ")}) temp"
     db.read(sql, database, Array(), Map())
   }
 

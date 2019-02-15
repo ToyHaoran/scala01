@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
 
 /**
   * 用来得到spark.read.jdbc中的第三个参数Array(String),用来分区读取数据库，相当于where条件
@@ -29,7 +30,16 @@ object PredicatesUtil {
     然后构造SQL语句。
      */
     val nullSql = s" $column IS NULL "
-    val array = JdbcUtil.load(database, s"(SELECT DISTINCT $column FROM $table)").collect()
+    //如果table位置是一个sql,肯定包含空格
+    val finalTable = if(table.contains(" ")){
+      //使用正则表达式解析表名
+      val matcher = "from [a-zA-Z0-9_]+".r
+      matcher.findAllIn(table).next().split(" ").toList.last
+    }else {
+      table
+    }
+    println(finalTable)
+    val array = JdbcUtil.load(database, s"(SELECT DISTINCT $column FROM $finalTable) temp").collect()
         .map(x =>
           if (x.getAs[String](column) == null) {
             nullSql
@@ -83,5 +93,7 @@ object PredicatesUtil {
   def byRandom(column: String, numPartition: Int): Array[String] = {
     (1 to numPartition).map(x => s" $column ='$x' ").toArray
   }
+
+
 
 }

@@ -1,35 +1,37 @@
 package scalademo
 
-object Regexp extends App{
+import utils.BaseUtil.int2boolen
 
-        implicit def int2Boolen(a: Int):Boolean = if(a == 0) false else true
-        //正则表达式
-        if(0){
-            val numPattern = "[0-9]+".r //等价于：Pattern.compile("...........")
-            val wsnumwsPattern = """\s+[0-9]+\s+""".r
-            //返回遍历所有匹配项的迭代器
-            for(matchString <- numPattern.findAllIn("99 bottles, 98 bottles")){
-                println(matchString)
-            }
+object Regexp extends App {
 
-            //找到首个匹配项
-            val m1 = wsnumwsPattern.findFirstIn("99 bottles, 98 bottles")
-            println(m1)
+  //正则表达式
+  if (0) {
+    val numPattern = "[0-9]+".r //等价于：Pattern.compile("...........")
+    val wsnumwsPattern =
+      """\s+[0-9]+\s+""".r
+    //返回遍历所有匹配项的迭代器
+    for (matchString <- numPattern.findAllIn("99 bottles, 98 bottles")) {
+      println(matchString)
+    }
 
-            //类似于startwith，从头开始匹配
-            numPattern.findPrefixOf("99 bottles, 98 bottles")
+    //找到首个匹配项
+    val m1 = wsnumwsPattern.findFirstIn("99 bottles, 98 bottles")
+    println(m1)
 
-            //替换
-            numPattern.replaceFirstIn("99 bottles, 98 bottles", "xx")
-            numPattern.replaceAllIn("99 bottles, 98 bottles", "xx")
-        }
+    //类似于startwith，从头开始匹配
+    numPattern.findPrefixOf("99 bottles, 98 bottles")
 
-        if(1){
-            print("正则表达式组========")
-            val numitemPattern = "([0-9]+) ([a-z]+)".r
-            for(numitemPattern(num, item) <- numitemPattern.findAllIn("99 bottles, 98 bottles")){
-                println(num + " " + item)
-            }
-        }
+    //替换
+    numPattern.replaceFirstIn("99 bottles, 98 bottles", "xx")
+    numPattern.replaceAllIn("99 bottles, 98 bottles", "xx")
+  }
+
+  if (0) {
+    print("正则表达式组========")
+    val numitemPattern = "([0-9]+) ([a-z]+)".r
+    for (numitemPattern(num, item) <- numitemPattern.findAllIn("99 bottles, 98 bottles")) {
+      println(num + " " + item)
+    }
+  }
 
 }

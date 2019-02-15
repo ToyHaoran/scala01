@@ -68,7 +68,10 @@ object ArrayDemo extends App {
 
     arr2.drop(2)
     arr2.dropRight(2)
+    //注意下面两个的区别：
+    // dropWhile丢弃条件所在集合开头的所有项目true。一旦第一项失败，它就会停止丢弃。
     arr2.dropWhile(_ == 3)
+    // filter丢弃整个集合中条件不正确的所有项目。它直到收集结束才停止。
     arr2.filter(_ > 3)
     arr2.filterNot(_ > 3)
 
