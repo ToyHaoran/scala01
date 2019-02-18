@@ -30,12 +30,12 @@ object PredicatesUtil {
     然后构造SQL语句。
      */
     val nullSql = s" $column IS NULL "
-    //如果table位置是一个sql,肯定包含空格
-    val finalTable = if(table.contains(" ")){
+    //如果table位置是一个sql,肯定包含空格，只适用于单个表带条件的sql
+    val finalTable = if (table.contains(" ")) {
       //使用正则表达式解析表名
       val matcher = "from [a-zA-Z0-9_]+".r
       matcher.findAllIn(table).next().split(" ").toList.last
-    }else {
+    } else {
       table
     }
     println(finalTable)
@@ -45,8 +45,7 @@ object PredicatesUtil {
             nullSql
           } else {
             s" $column ='${x.getAs[String](column)}' "
-          }
-        )
+          })
     if (ignoreNull) array.filter(!_.equals(nullSql)) else array
   }
 
@@ -93,7 +92,6 @@ object PredicatesUtil {
   def byRandom(column: String, numPartition: Int): Array[String] = {
     (1 to numPartition).map(x => s" $column ='$x' ").toArray
   }
-
 
 
 }

@@ -52,6 +52,7 @@ object Excel2Oracle extends App {
     println("插入表成功=============")
   }
 
+
   /**
     * 传入表名、主键数组、Schema，创建Hbase表。
     * 如果已存在，就先删除后创建。

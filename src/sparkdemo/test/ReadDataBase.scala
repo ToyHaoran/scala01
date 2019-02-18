@@ -21,6 +21,10 @@ import org.apache.spark.sql.{DataFrame, SaveMode}
   * Description:
   */
 object ReadDataBase extends App {
+  val 教训 = 0
+  if(0){
+    //修改完数据库一定要点击左上角的提交。卧槽，找Bug卡了我3个小时。。。老长时间不玩数据库生疏了。1H以上就找别人帮忙。
+  }
 
   /*
   集群启动命令：
@@ -48,7 +52,7 @@ object ReadDataBase extends App {
           alter system kill session '2100'; --权限不足 删除失败
           解决：找管理员。。。
    */
-  val 创建1亿条数据并存入数据库 = 0
+  val 几个大表创建1亿条数据从HDFS存入Oracle = 0
   if (0) {
     val spark = ConnectUtil.spark
     //需要修改以下内容：
@@ -84,7 +88,33 @@ object ReadDataBase extends App {
       JdbcUtil.save(db, desTable, data, SaveMode.Append)
     }
     println("全部插入完成==============")
+  }
 
+  /*
+   比如说压力测试的时候不能在YXFK运行。需要先创建多个空表。
+   创建空表的方式：
+    1、使用navicat传输数据，不好用。。
+    2、推荐：使用PL/SQL导出表结构，然后切换到另一个数据库进行导入。（直接导出全部数据也可以）
+      导出：工具——导出表——SQL插入——只选择第二个创建表——Where子句中写ROWNUM<1——选择你需要导出的表——输出文件——导出
+      导入：工具——导入表——SQL插入——导入文件——导入
+      然后使用下面这个程序导入记录，适合大量数据。
+    3、手动复制创建表的语句，然后使用下面这个程序导入
+    4、直接使用PL/SQL导出（大量数据，必须在服务端运行）：
+        数据泵(expdp/impdp)可以通过使用并行，从而在效率上要比exp/imp 要高。
+        在导出的时候Oracle导出：导出可执行文件，然后选择oracle/bin目录下的数据泵expdp.exe
+        导入时选择：impdb.exe。
+        关于速度：Oracle导出(dmp、批量、速度快、无法修改) >> SQL插入(sql、一条一条、速度慢、可修改)
+   */
+  val 将Oracle表复制到测试的Oracle = 0
+  if (1) {
+    val spark = ConnectUtil.spark
+    val tables = "HS_DJBB"
+    tables.split(",").foreach(table => {
+      //todo 加分区列分区读取
+      val df = JdbcUtil.load("dfjs", table)
+      df.show()
+      JdbcUtil.save("dfjs", table+"_2", df)
+    })
   }
 
   /*
@@ -101,7 +131,7 @@ object ReadDataBase extends App {
     val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
     hdfsUtil.setUser("root")
     tables.split(",").par.foreach(table => {
-      val df = JdbcUtil.loadTable("gzdb", table,"GDDWBM")
+      val df = JdbcUtil.loadTable("gzdb", table, "GDDWBM")
       val path = hdfsRoot + "/YXFK/compute/" + table
       val path_bak = path + "_BAK"
       try {
@@ -225,9 +255,9 @@ object ReadDataBase extends App {
 
     //注意后面加个temp，这样Oracle和Mysql就可以通用了。
     //JdbcUtil.load("local", "(select ID,Name from student) temp",Array("ID='002'","ID='003'")).show()
-    JdbcUtil.load("local", "(select ID,Name from student) temp",Array("Name='LHQ' and ID='002' ","ID>='004'")).show()
+    JdbcUtil.load("local", "(select ID,Name from student) temp", Array("Name='LHQ' and ID='002' ", "ID>='004'")).show()
     //JdbcUtil.load("local", "(select ID,Name from student where ID!='888') temp",Array("Name='LHQ' and ID='002' ","ID>='004'")).show()
-    JdbcUtil.loadByColumn("local", "(select ID,Name from student) temp","ID").show()
+    JdbcUtil.loadByColumn("local", "(select ID,Name from student) temp", "ID").show()
     //JdbcUtil.load("yxfk", "(select * from HS_DJBB) temp").show()
 
     //分区读取数据库
