@@ -16,14 +16,18 @@ object ConnectUtil {
   /**
     * 获得SparkSession，已自动区分本机和集群
     */
-  lazy val spark: SparkSession =
-    if (!scala.sys.props.get("user.name").head.equals("root")) {
+  lazy val spark: SparkSession = {
+    val name = scala.sys.props.get("user.name").head
+    println("用户名为：" + name + "========")
+    if (name.equals("llhr")) {
       println("匹配到本地spark=======")
       sparkBuilder.appName(NAME).master("local[*]").getOrCreate()
     } else {
       println("匹配到集群spark=======")
       sparkBuilder.appName(NAME).getOrCreate()
     }
+
+  }
 
   /**
     * 获得SparkContext，已自动区分本机和集群

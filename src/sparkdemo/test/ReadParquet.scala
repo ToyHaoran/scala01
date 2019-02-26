@@ -2,6 +2,7 @@ package sparkdemo.test
 
 import org.apache.spark.sql.{AnalysisException, SaveMode, SparkSession}
 import utils.BaseUtil._
+import utils.database.JdbcUtil
 import utils.{ConnectUtil, HDFSUtil, PropUtil}
 
 /**
@@ -20,7 +21,7 @@ object ReadParquet extends App {
     val hdfsUtil = HDFSUtil.getInstance(hdfsRoot)
     //val files = hdfsUtil.list("/YXFK/compute/")  //所有表
     //val tables = "KH_YDKH" //指定表
-    val tables:String = args(0)
+    val tables: String = args(0)
     val files = tables.split(",").map(s => "/YXFK/compute/" + s).toList.toArray
     //需要统计的列名
     val colName = "GDDWBM"
@@ -78,7 +79,7 @@ object ReadParquet extends App {
       try {
         val df = spark.read.parquet(hdfsRoot + filePath)
         //有待测试
-        if(df.count()>1000000){
+        if (df.count() > 1000000) {
           df.repartition(200).write.mode(SaveMode.Overwrite).parquet(hdfsRoot + filePath.replace("/user/appuser/YXFK", ""))
         }
         println(filePath + "复制完成==============")

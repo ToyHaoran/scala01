@@ -6,7 +6,6 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/source" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/src/data" />
-      <excludeFolder url="file://$MODULE_DIR$/src/scalademo" />
       <excludeFolder url="file://$MODULE_DIR$/src/sparkdemo/testfile" />
       <excludeFolder url="file://$MODULE_DIR$/src/sparkgraphx" />
       <excludeFolder url="file://$MODULE_DIR$/src/sparkml" />

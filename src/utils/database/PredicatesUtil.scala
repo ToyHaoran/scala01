@@ -38,7 +38,7 @@ object PredicatesUtil {
     } else {
       table
     }
-    println(finalTable)
+    //println(finalTable)
     val array = JdbcUtil.load(database, s"(SELECT DISTINCT $column FROM $finalTable) temp").collect()
         .map(x =>
           if (x.getAs[String](column) == null) {

@@ -3,6 +3,12 @@ package scalademo
 import utils.BaseUtil.int2boolen
 
 object Regexp extends App {
+  val 在线工具 = 0
+  if(0){
+    /*
+    http://tool.oschina.net/regex#
+     */
+  }
 
   //正则表达式
   if (0) {
@@ -32,6 +38,11 @@ object Regexp extends App {
     for (numitemPattern(num, item) <- numitemPattern.findAllIn("99 bottles, 98 bottles")) {
       println(num + " " + item)
     }
+  }
+
+  val 不区分大小写 = 0
+  if(0){
+
   }
 
 }

@@ -2,7 +2,7 @@ package utils.DataIntegration
 
 import java.text.SimpleDateFormat
 
-import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.{SaveMode, SparkSession}
 import utils.PropUtil
 import utils.database.JdbcUtil
 
@@ -32,6 +32,8 @@ object DataInit {
 
   //测试
   def main(args: Array[String]): Unit = {
+    //bug1:一直权限不对:Permission denied: user=root, access=WRITE, inode="/datatest/compute/DW_YXBYQ/_temporary/0":llhr:hdfs:drwxr-xr-x,
+    // 一般是HDFS地址没写对，是不是指向了另一个地址？
     initData()
   }
 

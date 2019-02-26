@@ -7,7 +7,7 @@ import org.apache.log4j.Logger
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.{DataFrame, SaveMode}
 import utils.BaseUtil._
-import utils.PropUtil
+import utils.{ParseUtil, PropUtil}
 import utils.database.PropertyKey._
 
 import scala.collection.mutable.ArrayBuffer
@@ -88,7 +88,8 @@ object JdbcUtil {
         if (i > 1) print(",  ")
         val value = resultSet.getString(i)
         val key = data.getColumnName(i)
-        print(key + ":" + value)
+        val colTypeName = data.getColumnTypeName(i)
+        print(key + ":" + value + ":" + colTypeName)
       }
       println("")
     }
@@ -102,7 +103,27 @@ object JdbcUtil {
     * 查询并且竖着打印信息
     */
   def queryAndPrintV(database: String, sql: String): Unit = {
-    queryAndWrap(database, sql).foreach(printMap(_))
+    val db = propertiesMap.get(database)
+    val url = db.get(URL.toString).toString
+    val user = db.get(USER_NAME.toString).toString
+    val pass = db.get(PASSWORD.toString).toString
+    val connection = getConnection(url, user, pass)
+    val preparedStatement = connection.prepareStatement(sql)
+    val resultSet = preparedStatement.executeQuery()
+
+    val data: ResultSetMetaData = resultSet.getMetaData
+    while (resultSet.next()) {
+      for (i <- 1 to data.getColumnCount) {
+        val value = resultSet.getString(i)
+        val key = data.getColumnName(i)
+        val colTypeName = data.getColumnTypeName(i)
+        println(key + ":" + colTypeName + ":" + value)
+      }
+    }
+
+    //关闭连接
+    preparedStatement.close()
+    connection.close()
   }
 
   /**
@@ -140,7 +161,7 @@ object JdbcUtil {
   /**
     * 通过Spark加载Column信息
     */
-  def getTableColumnsBySpark(db: String, table: String): Set[String] = {
+  def getColumnsBySpark(db: String, table: String): Set[String] = {
     val sql = s"(SELECT * FROM $table WHERE ROWNUM = 1)"
     load(db, sql).columns.toSet
   }
@@ -148,7 +169,7 @@ object JdbcUtil {
   /**
     * 通过JDBC加载Column信息
     */
-  def getTableColumnsByJdbc(database: String, sql: String): Array[String] = {
+  def getColumnsByJdbc(database: String, sql: String): Array[String] = {
     val db = propertiesMap.get(database)
     val url = db.get(URL.toString).toString
     val user = db.get(USER_NAME.toString).toString
@@ -240,37 +261,22 @@ object JdbcUtil {
 
 
   /**
-    * Spark通过JDBC加载数据方法封装
+    * Spark通过JDBC加载数据方法封装<br>
+    * 比如：load("yxfk","HS_DJBB"),load("yxfk","(select * from HS_DJBB where BBBH=423524352) temp")
     *
-    * @param database 数据库名称
-    * @param table    表名
-    * @param options  自定义参数，优先级：自定义参数>配置文件>默认配置
+    * @param database   数据库名称
+    * @param tableOrSql 表名，也可以传入SQL组成一个临时表
+    * @param options    自定义参数，优先级：自定义参数>配置文件>默认配置
     * @return DataFrame
     */
-  def load(database: String, table: String, predicates: Array[String] = Array(), options: Map[String, String] = Map()): DataFrame = {
+  def load(database: String, tableOrSql: String, predicates: Array[String] = Array(), options: Map[String, String] = Map()): DataFrame = {
     //没有此数据库会得到空指向异常，不需要处理，系统会打印错误信息
     val db = getDBAdapter(database)
-    db.read(table, database, predicates, options)
-  }
-
-
-  /**
-    * 带有条件的加载数据库表，(没有实现分区读取，和参数添加）
-    *
-    * @param database  数据库
-    * @param table     表名
-    * @param filed     字段名（一个str，中间用逗号分隔）
-    * @param condition 条件
-    * @return DF
-    */
-  def loadWithCondition(database: String, table: String, filed: String = "*", condition: Array[String] = Array("1=1")): DataFrame = {
-    val db = getDBAdapter(database)
-    val sql = s"(select $filed from $table where ${condition.mkString(" AND ")}) temp"
-    db.read(sql, database, Array(), Map())
+    db.read(tableOrSql, database, predicates, options)
   }
 
   /**
-    * 通过分区去加载数据库表
+    * 通过分区去加载数据库表，默认分区字段是GDDWBM，如果不包含此字段，会随机分区50读取
     *
     * @param database         数据库
     * @param table            表名
@@ -279,17 +285,14 @@ object JdbcUtil {
     * @return DF
     */
   def loadTable(database: String, table: String, column: String = "GDDWBM", defaultPartition: Int = 50): DataFrame = {
-    val columns = getTableColumnsBySpark(database, table)
+    val columns = getColumnsBySpark(database, table)
     if (columns.contains(column)) {
       val df = loadByColumn(database, table, column)
       df.cache()
       df.count()
       df
     } else {
-      val df = loadByRandom(database, table, defaultPartition)
-      df.cache() //必须加缓存，否则drop之后读取的数据为0,原因未知，估计是随机数又给删掉了。
-      df.count()
-      df.drop("RANDOMKEY")
+      loadByRandom(database, table, defaultPartition)
     }
   }
 
@@ -342,11 +345,46 @@ object JdbcUtil {
     * 适合Oracle数据库。
     * 给定分区数，直接分区读取数据库。
     */
+  @deprecated("有问题，不要使用，读取的数据不够")
   def loadByRandom(database: String, table: String, numpartition: Int, options: Map[String, String] = Map()): DataFrame = {
     val db = getDBAdapter(database)
     val finalSql = s"(SELECT ROUND((DBMS_RANDOM.VALUE*$numpartition),0) AS RANDOMKEY,t.* from $table t)"
     val predicates = PredicatesUtil.byRandom("RANDOMKEY", numpartition)
-    db.read(finalSql, database, predicates, options)
+    val df = db.read(finalSql, database, predicates, options)
+    //必须加缓存，否则drop之后读取的数据为0,原因未知，估计是随机数又给删掉了。
+    df.cache()
+    df.count()
+    df.drop("RANDOMKEY")
+  }
+
+  /**
+    * 根据Rownum分区读取,应该先读取数据库，然后判断数量。
+    *
+    * @param numpartition 分区数
+    */
+  def loadByRownum(database: String, table: String, numpartition: Int): DataFrame = {
+    val db = getDBAdapter(database)
+    val finalSql = s"(SELECT t.*,ROWNUM rownum_rn FROM $table t) b"
+    val options = Map(
+      "partitionColumn" -> "rownum_rn",
+      "lowerBound" -> "0",
+      "upperBound" -> s"${load(database, s"(select count(1) from $table) t").collect()(0)(0).asInstanceOf[java.math.BigDecimal].setScale(0,1)}",
+      "numPartitions" -> s"$numpartition")
+    db.read(finalSql, database, Array(), options).drop("rownum_rn")
+  }
+
+  /**
+    * 通过SQL加载直接用[[load]]方法就行，这个方法用来分区加载。
+    */
+  //todo 未测试
+  def loadBySQLAndPar(database: String, sql: String, column: String, options: Map[String, String] = Map()): DataFrame = {
+    val db = getDBAdapter(database)
+    //解析SQL得到Table
+    val table = ParseUtil.sql2Table(sql)
+    //通过表得到某列的predicates
+    val predicates = PredicatesUtil.byColumn(database, table, column, true)
+    //调用spark读取
+    db.read(s"($sql) temp", database, predicates, options)
   }
 
   /**
@@ -365,13 +403,12 @@ object JdbcUtil {
 
   /**
     * 生成数据库配置文件信息，需要在配置文件中配置项目名称。
-    * 感觉没什么卵用
     *
     * @param name     数据库名称
     * @param fileName 保存的配置文件名称
     * @return 成功标志
     */
-  @deprecated
+  @deprecated("感觉没什么卵用")
   private def writeProperties(name: String, fileName: String): Boolean = {
     val file = if (fileName.contains(".properties")) fileName else s"$fileName.properties"
     val db = propertiesMap.getOrDefault(name, null)

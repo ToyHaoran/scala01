@@ -8,82 +8,119 @@ import scala.collection.immutable.ListMap
 
 // 序列是继承自特质Seq的类，可以处理一组线性分布的数据。元素是有序的。
 object ArrayDemo extends App {
-
   /*
-  https://blog.csdn.net/zyp13781913772/article/details/81428862
+  关于数组可以去看看极客时间笔记。
+    如果已经确定数组大小，使用Array。
+    如果后期需要对数组进行插入和删除，使用Arraybuffer。
    */
-  val 大量的集合操作 = 0
+  val Array基本操作 = 0
   if (0) {
-    val (arr1, arr2, arr3, arr4, list1, list2, str1) = {
-      val arr1 = Array(1, 2)
-      val arr2 = Array(3, 4)
-      val arr3 = Array('a', 'b', 'c')
-      val arr4 = Array('d', 3, "c")
-      val list1 = List(1, 2, 3, 4)
-      val list2 = List(5, 6, 7, 8)
-      val str1 = new StringBuilder
-      (arr1, arr2, arr3, arr4, list1, list2, str1)
-    }
+    val arr1 = Array("hello", "world")
+    val arr2 = Array("你好", "世界")
 
-    arr1 ++ arr2 //将a，b合并
-    arr1 ++: list1 // 合并后，右边的类型决定结果类型
-    0 +: arr1 //在数组前面添加一个元素，并返回新的对象
-    arr1 :+ 0 //与前面相反
+    println("数组查找========")
+    println(arr1(0))
+    println(arr1.apply(0))
 
+    println("数组中元素更新=========")
+    arr1.update(0, "hello2")
+    arr1(1) = "world2"
+
+    println("数组插入=========")
+    println(("666" +: arr1).mkString(",")) //在数组前面添加一个元素，并返回新的对象
+    println((arr1 :+ "777").mkString(",")) //与前面相反,在后面加个元素
+    println(arr1.mkString(","))
+
+    println("数组删除======")
+    //暂时不能删除
+
+    println("同类型数组合并")
+    //和List合并后，右边的类型决定结果类型
+    arr1 ++ arr2
+    Array.concat(arr1, arr2)
+  }
+
+
+  val ArrayBuffer基本操作 = 0
+  if (0) {
+    println("创建数组缓冲，增删改查操作=========")
+    import scala.collection.mutable.ArrayBuffer
+    val b = ArrayBuffer[Int]()
+    println("添加==")
+    b += 1 //在末尾添加元素
+    b +=(2, 3, 4, 5) //添加集合
+    b ++= Array(6, 7, 8, 9) //必须用++=追加任何集合
+    b.insert(2, 11) //在下标2位置添加11
+    println("删除===")
+    b.trimEnd(2) //移除后面2个元素，高效操作
+    b.remove(5) //移除下标5
+    b -= 7 //移除元素7（一个一个删除，从前往后）
+    b.remove(3, 2) //从下标3开始移除2个
+
+    println("过滤===")
+    b.drop(2) //扔掉前2个元素
+    b.dropRight(2) //后两个
+    //注意下面两个的区别：
+    // dropWhile丢弃条件所在集合开头的所有项目true。一旦第一项失败，它就会停止丢弃。
+    b.dropWhile(_ == 3)
+    // filter丢弃整个集合中条件不正确的所有项目。它直到收集结束才停止。
+    b.filter(_ > 3)
+    b.filterNot(_ > 3)
+
+    println("查看和修改=====")
+    b(1)
+    b(2) = 3
+    b.find(_ > 2) //查找第一个符合条件的元素
+
+    println("与Array的相互转化===")
+    ArrayBuffer(b.toArray: _*) //可以将任何集合通过这种方式转为想要的集合。
+
+    println("常用算法***=====")
+    b.sum //求和
+    b.count(a => a + 3 == 7) //求满足条件的个数
+    b.reverse //数组倒转
+    b.sorted //数组排序
+    println(b.mkString(","))
+
+    val list1 = List(1, 2, 3, 4)
+    println("对数组元素进行折叠======")
     (10 /: list1) (_ + _) //对数组中所有的元素进行相同的操作 ，foldLeft的简写
     (10 /: list1) (_ * _)
     (list1 :\ 10) (_ + _) //foldRight的简写
 
+    println("将集合转为字符串===")
     //等价于mkString，不过一个是StringBuilder，一个是String
-    list1.addString(str1)
-    list1.addString(str1, "-")
-    list1.addString(str1, "[", "-", "]")
+    list1.addString(new StringBuilder)
     //本质是调用的上面的方法
     list1.mkString("[", "-", "]")
 
     list1.par.aggregate(5)(_ + _, _ + _) //聚合，类似RDD的方法
-    list1.canEqual(list2) //判断两个对象是否能比较
+    list1.canEqual(List(5, 6, 7, 8)) //判断两个对象是否能比较
 
-    arr3.collect { case 'a' => 'A'; case x => x } //通过执行一个并行计算（偏函数），得到一个新的数组对象
-    arr4.collectFirst { case x: Int => x * 100 } //在序列中查找第一个符合偏函数定义的元素，并执行偏函数计算
-    arr1.find(_ > 2) //查找第一个符合条件的元素
+    list1.contains(2)
+    list1.exists(_ < 2)
+    list1.endsWith(Array(3, 4))
+    list1.containsSlice(List(2, 3)) //是否包含子集
+    list1.containsSlice(List(4, 3)) //false
 
+    list1.count(_ > 2) //统计符合条件的元素个数，下面统计大于 2 的元素个数
+    list1.distinct //去重
+    list1.diff(List(4, 5, 6, 7)) //计算当前数组与另一个数组的不同。将当前数组中没有在另一个数组中出现的元素返回
+
+    val arr3 = Array('a', 'b', 'c')
     //排列组合，这个排列组合会选出所有包含字符不一样的组合，对于 “abc”、“cba”，只选择一个，参数n表示序列长度，就是几个字符为一组
     arr3.combinations(2).foreach((item) => println(item.mkString(",")))
     arr3.combinations(3).foreach((item) => println(item.mkString(",")))
 
-    list1.contains(2)
-    list1.exists(_ < 2)
-    arr1.endsWith(Array(3, 4))
-    list1.containsSlice(List(2, 3)) //是否包含子集
-    list1.containsSlice(List(4, 3)) //false
-
     //判断两个序列长度以及对应位置元素是否符合某个条件。如果两个序列具有相同的元素数量并且p(x, y)=true，返回结果为true
     //下面代码检查a和b长度是否相等，并且a中元素是否小于b中对应位置的元素
-    arr1.corresponds(arr2)(_ < _)
-
-    arr2.count(_ > 2) //统计符合条件的元素个数，下面统计大于 2 的元素个数
-    arr2.distinct //去重
-    arr2.diff(arr1) //计算当前数组与另一个数组的不同。将当前数组中没有在另一个数组中出现的元素返回
-
-    arr2.drop(2)
-    arr2.dropRight(2)
-    //注意下面两个的区别：
-    // dropWhile丢弃条件所在集合开头的所有项目true。一旦第一项失败，它就会停止丢弃。
-    arr2.dropWhile(_ == 3)
-    // filter丢弃整个集合中条件不正确的所有项目。它直到收集结束才停止。
-    arr2.filter(_ > 3)
-    arr2.filterNot(_ > 3)
-
-    arr1.flatMap(x => 1 to x)
-    Array(arr1, arr2, Array(1, 2, 3, 4)).flatten //将二维数组的所有元素联合在一起，形成一个一维数组返回
-
+    list1.corresponds(List(5, 6, 7, 8))(_ < _)
+    Array(1, 2, 3, 4).flatMap(x => 1 to x)
+    Array(Array(1, 2, 3, 4), Array(5, 6, 7, 8), Array(1, 2, 3, 4)).flatten //将二维数组的所有元素联合在一起，形成一个一维数组返回
   }
 
-  // 数组能够让你保留一组元素序列并可以用基于0的索引高效访问（无论是获取还是添加）处于任意位置的元素。
-  val 不可变数组 = 0
-  if (1) {
-    println("不可变（定长）数组===========")
+  val Array高级操作 = 0
+  if (0) {
     println("初始化数组=======")
     val nums = new Array[Int](10) //初始化为0
     val nums1 = new Array[String](10) //初始化为null
@@ -98,8 +135,7 @@ object ArrayDemo extends App {
     //返回数组，长度为第一个参数指定，同时每个元素使用第二个参数进行填充。
     Array.fill(3)(math.random) // Array[Double] = Array(0.47204059555458355, 0.4619077488315301, 0.02781911462725528)
     Array.fill(2, 3)("11") // Array[Array[String]] = Array(Array(11, 11, 11), Array(11, 11, 11))
-
-    println("利用函数创建数组======")
+    println("利用函数创建数组======") //感觉可以用for循环构建。。
     //返回：start, f(start), f(f(start)), ... 初始值可以自定义
     Array.iterate(0, 3)(a => a + 5) //Array[Int] = Array(0, 5, 10)   初始值为 0，长度为 3，计算函数为a=>a+5:
     Array.iterate(2, 3)(a => a * 5) // Array[Int] = Array(2, 10, 50)
@@ -110,26 +146,10 @@ object ArrayDemo extends App {
     Array.tabulate(3, 4)((a, b) => a + b) //下标相加
     Array.tabulate(3, 4)(_ + _) //Array[Array[Int]] = Array(Array(0, 1, 2, 3), Array(1, 2, 3, 4), Array(2, 3, 4, 5))
 
-    println("访问数组========")
-    //(使用小括号访问)
-    nums3(0)
-    nums3.apply(1)
-    println(nums3)
-
-    println("修改数组=======")
-    nums3(1) = "every one"
-    nums3.update(1, "every one")
-
-    println("数组长度=====")
-    nums.length //数组长度
-
     println("复制数组=====")
     nums.clone() //克隆数组
     //复制一个数组到另一个数组：从num2的下标2开始复制3个到nums的下标4开始（注意不要越界）
     Array.copy(nums2, 2, nums, 4, 3)
-
-    println("合并同类型数组=========")
-    Array.concat(nums, nums2)
 
     println("多维数组======")
     //创建规则三维数组,赋值1-27
@@ -143,7 +163,6 @@ object ArrayDemo extends App {
         }
       }
     }
-
     println("遍历三维数组====")
     for (i <- x) {
       //x是三维数组，i是二维数组
@@ -159,39 +178,9 @@ object ArrayDemo extends App {
       x2(i) = new Array[Int](i + 1)
     }
   }
-
-  val 可变数组 = 0
-  if (1) {
-    //———————————————————————可变数组：数组缓冲—————————————————————————————————
-    println("创建数组缓冲，增删改查操作=========")
-    import scala.collection.mutable.ArrayBuffer
-    val b = ArrayBuffer[Int]()
-    b += 1 //在末尾添加元素
-    b +=(2, 3, 4, 5) //添加集合
-    b ++= Array(6, 7, 8, 9) //必须用++=追加任何集合
-    b.trimEnd(2) //移除后面2个元素，高效操作
-    b.insert(2, 11) //在下标2位置添加11
-    b.remove(5) //移除下标5
-    b -= 7 //移除元素7（一个一个删除，从前往后）
-    b.remove(3, 2) //从下标3开始移除2个
-
-    println("查看和修改元素========")
-    b(1)
-    b(2) = 3
-
-    b.toArray.toBuffer //相互转化
-
-    println("常用算法,重点=======")
-    b.sum
-    b.count(a => a + 3 == 7)
-    b.reverse
-    b.sorted
-    b.foreach(println(_))
-  }
 }
 
 object ListDemo extends App {
-  //列表支持在头部快速添加和删除，但是不能提供对任意索引值的快速引用，因为这种实现需要线性枚举整个列表
   val 不可变列表 = 0
   if (0) {
     println("创建列表===========")
@@ -318,7 +307,7 @@ object ListDemo extends App {
   }
 
 
-  val 可变列表_列表缓存 = 0
+  val ListBuffer基本操作 = 0
   if (1) {
     import scala.collection.mutable.ListBuffer
     val buf = new ListBuffer[Int]

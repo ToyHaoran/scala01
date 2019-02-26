@@ -22,8 +22,51 @@ import org.apache.spark.sql.{DataFrame, SaveMode}
   */
 object ReadDataBase extends App {
   val 教训 = 0
-  if(0){
+  if (0) {
     //修改完数据库一定要点击左上角的提交。卧槽，找Bug卡了我3个小时。。。老长时间不玩数据库生疏了。1H以上就找别人帮忙。
+  }
+
+  /*
+   读取正确的parquet，然后读取错误的parquet，然后测试错误的parquet是否是重复数据，检查是否有漏掉的数据。
+   */
+  val 测试正确数据和错误数据 = 0
+  if (1) {
+    //todo  能够对比Oracle和Parquet文件
+    val correct = JdbcUtil.load("dfjs", "HS_DJBB")
+   /* val wrong = ConnectUtil.spark.read.format("jdbc")
+        .option("driver", "oracle.jdbc.driver.OracleDriver")
+        .option("url", "jdbc:oracle:thin:@172.20.32.210:1521/hycx")
+        .option("user", "RT_DFJS")
+        .option("password", "ffffff")
+        .option("dbtable", "(SELECT t.*,ROWNUM rownum_rn FROM HS_DJBB t) b")
+        .option("fetchsize", "5000")
+        .option("partitionColumn", "rownum_rn")
+        .option("lowerBound", "0")
+        .option("upperBound", "1500")
+        .option("numPartitions", "10")
+        .load()
+        .drop("rownum_rn")*/
+    val wrong = JdbcUtil.loadByRownum("dfjs", "HS_DJBB", 10)
+
+    correct.cache()
+    wrong.cache()
+    println("数量对比================")
+    println(s"correct: ${correct.count()}")
+    println(s"wrong: ${wrong.count()}")
+
+    //todo 主键数量对比，能大大加快对比速度，问题是主键是怎么获取？
+    correct.printPartItemNum()
+    wrong.printPartItemNum()
+
+    println("取差集，按理说应该等于0============")
+    val df1 = correct.except(wrong)
+    val df2 = wrong.except(correct)
+    println(s"correct有,但是wrong没有： ${df1.count()}")
+    df1.show()
+    println(s"wrong有,但是correct没有： ${df2.count()}")
+    df2.show()
+
+
   }
 
   /*
@@ -106,14 +149,14 @@ object ReadDataBase extends App {
         关于速度：Oracle导出(dmp、批量、速度快、无法修改) >> SQL插入(sql、一条一条、速度慢、可修改)
    */
   val 将Oracle表复制到测试的Oracle = 0
-  if (1) {
+  if (0) {
     val spark = ConnectUtil.spark
     val tables = "HS_DJBB"
     tables.split(",").foreach(table => {
       //todo 加分区列分区读取
       val df = JdbcUtil.load("dfjs", table)
       df.show()
-      JdbcUtil.save("dfjs", table+"_2", df)
+      JdbcUtil.save("dfjs", table + "_2", df)
     })
   }
 
@@ -284,19 +327,19 @@ object ReadDataBase extends App {
   if (0) {
     if (0) {
       //测试
-      JdbcUtil.queryAndPrintH("gzdb", "select * from HS_DJBB where rownum = 1")
-      JdbcUtil.queryAndPrintH("yxfk", "select * from FW_YKYXBYQLSXX where rownum = 1")
-
-      JdbcUtil.queryAndPrintH("local", "select * from student")
-      val lst: List[Map[String, Any]] = JdbcUtil.queryAndWrap("local", "select * from student")
-      JdbcUtil.queryAndPrintV("local", "select * from student")
+      JdbcUtil.queryAndPrintV("gzdb", "select * from HS_DJBB where rownum = 1")
+      //      JdbcUtil.queryAndPrintH("yxfk", "select * from FW_YKYXBYQLSXX where rownum = 1")
+      //
+      //      JdbcUtil.queryAndPrintH("local", "select * from student")
+      //      val lst: List[Map[String, Any]] = JdbcUtil.queryAndWrap("local", "select * from student")
+      //      JdbcUtil.queryAndPrintV("local", "select * from student")
     }
     if (0) {
       //读取大表的Schema信息
       val tables = "LC_YXDNBSS,SB_YXDNB,KH_JLD,ZW_SSDFJL,KH_JSH,KH_YDKH"
       tables.split(",").foreach(table => {
         println(s"${table}的Schema查询=======")
-        JdbcUtil.getTableColumnsByJdbc("yxfk", s"select * from $table where rownum <= 1")
+        JdbcUtil.getColumnsByJdbc("yxfk", s"select * from $table where rownum <= 1")
       })
     }
   }
